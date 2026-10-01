@@ -1,0 +1,73 @@
+[project]
+name = "kosha"
+version = "0.1.0"
+requires-python = ">=3.14"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "prek>=0.5.4",
+    "ruff>=0.16.9",
+]
+
+[tool.ruff]
+line-length = 88
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+# Preview unlocks pydoclint (DOC) checks that keep Args/Returns/Raises in sync with code.
+preview = true
+select = ["ALL"]
+ignore = [
+    # Conflicts with the formatter.
+    "missing-trailing-comma",
+    "missing-copyright-notice",
+    # Empty package __init__.py files are everywhere in a Django project.
+    "undocumented-public-package",
+    # Dunder methods, Django's inner Meta classes and __init__ (documented on the class).
+    "undocumented-magic-method",
+    "undocumented-public-nested-class",
+    "undocumented-public-init",
+    # Django's Meta/admin/ModelForm class attributes are idiomatic lists/tuples.
+    "mutable-class-default",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"manage.py" = ["implicit-namespace-package"]
+"**/settings{,/*}.py" = [
+    "undefined-local-with-import-star",
+    "undefined-local-with-import-star-usage",
+]
+"**/{tests/**/*,test_*,conftest}.py" = [
+    "ANN",
+    "ARG",
+    "D1",
+    "DOC",
+    "assert",
+    "magic-value-comparison",
+    "hardcoded-password-func-arg",
+    # Django's TestCase is unittest-based.
+    "pytest-unittest-assertion",
+    "pytest-unittest-raises-assertion",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-branches = 10
+max-returns = 4
+max-statements = 40
+max-nested-blocks = 3
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
