@@ -2,7 +2,7 @@
     A link in the app rail; without `to`, a feature still to come. It is the
     current one on `to` itself and on any page named in `also`.
 {% endcomment %}
-{% with current=request.resolver_match.url_name %}
+{% with current=request.resolver_match.view_name %}
     {% if to %}
         <a href="{% url to %}" class="rail-link" title="{{ label }}" {% if current == to or current in also.split %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i><span class="rail-label">{{ label }}</span></a>
     {% else %}

@@ -15,7 +15,7 @@
             </div>
             <div class="mt-6 grid gap-0.5">
                 {% include "layouts/_nav_link.html" with to="home" icon="house" label="Home" %}
-                {% include "layouts/_nav_link.html" with icon="wallet" label="Accounts" %}
+                {% include "layouts/_masters_nav.html" %}
                 {% include "layouts/_nav_link.html" with icon="arrow-left-right" label="Transactions" %}
                 {% include "layouts/_nav_link.html" with icon="piggy-bank" label="Budgets" %}
                 {% include "layouts/_nav_link.html" with icon="chart-column" label="Reports" %}
@@ -45,7 +45,7 @@
     </div>
     <nav class="tabs" aria-label="Main">
         {% include "layouts/_tab.html" with to="home" icon="house" label="Home" %}
-        {% include "layouts/_tab.html" with icon="wallet" label="Accounts" %}
+        {% include "layouts/_tab.html" with to="masters:masters" icon="wallet" label="Masters" section="masters" %}
         {% include "layouts/_tab.html" with icon="arrow-left-right" label="Activity" %}
         {% include "layouts/_tab.html" with icon="piggy-bank" label="Budgets" %}
         {% include "layouts/_tab.html" with to="settings" icon="settings" label="Settings" also=settings_pages %}

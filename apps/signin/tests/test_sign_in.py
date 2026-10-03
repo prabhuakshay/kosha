@@ -19,14 +19,15 @@ SIGNING_IN = {
 PASSKEY_SIGN_IN = {"passkey_sign_in_begin", "passkey_sign_in_complete"}
 
 
-def kosha_routes(patterns=None):
+def kosha_routes(patterns=None, prefix=""):
     """Every named route outside the admin, which guards itself."""
     for pattern in get_resolver().url_patterns if patterns is None else patterns:
         if isinstance(pattern, URLResolver):
             if pattern.app_name != "admin":
-                yield from kosha_routes(pattern.url_patterns)
+                namespace = f"{pattern.namespace}:" if pattern.namespace else ""
+                yield from kosha_routes(pattern.url_patterns, prefix + namespace)
         elif pattern.name:
-            yield pattern.name
+            yield prefix + pattern.name
 
 
 def url_of(name):

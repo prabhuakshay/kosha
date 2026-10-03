@@ -1,11 +1,12 @@
 {% comment %}
-    The way back up from a page under `to` in the section at `top`, for
-    desktops, which hide the top bar and its back link.
+    The way back up from a page under `to` (or `href`, for a page whose URL
+    takes arguments) in the section at `top`, for desktops, which hide the
+    top bar and its back link.
 {% endcomment %}
 <nav aria-label="Breadcrumb" class="crumbs">
     <ol>
         <li><a href="{% url top %}">{{ top_label }}</a></li>
-        <li><a href="{% url to %}">{{ label }}</a></li>
+        <li><a href="{% if href %}{{ href }}{% else %}{% url to %}{% endif %}">{{ label }}</a></li>
         <li aria-current="page">{{ here }}</li>
     </ol>
 </nav>

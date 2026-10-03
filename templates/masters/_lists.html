@@ -1,0 +1,8 @@
+<p class="sub-group">Accounts</p>
+{% include "masters/_list_link.html" with to="masters:assets" icon="wallet" label="Assets" also="masters:asset masters:new_asset masters:edit_asset" %}
+{% include "masters/_list_link.html" with to="masters:liabilities" icon="credit-card" label="Liabilities" %}
+{% include "masters/_list_link.html" with to="masters:income" icon="arrow-down-left" label="Income" %}
+{% include "masters/_list_link.html" with to="masters:expenses" icon="arrow-up-right" label="Expenses" %}
+<p class="sub-group">Classification</p>
+{% include "masters/_list_link.html" with to="masters:categories" icon="shapes" label="Categories" %}
+{% include "masters/_list_link.html" with to="masters:tags" icon="tag" label="Tags" %}

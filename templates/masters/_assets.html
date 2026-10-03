@@ -1,0 +1,22 @@
+{% load money %}
+<div class="list-head flex items-center gap-3">
+    <h2 class="display list-title">Assets</h2>
+    <a href="{% url 'masters:new_asset' %}" class="btn btn-small ml-auto" {% if request.resolver_match.view_name == "masters:new_asset" %}aria-current="page"{% endif %}><i data-lucide="plus" class="size-3.5"></i>New</a>
+</div>
+{% if groups %}
+    <p class="list-note">Total <span class="amount" data-total>{{ total|money }}</span></p>
+    {% for kind, accounts, subtotal in groups %}
+        <p class="group-label group-sum"><span data-kind>{{ kind.label }}</span><span class="amount" data-subtotal="{{ kind.value }}">{{ subtotal|money }}</span></p>
+        <nav class="rows" aria-label="{{ kind.label }}">
+            {% for account in accounts %}
+                <a href="{% url 'masters:asset' account.pk %}" class="row" {% if account == selected %}aria-current="page"{% endif %}>
+                    <span class="tile"><i data-lucide="{{ account.icon }}"></i></span>
+                    <span class="min-w-0 flex-1 truncate text-[15px] font-semibold">{{ account.name }}</span>
+                    <span class="amount text-[14px]" data-balance>{{ account.balance|money }}</span>
+                </a>
+            {% endfor %}
+        </nav>
+    {% endfor %}
+{% else %}
+    <p class="list-note">None yet</p>
+{% endif %}

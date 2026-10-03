@@ -1,0 +1,4 @@
+{% extends "layouts/split.html" %}
+{% comment %}A list in Masters beside the page open from it, under a way back to Masters on phones.{% endcomment %}
+{% block list_back %}{% include "layouts/_back.html" with to="masters:masters" label="Masters" %}{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="masters:masters" label="Masters" %}{% endblock %}

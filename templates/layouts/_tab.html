@@ -1,7 +1,10 @@
-{% comment %}A tab in the phone's tab bar, like layouts/_nav_link.html.{% endcomment %}
-{% with current=request.resolver_match.url_name %}
+{% comment %}
+    A tab in the phone's tab bar, like layouts/_nav_link.html, also the current
+    one on every page in the URL namespace `section`.
+{% endcomment %}
+{% with current=request.resolver_match.view_name %}
     {% if to %}
-        <a href="{% url to %}" class="tab" {% if current == to or current in also.split %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i>{{ label }}</a>
+        <a href="{% url to %}" class="tab" {% if current == to or current in also.split or section and section == request.resolver_match.namespace %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i>{{ label }}</a>
     {% else %}
         <span class="tab" aria-disabled="true"><i data-lucide="{{ icon }}"></i>{{ label }}</span>
     {% endif %}
