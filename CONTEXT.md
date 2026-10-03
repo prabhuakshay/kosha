@@ -4,6 +4,8 @@ A self-hosted personal finance app: one person's treasury, on infrastructure the
 
 ## Language
 
+### Signing in
+
 **Owner**:
 The one person a Kosha install belongs to, and its only login. There is no sign-up and no second login.
 _Avoid_: user, account (Account will mean a financial account)
@@ -42,3 +44,61 @@ _Avoid_: lockout, ban
 
 **Security log**:
 The permanent record of everything that happened to how Kosha is signed in to: sign-ins, wrong passwords and codes, Pauses, and every change to a Way to sign in, the password or the Recovery codes. The Owner can read it but never edit or clear it. A sign-in from an address or device no earlier sign-in used also emails the Owner.
+
+### Money
+
+**Base currency**:
+The one currency every amount in Kosha is in, set in Settings. INR unless the Owner changes it.
+_Avoid_: default currency, home currency
+
+**Account**:
+Any Asset account, Liability, Expense account, Income account, or Revaluation. Its name is unique among Accounts of the same type, ignoring case. Never created from typed text, only on purpose.
+
+**Asset account**:
+An Account holding money the Owner has: a Bank, Savings, Cash, Investment, Lent or Property account. Lent is money others owe the Owner; Property is something they own that isn't money, such as a house, land, a vehicle or gold.
+
+**Liability**:
+An Account holding money the Owner owes, which they can also spend from: a Credit card, Loan, Mortgage or Debt to a person.
+_Avoid_: debt account
+
+**Kind**:
+What sort of Asset account or Liability an Account is, such as Savings or Credit card. It can change within the same type but never from an Asset account to a Liability or back.
+_Avoid_: role, subtype
+
+**Expense account**:
+Someone the Owner pays: a shop, a landlord, a utility. Says who money went to, never what it was for.
+_Avoid_: payee, merchant, vendor
+
+**Income account**:
+Someone who pays the Owner: an employer, a client, a tenant.
+_Avoid_: revenue account, payer, source
+
+**Revaluation**:
+The one Account Kosha keeps for itself, on the other side of every change in what a Property account is worth. The Owner can't create, edit or delete it, and it counts as neither spending nor income.
+_Avoid_: depreciation, adjustment, unrealised gains
+
+**Net worth**:
+Everything in Asset accounts minus everything in Liabilities.
+
+**Liquid net worth**:
+Net worth counting only Bank, Savings, Cash and Investment accounts, less Credit cards: what the Owner could actually use.
+
+**Opening balance**:
+What an Asset account or Liability held on the day the Owner started tracking it in Kosha.
+_Avoid_: initial balance, starting balance
+
+**Closed**:
+An Account the Owner no longer uses, hidden from everyday lists but kept with its history. Only an Account with nothing in it can be Closed, and it can be reopened. An Account that nothing refers to can be deleted outright instead; its History keeps that it existed.
+_Avoid_: archived, inactive
+
+**Category**:
+What money was spent or received for, such as Groceries or Salary. One flat list, usable on money going out or coming in. Can be Closed like an Account.
+_Avoid_: expense type, head
+
+**Tag**:
+A label for the context money moved in, such as a trip or "reimbursable". Any number can be put on the same movement of money, and typing a new one creates it. Never Closed, only deleted.
+_Avoid_: label, project
+
+**History**:
+The permanent record of every change to an Account, Category, Tag or Setting: what changed, from what to what, and when, including deletions. The Owner can read it but never edit or clear it. Separate from the Security log.
+_Avoid_: audit log, change log, activity
