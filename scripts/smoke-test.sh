@@ -111,8 +111,11 @@ status=$(start_and_probe "$app" --network "$run")
 [ "$status" = "200" ] || { docker logs "$app"; fail "/healthz/ answered $status, want 200"; }
 pass "/healthz/ answers 200 over plain HTTP with an arbitrary Host"
 
-docker logs "$app" 2>&1 | grep -Eq 'Setup code: [0-9]{4} [0-9]{4} [0-9]{4}' \
-  || { docker logs "$app"; fail "log lacks the Setup code"; }
+# Captured first: grep -q stops at the match, and under pipefail the SIGPIPE
+# it leaves a still-writing docker logs would fail the check.
+log=$(docker logs "$app" 2>&1)
+grep -Eq 'Setup code: [0-9]{4} [0-9]{4} [0-9]{4}' <<<"$log" \
+  || { echo "$log"; fail "log lacks the Setup code"; }
 pass "log carries the Setup code while unclaimed"
 
 status=$(start_and_probe "$app-nodb" \
