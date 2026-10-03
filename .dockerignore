@@ -1,0 +1,29 @@
+# Host toolchains, built for the host's platform.
+.venv/
+node_modules/
+
+# Generated: compiled by the assets stage and collectstatic.
+static/css/app.css
+static/js/
+staticfiles/
+media/
+
+# Secrets never belong in an image layer.
+.env
+.env.*
+
+# Caches and metadata.
+.git/
+.github/
+.ruff_cache/
+__pycache__/
+*.py[codz]
+
+# Not part of the running app.
+docs/
+scripts/
+AGENTS.md
+CLAUDE.md
+LICENSE
+README.md
+compose*.yaml
