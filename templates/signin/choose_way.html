@@ -1,0 +1,25 @@
+{% extends "layouts/signed_out.html" %}
+{% block title %}Choose a way to sign in · Kosha{% endblock %}
+{% block main %}
+    <h1 class="display mt-10 text-[42px] leading-none lg:text-[48px]">Choose a way to sign in</h1>
+    <p class="mt-3 max-w-[34ch] text-[15px] leading-6 text-ink-2">Kosha is on the open internet and holds your finances. A password alone isn't enough.</p>
+    <div class="mt-8 grid gap-2">
+        {% comment %}Passkeys aren't built yet, so the choice shows but can't be made.{% endcomment %}
+        <div class="flex items-center gap-4 rounded-xl border bg-surface p-4 opacity-50" aria-disabled="true">
+            <span class="tile size-10"><i data-lucide="fingerprint" class="size-5"></i></span>
+            <span class="min-w-0 flex-1">
+                <span class="flex flex-wrap items-center gap-x-2 text-[15px] font-semibold">Passkey<span class="text-[12px] font-semibold text-good">Recommended</span></span>
+                <span class="block text-[13px] leading-5 text-ink-2">Sign in with your fingerprint or face, no password.</span>
+            </span>
+        </div>
+        <a href="{% url 'set_up_authenticator' %}" class="flex items-center gap-4 rounded-xl border bg-surface p-4">
+            <span class="tile size-10"><i data-lucide="smartphone" class="size-5"></i></span>
+            <span class="min-w-0 flex-1">
+                <span class="block text-[15px] font-semibold">Authenticator app</span>
+                <span class="block text-[13px] leading-5 text-ink-2">A 6-digit code with your password.</span>
+            </span>
+            <i data-lucide="chevron-right" class="text-ink-3"></i>
+        </a>
+    </div>
+    <p class="mt-4 text-[13px] text-ink-2">You can add the other one later in Security.</p>
+{% endblock %}

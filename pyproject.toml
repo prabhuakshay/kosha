@@ -7,9 +7,11 @@ license-files = ["LICENSE"]
 dependencies = [
     "django>=6.1.1",
     "django-environ>=0.14.0",
+    "django-otp>=1.7.3",
     "django-storages[s3]>=1.14.6",
     "gunicorn>=26.2.0",
     "psycopg[binary]>=3.3.6",
+    "qrcode>=8.2",
     "whitenoise>=6.12.0",
 ]
 

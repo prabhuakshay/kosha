@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "django_otp.plugins.otp_static",
     "apps.core",
     "apps.signin",
     "apps.users",
@@ -64,6 +67,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     # Every view needs sign-in unless it opts out with @login_not_required.
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
+    "django_otp.middleware.OTPMiddleware",
+    # A password alone reaches only the code step, or setting up a Way to sign in.
+    "apps.signin.middleware.WayToSignInMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
@@ -111,6 +117,8 @@ LOGOUT_REDIRECT_URL = "sign_in"
 # asks again.
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_SAVE_EVERY_REQUEST = True
+
+OTP_TOTP_ISSUER = "Kosha"
 
 validators = "django.contrib.auth.password_validation"
 AUTH_PASSWORD_VALIDATORS = [

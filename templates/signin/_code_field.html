@@ -1,0 +1,5 @@
+<label class="block">
+    <span class="text-[13px] font-medium text-ink-2">{{ label }}</span>
+    <input class="field mt-1.5 h-14 text-center text-[24px] font-semibold tracking-[.2em] tabular-nums" name="code" {% if digits_only %}inputmode="numeric" {% endif %}autocomplete="one-time-code" required autofocus>
+    {% include "signin/_errors.html" %}
+</label>

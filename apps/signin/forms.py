@@ -1,14 +1,20 @@
-"""Forms for Claiming the install."""
+"""Forms for Claiming the install and signing in."""
 
 from typing import TYPE_CHECKING
 
 from django import forms
 from django.contrib.auth import get_user_model, password_validation
 
+from apps.signin import ways
 from apps.signin.claim import is_setup_code
 
 if TYPE_CHECKING:
+    from django_otp.models import Device
+    from django_otp.plugins.otp_totp.models import TOTPDevice
+
     from apps.users.models import User
+
+WRONG_CODE = "That code doesn't match. Try the one showing now."
 
 
 class SetupCodeForm(forms.Form):
@@ -67,3 +73,61 @@ class OwnerForm(forms.Form):
             self.cleaned_data["password"],
             name=self.cleaned_data["name"],
         )
+
+
+class NewAuthenticatorForm(forms.Form):
+    """A code from the Authenticator app being set up, which saves it.
+
+    Args:
+        device: The unsaved device being set up.
+    """
+
+    code = forms.CharField(max_length=32)
+
+    def __init__(self, device: TOTPDevice, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        self.device = device
+
+    def clean_code(self) -> str:
+        """Save the device if the app shows a right code.
+
+        Returns:
+            The code as entered.
+
+        Raises:
+            ValidationError: The code is wrong.
+        """
+        code = self.cleaned_data["code"]
+        if not ways.confirm_authenticator(self.device, code):
+            raise forms.ValidationError(WRONG_CODE)
+        return code
+
+
+class CodeForm(forms.Form):
+    """A code from the Authenticator app, or a Recovery code.
+
+    Args:
+        owner: Whose codes to check.
+    """
+
+    code = forms.CharField(max_length=32)
+
+    def __init__(self, owner: User, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        self.owner = owner
+        self.device: Device | None = None
+
+    def clean_code(self) -> str:
+        """Match the code, keeping the device it matched.
+
+        Returns:
+            The code as entered.
+
+        Raises:
+            ValidationError: It matches nothing.
+        """
+        code = self.cleaned_data["code"]
+        self.device = ways.matching_device(self.owner, code)
+        if self.device is None:
+            raise forms.ValidationError(WRONG_CODE)
+        return code

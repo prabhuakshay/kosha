@@ -12,9 +12,7 @@ from apps.core.testing import tags
 def page_response(request, client):
     """A signed-out page and a signed-in one, both on the base layout."""
     # Without an Owner, sign-in redirects to Claim.
-    owner = request.getfixturevalue("owner")
-    if request.param == "home":
-        client.force_login(owner)
+    request.getfixturevalue("signed_in" if request.param == "home" else "owner")
     return client.get(reverse(request.param))
 
 
