@@ -8,8 +8,8 @@ from django.urls import reverse
 from django.utils.timezone import localdate
 
 from apps.core.testing import tags
+from apps.masters.listings import LISTINGS
 from apps.masters.models import KINDS, Account
-from apps.masters.views import LISTINGS
 
 if TYPE_CHECKING:
     from django.http import HttpResponse
@@ -136,3 +136,75 @@ def history(response: HttpResponse) -> tuple[list[str], list[str]]:
     actions = re.findall(r"data-history-action>([^<]+)<", response.text)
     changes = re.findall(r"data-history-change>([^<]+)<", response.text)
     return actions, [unescape(c) for c in changes]
+
+
+def account(
+    type_: Account.Type, name: str = "HDFC", balance: int = 0, *, closed: bool = False
+) -> Account:
+    """Make an Account straight in the database, with a Kind if its type has them.
+
+    Args:
+        type_: The Account's type.
+        name: Its name.
+        balance: Its Opening balance, if its type has one.
+        closed: Whether it's Closed.
+
+    Returns:
+        The Account.
+    """
+    if type_ not in KINDS:
+        return Account.objects.create(type=type_, name=name, closed=closed)
+    return Account.objects.create(
+        type=type_,
+        kind=FILLED_IN[type_]["kind"],
+        name=name,
+        opening_balance=balance,
+        opened_on=localdate(),
+        closed=closed,
+    )
+
+
+def url(action: str, account: Account) -> str:
+    """The address of an Account's detail, or of an action on it.
+
+    Args:
+        action: A route prefix such as ``close_``, or nothing for the detail.
+        account: The Account.
+
+    Returns:
+        The address.
+    """
+    return reverse(f"masters:{action}{LISTINGS[account.type].route}", args=[account.pk])
+
+
+def listed(client: Client, type_: Account.Type) -> tuple[list[str], list[str]]:
+    """The names in a list of Accounts.
+
+    Args:
+        client: A signed-in client.
+        type_: The list's type.
+
+    Returns:
+        The open Accounts' names, then those in the Closed section.
+    """
+    text = client.get(reverse(LISTINGS[type_].list)).text
+    open_part, _, closed_part = text.partition("data-closed")
+
+    def names(part: str) -> list[str]:
+        found = re.findall(r'truncate text-\[15px\] font-semibold">([^<]+)<', part)
+        return [unescape(n) for n in found]
+
+    return names(open_part), names(closed_part)
+
+
+def notices(response: HttpResponse) -> list[str]:
+    """The notices a page shows after something was done, or refused.
+
+    Args:
+        response: The page.
+
+    Returns:
+        Each notice's text.
+    """
+    found = re.findall(r'role="status"><i[^>]*></i>([^<]+)<', response.text)
+    return [unescape(n) for n in found]

@@ -863,6 +863,23 @@
     gap: 0.75rem;
   }
 
+  .closed {
+    margin-top: 0.75rem;
+  }
+
+  .closed > summary {
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .closed > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .closed[open] > summary svg {
+    rotate: 180deg;
+  }
+
   .amount {
     flex: none;
     font-variant-numeric: tabular-nums;

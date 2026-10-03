@@ -37,6 +37,7 @@ class Account(models.Model):
         max_digits=24, decimal_places=4, default=Decimal(0)
     )
     opened_on = models.DateField(null=True, blank=True)
+    closed = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
@@ -56,6 +57,15 @@ class Account(models.Model):
             The Opening balance, until transactions add to it.
         """
         return self.opening_balance
+
+    @property
+    def in_use(self) -> bool:
+        """Whether anything refers to the Account, so it can't be deleted.
+
+        Returns:
+            False, until transactions refer to Accounts.
+        """
+        return False
 
     @property
     def icon(self) -> str:

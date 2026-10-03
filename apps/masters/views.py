@@ -1,6 +1,5 @@
 """Masters: the Accounts, Categories and Tags everything else refers to."""
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from django.contrib import messages
@@ -8,14 +7,16 @@ from django.db import transaction
 from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.formats import date_format
+from django.views.decorators.http import require_POST
 
 from apps.core import history
 from apps.core.money import write
-from apps.masters.forms import AccountForm, BalanceAccountForm
 from apps.masters.models import KINDS, Account
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
+
+    from apps.masters.listings import Listing
 
 # Lists still to come: what belongs in each, for their empty states.
 COMING = {
@@ -59,17 +60,20 @@ def masters(request: HttpRequest) -> HttpResponse:
 
 
 def summary(accounts: list[Account], *, total: bool = False) -> str:
-    """Say how many Accounts a list holds, and what they hold between them.
+    """Say how many open Accounts a list holds, and what they hold between them.
 
     Args:
-        accounts: The list's Accounts.
+        accounts: The list's Accounts, Closed ones included.
         total: Whether to add up their balances.
 
     Returns:
-        Such as ``2 · ₹3,20,000.00``, or ``None yet``.
+        Such as ``2 · ₹3,20,000.00``, ``None open`` or ``None yet``.
     """
     if not accounts:
         return "None yet"
+    accounts = [a for a in accounts if not a.closed]
+    if not accounts:
+        return "None open"
     if total:
         return f"{len(accounts)} · {write(sum(a.balance for a in accounts))}"
     return str(len(accounts))
@@ -96,104 +100,6 @@ def coming(request: HttpRequest, name: str) -> HttpResponse:
             "text": f"{text} Adding them comes soon.",
         },
     )
-
-
-@dataclass(frozen=True)
-class Listing:
-    """A list of Accounts of one type: its routes and what it says."""
-
-    type: Account.Type
-    route: str
-    plural: str
-    title: str
-    noun: str
-    icon: str
-    about: str
-    lede: str
-    total: str = ""
-    opening_note: str = ""
-
-    @property
-    def kinds(self) -> list[Account.Kind]:
-        """The Kinds the list groups by, if its type has any."""
-        return KINDS.get(self.type, [])
-
-    @property
-    def form(self) -> type[AccountForm]:
-        """The form adding or changing one of its Accounts."""
-        return BalanceAccountForm if self.kinds else AccountForm
-
-    @property
-    def list(self) -> str:
-        """The list's route name."""
-        return f"masters:{self.plural}"
-
-    @property
-    def detail(self) -> str:
-        """The route name of an Account's detail."""
-        return f"masters:{self.route}"
-
-    @property
-    def new(self) -> str:
-        """The route name of the form adding an Account."""
-        return f"masters:new_{self.route}"
-
-    @property
-    def edit(self) -> str:
-        """The route name of the form editing an Account."""
-        return f"masters:edit_{self.route}"
-
-
-ASSETS = Listing(
-    type=Account.Type.ASSET,
-    route="asset",
-    plural="assets",
-    title="Assets",
-    noun="asset account",
-    icon="wallet",
-    about="Money you have: bank accounts, deposits, cash and investments, money "
-    "you've lent, and things you own such as a house or gold.",
-    lede="Money you have, or something you own.",
-    total="Total",
-    opening_note="What it held when you started tracking it. Use a minus sign "
-    "only if it was overdrawn.",
-)
-LIABILITIES = Listing(
-    type=Account.Type.LIABILITY,
-    route="liability",
-    plural="liabilities",
-    title="Liabilities",
-    noun="liability",
-    icon="scale",
-    about="Money you owe: credit cards, loans, a mortgage and debts to people.",
-    lede="Money you owe, even if you can spend from it, such as a credit card.",
-    total="Total owed",
-    opening_note="What you owed when you started tracking it. Use a minus sign "
-    "only if you were in credit.",
-)
-INCOME = Listing(
-    type=Account.Type.INCOME,
-    route="income_account",
-    plural="income",
-    title="Income",
-    noun="income account",
-    icon="arrow-down-left",
-    about="Income accounts: who pays you, such as an employer, a client or a tenant.",
-    lede="Someone who pays you, such as an employer, a client or a tenant.",
-)
-EXPENSES = Listing(
-    type=Account.Type.EXPENSE,
-    route="expense_account",
-    plural="expenses",
-    title="Expenses",
-    noun="expense account",
-    icon="arrow-up-right",
-    about="Expense accounts: who you pay, such as a shop, a landlord or a utility.",
-    lede="Someone you pay, such as a shop, a landlord or a utility.",
-)
-LISTINGS = {
-    listing.type: listing for listing in (ASSETS, LIABILITIES, INCOME, EXPENSES)
-}
 
 
 def account_list(request: HttpRequest, listing: Listing) -> HttpResponse:
@@ -227,6 +133,7 @@ def account_detail(request: HttpRequest, listing: Listing, pk: int) -> HttpRespo
         {
             "account": account,
             "history": history.of(account),
+            "cant_close": cant_close(account),
             **list_pane(listing, selected=account),
         },
     )
@@ -287,6 +194,97 @@ def edit_account(request: HttpRequest, listing: Listing, pk: int) -> HttpRespons
     )
 
 
+def cant_close(account: Account) -> str:
+    """Why an Account can't be Closed, if it's open and can't be.
+
+    Args:
+        account: The Account.
+
+    Returns:
+        The reason, or nothing if it can be Closed.
+    """
+    if not account.closed and account.type in KINDS and account.balance:
+        return (
+            f"{account.name} can't be closed while its balance is "
+            f"{write(account.balance)}. Only an account with a zero balance can be "
+            "closed."
+        )
+    return ""
+
+
+@require_POST
+def close_account(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
+    """Close an Account, unless it still holds something.
+
+    Args:
+        request: The incoming request.
+        listing: Which list.
+        pk: The Account's id.
+
+    Returns:
+        A redirect to the Account.
+    """
+    account = get_object_or_404(Account, pk=pk, type=listing.type)
+    if reason := cant_close(account):
+        messages.error(request, reason)
+    elif not account.closed:
+        with transaction.atomic():
+            account.closed = True
+            account.save(update_fields=["closed"])
+            record(account, history.Action.CLOSED)
+        messages.success(request, f"Closed {account.name}.")
+    return redirect(listing.detail, account.pk)
+
+
+@require_POST
+def reopen_account(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
+    """Reopen a Closed Account.
+
+    Args:
+        request: The incoming request.
+        listing: Which list.
+        pk: The Account's id.
+
+    Returns:
+        A redirect to the Account.
+    """
+    account = get_object_or_404(Account, pk=pk, type=listing.type)
+    if account.closed:
+        with transaction.atomic():
+            account.closed = False
+            account.save(update_fields=["closed"])
+            record(account, history.Action.REOPENED)
+        messages.success(request, f"Reopened {account.name}.")
+    return redirect(listing.detail, account.pk)
+
+
+@require_POST
+def delete_account(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
+    """Delete an Account nothing refers to, keeping its History.
+
+    Args:
+        request: The incoming request.
+        listing: Which list.
+        pk: The Account's id.
+
+    Returns:
+        A redirect to the list, or to the Account if it's in use.
+    """
+    account = get_object_or_404(Account, pk=pk, type=listing.type)
+    if account.in_use:
+        messages.error(
+            request,
+            f"{account.name} can't be deleted while anything refers to it. "
+            "Close it instead.",
+        )
+        return redirect(listing.detail, account.pk)
+    with transaction.atomic():
+        record(account, history.Action.DELETED)
+        account.delete()
+    messages.success(request, f"Deleted {account.name}.")
+    return redirect(listing.list)
+
+
 def snapshot(account: Account) -> dict[str, str]:
     """An Account's fields, written out as its History shows them.
 
@@ -329,7 +327,9 @@ def record(
 
 
 def list_pane(listing: Listing, selected: Account | None = None) -> dict:
-    """What a list pane shows: its Accounts, grouped by Kind with totals if any.
+    """What a list pane shows: its open Accounts, then its Closed ones.
+
+    Open Accounts are grouped by Kind with totals, if the list has Kinds.
 
     Args:
         listing: Which list.
@@ -338,7 +338,8 @@ def list_pane(listing: Listing, selected: Account | None = None) -> dict:
     Returns:
         The template context for the list pane.
     """
-    of_type = list(Account.objects.filter(type=listing.type).order_by(Lower("name")))
+    accounts = list(Account.objects.filter(type=listing.type).order_by(Lower("name")))
+    of_type = [a for a in accounts if not a.closed]
     groups = []
     for kind in listing.kinds:
         of_kind = [a for a in of_type if a.kind == kind]
@@ -347,6 +348,7 @@ def list_pane(listing: Listing, selected: Account | None = None) -> dict:
     return {
         "listing": listing,
         "accounts": of_type,
+        "closed": [a for a in accounts if a.closed],
         "groups": groups,
         "total": sum(a.balance for a in of_type),
         "selected": selected,

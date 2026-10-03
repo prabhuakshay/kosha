@@ -40,6 +40,9 @@ class HistoryEntry(models.Model):
     class Action(models.TextChoices):
         CREATED = "created", "Created"
         EDITED = "edited", "Edited"
+        CLOSED = "closed", "Closed"
+        REOPENED = "reopened", "Reopened"
+        DELETED = "deleted", "Deleted"
         BASE_CURRENCY_CHANGED = "base_currency_changed", "Base currency changed"
 
     at = models.DateTimeField(default=timezone.now, db_index=True)
