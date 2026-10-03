@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 
 from apps.core import history
 from apps.core.money import write
-from apps.masters.models import KINDS, Account
+from apps.masters.models import KINDS, Account, Category
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -20,11 +20,6 @@ if TYPE_CHECKING:
 
 # Lists still to come: what belongs in each, for their empty states.
 COMING = {
-    "categories": (
-        "Categories",
-        "shapes",
-        "What money is spent or received for, such as Groceries or Salary.",
-    ),
     "tags": (
         "Tags",
         "tag",
@@ -55,28 +50,29 @@ def masters(request: HttpRequest) -> HttpResponse:
             "liabilities": summary(of(Account.Type.LIABILITY), total=True),
             "income": summary(of(Account.Type.INCOME)),
             "expenses": summary(of(Account.Type.EXPENSE)),
+            "categories": summary(list(Category.objects.all())),
         },
     )
 
 
-def summary(accounts: list[Account], *, total: bool = False) -> str:
-    """Say how many open Accounts a list holds, and what they hold between them.
+def summary(items: list[Account] | list[Category], *, total: bool = False) -> str:
+    """Say how many open ones a list holds, and what they hold between them.
 
     Args:
-        accounts: The list's Accounts, Closed ones included.
-        total: Whether to add up their balances.
+        items: The list's Accounts or Categories, Closed ones included.
+        total: Whether to add up their balances, for Accounts.
 
     Returns:
         Such as ``2 · ₹3,20,000.00``, ``None open`` or ``None yet``.
     """
-    if not accounts:
+    if not items:
         return "None yet"
-    accounts = [a for a in accounts if not a.closed]
-    if not accounts:
+    items = [i for i in items if not i.closed]
+    if not items:
         return "None open"
     if total:
-        return f"{len(accounts)} · {write(sum(a.balance for a in accounts))}"
-    return str(len(accounts))
+        return f"{len(items)} · {write(sum(i.balance for i in items))}"
+    return str(len(items))
 
 
 def coming(request: HttpRequest, name: str) -> HttpResponse:

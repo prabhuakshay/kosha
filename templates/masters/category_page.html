@@ -1,0 +1,4 @@
+{% extends "masters/_page.html" %}
+{% comment %}A page beside the list of Categories, under a way back to it on phones.{% endcomment %}
+{% block list %}{% include "masters/_categories.html" %}{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="masters:categories" label="Categories" %}{% endblock %}

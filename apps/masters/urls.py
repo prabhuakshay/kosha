@@ -2,7 +2,7 @@
 
 from django.urls import URLPattern, path
 
-from apps.masters import listings, views
+from apps.masters import categories, listings, views
 
 
 def account_routes(listing: listings.Listing) -> list[URLPattern]:
@@ -44,6 +44,18 @@ urlpatterns = [
     *account_routes(listings.LIABILITIES),
     *account_routes(listings.INCOME),
     *account_routes(listings.EXPENSES),
+    path("categories/", categories.category_list, name="categories"),
+    path("categories/new/", categories.new_category, name="new_category"),
+    path("categories/<int:pk>/", categories.category_detail, name="category"),
+    path("categories/<int:pk>/edit/", categories.edit_category, name="edit_category"),
+    *(
+        path(f"categories/<int:pk>/{action}/", view, name=f"{action}_category")
+        for action, view in [
+            ("close", categories.close_category),
+            ("reopen", categories.reopen_category),
+            ("delete", categories.delete_category),
+        ]
+    ),
     *(
         path(f"{name}/", views.coming, {"name": name}, name=name)
         for name in views.COMING
