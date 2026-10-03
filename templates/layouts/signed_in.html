@@ -1,38 +1,56 @@
 {% extends "base.html" %}
+{% load static %}
 {% comment %}
-    Signed in. Phones get a header with the wordmark, or a `back` link, and the
-    avatar; desktops get a sidebar instead, which later features add their own
-    links to.
+    Signed in. Desktops get the app rail, icons only on narrower ones; phones
+    get a top bar with the wordmark, or a `back` link, and a tab bar. `panes`
+    is one scrolling pane unless a layout splits it (layouts/split.html).
 {% endcomment %}
 {% block content %}
-    <div class="lg:flex">
-        <aside class="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r bg-surface px-3 py-4 lg:flex">
-            <div class="flex h-10 items-center gap-2.5 px-2.5">{% include "_mark.html" %}</div>
-            <nav class="mt-6 grid gap-0.5" aria-label="Main">
+    {% with settings_pages="security password sessions security_log new_authenticator new_recovery_codes confirm" %}
+    <div class="shell">
+        <nav class="rail" aria-label="Main">
+            <div class="rail-brand flex h-10 items-center gap-2.5">
+                <img src="{% static 'icons/icon.svg' %}" alt="" class="size-[26px] shrink-0">
+                <span class="wordmark font-display text-[16px] font-bold tracking-[.04em] [font-stretch:85%]">KOSHA</span>
+            </div>
+            <div class="mt-6 grid gap-0.5">
                 {% include "layouts/_nav_link.html" with to="home" icon="house" label="Home" %}
-                {% include "layouts/_nav_link.html" with to="settings" icon="settings" label="Settings" %}
-            </nav>
-            <button type="button" popovertarget="owner-menu" class="mt-auto flex items-center gap-3 rounded-lg p-2 text-left hover:bg-well">
-                <span class="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-[12px] font-semibold text-on-primary">{{ user.initials }}</span>
-                <span class="min-w-0">
+                {% include "layouts/_nav_link.html" with icon="wallet" label="Accounts" %}
+                {% include "layouts/_nav_link.html" with icon="arrow-left-right" label="Transactions" %}
+                {% include "layouts/_nav_link.html" with icon="piggy-bank" label="Budgets" %}
+                {% include "layouts/_nav_link.html" with icon="chart-column" label="Reports" %}
+                {% include "layouts/_nav_link.html" with to="settings" icon="settings" label="Settings" also=settings_pages %}
+            </div>
+            <button type="button" popovertarget="owner-menu" class="rail-owner" aria-label="Owner menu">
+                <span class="avatar">{{ user.initials }}</span>
+                <span class="rail-owner-text">
                     <span class="block truncate text-[14px] font-semibold">{{ user.name }}</span>
-                    <span class="block truncate text-[12px] text-ink-2">{{ user.email }}</span>
+                    <span class="block truncate text-[12px] text-on-panel/60">{{ user.email }}</span>
                 </span>
             </button>
-        </aside>
-        <div class="min-w-0 flex-1">
-            <header class="sticky top-0 z-30 bg-bg/90 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:hidden">
-                <div class="mx-auto flex h-14 max-w-sm items-center gap-2.5 px-5">
-                    {% block back %}{% include "_mark.html" %}{% endblock %}
-                    <button type="button" popovertarget="owner-menu" class="ml-auto grid size-9 shrink-0 place-items-center rounded-full bg-primary text-[12px] font-semibold text-on-primary" aria-label="Owner menu">{{ user.initials }}</button>
-                </div>
-            </header>
-            <main class="mx-auto max-w-sm px-5 pb-28 lg:max-w-2xl lg:px-10 lg:pt-14">
-                {% block crumbs %}{% endblock %}
-                {% block main %}{% endblock %}
-            </main>
-        </div>
+        </nav>
+        {% block panes %}
+            <div class="main">
+                <header class="topbar">
+                    <div class="flex h-13 items-center gap-2.5 px-5">
+                        {% block back %}{% include "_mark.html" %}{% endblock %}
+                        <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
+                    </div>
+                </header>
+                <main class="pane">
+                    {% block main %}{% endblock %}
+                </main>
+            </div>
+        {% endblock %}
     </div>
+    <nav class="tabs" aria-label="Main">
+        {% include "layouts/_tab.html" with to="home" icon="house" label="Home" %}
+        {% include "layouts/_tab.html" with icon="wallet" label="Accounts" %}
+        {% include "layouts/_tab.html" with icon="arrow-left-right" label="Activity" %}
+        {% include "layouts/_tab.html" with icon="piggy-bank" label="Budgets" %}
+        {% include "layouts/_tab.html" with to="settings" icon="settings" label="Settings" also=settings_pages %}
+    </nav>
     {% include "layouts/_sheet.html" with id="owner-menu" title=user.name body="layouts/_owner_menu.html" %}
+    {% endwith %}
     {% block sheets %}{% endblock %}
 {% endblock %}

@@ -1,0 +1,8 @@
+{% comment %}A tab in the phone's tab bar, like layouts/_nav_link.html.{% endcomment %}
+{% with current=request.resolver_match.url_name %}
+    {% if to %}
+        <a href="{% url to %}" class="tab" {% if current == to or current in also.split %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i>{{ label }}</a>
+    {% else %}
+        <span class="tab" aria-disabled="true"><i data-lucide="{{ icon }}"></i>{{ label }}</span>
+    {% endif %}
+{% endwith %}

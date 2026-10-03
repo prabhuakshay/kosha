@@ -1,49 +1,80 @@
 {% extends "layouts/settings_page.html" %}
-{% block title %}Security · Kosha{% endblock %}
+{% block title %}Signing in · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display mt-2 text-[32px] leading-none lg:text-[40px]">Security</h1>
+    <h1 class="display page-title">Signing in</h1>
     <p class="mt-3 flex items-center gap-2 text-[13px] text-ink-2"><i data-lucide="lock-open" class="size-4 text-good"></i>Confirmed it's you · changes allowed for 10 minutes</p>
-    {% for message in messages %}
-        <p class="mt-4 text-[14px] font-medium {% if message.level_tag == 'error' %}text-bad{% else %}text-good{% endif %}" role="status">{{ message }}</p>
-    {% endfor %}
-    <ul class="mt-5 divide-y rounded-xl border bg-surface">
-        <li>
-            <button type="button" popovertarget="sheet-passkeys" class="flex w-full items-center gap-3 px-3.5 py-3 text-left">
-                <span class="tile"><i data-lucide="key-round"></i></span>
-                <span class="min-w-0 flex-1">
-                    <span class="block text-[15px] font-semibold">Passkeys</span>
-                    <span class="block truncate text-[13px] text-ink-2">{% if passkeys %}{{ passkeys|length }} passkey{{ passkeys|length|pluralize }}{% else %}None yet · recommended{% endif %}</span>
-                </span>
-                <i data-lucide="chevron-right" class="text-ink-3"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" popovertarget="sheet-authenticator" class="flex w-full items-center gap-3 px-3.5 py-3 text-left">
-                <span class="tile"><i data-lucide="smartphone"></i></span>
-                <span class="min-w-0 flex-1">
-                    <span class="block text-[15px] font-semibold">Authenticator app</span>
-                    <span class="block truncate text-[13px] text-ink-2">{{ authenticator|yesno:"On,Off" }}</span>
-                </span>
-                <i data-lucide="chevron-right" class="text-ink-3"></i>
-            </button>
-        </li>
-        <li>
-            <button type="button" popovertarget="sheet-codes" class="flex w-full items-center gap-3 px-3.5 py-3 text-left">
-                <span class="tile"><i data-lucide="life-buoy"></i></span>
-                <span class="min-w-0 flex-1">
-                    <span class="block text-[15px] font-semibold">Recovery codes</span>
-                    <span class="block truncate text-[13px] text-ink-2">{{ recovery_codes_left }} of {{ recovery_codes_total }} left</span>
-                </span>
-                <i data-lucide="chevron-right" class="text-ink-3"></i>
-            </button>
-        </li>
-        {% include "layouts/_row.html" with to="password" icon="rectangle-ellipsis" title="Password" sub="Change it" %}
-        {% include "layouts/_row.html" with to="sessions" icon="monitor-smartphone" title="Sessions" sub="Every device signed in" %}
-        {% include "layouts/_row.html" with to="security_log" icon="scroll-text" title="Security log" sub="Sign-ins and changes" %}
-    </ul>
-{% endblock %}
-{% block sheets %}
-    {% include "layouts/_sheet.html" with id="sheet-passkeys" title="Passkeys" body="signin/_passkeys_sheet.html" %}
-    {% include "layouts/_sheet.html" with id="sheet-authenticator" title="Authenticator app" body="signin/_authenticator_sheet.html" %}
-    {% include "layouts/_sheet.html" with id="sheet-codes" title="Recovery codes" body="signin/_codes_sheet.html" %}
+    {% include "signin/_messages.html" %}
+
+    <section class="section" aria-labelledby="passkeys-title">
+        <h2 id="passkeys-title" class="section-title">Passkeys <small>{% if passkeys %}{{ passkeys|length }} passkey{{ passkeys|length|pluralize }}{% else %}None yet · recommended{% endif %}</small></h2>
+        <p class="note">Sign in with your fingerprint or face, no password. Each phone, computer or security key holds its own.</p>
+        {% if passkeys %}
+            <ul class="items">
+                {% for passkey in passkeys %}
+                    <li class="item">
+                        <span class="tile"><i data-lucide="key-round"></i></span>
+                        <span class="min-w-0 flex-1">
+                            <span class="item-title"><span class="truncate" data-passkey-name>{{ passkey.name|default:"Passkey" }}</span></span>
+                            <span class="item-sub block">Added {{ passkey.created_at|date:"j M Y" }} · {% if passkey.last_used_at %}Last used {{ passkey.last_used_at|date:"j M Y" }}{% else %}Never used{% endif %}</span>
+                        </span>
+                        <form method="post" action="{% url 'remove_passkey' passkey.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-danger btn-small"><i data-lucide="trash-2" class="size-3.5"></i>Remove</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% url 'security' as security %}
+        <div class="actions">
+            <button type="button" {% include "signin/_passkey_attrs.html" with action="register" next=security %} class="btn disabled:opacity-50"><i data-lucide="plus"></i>Add a passkey on this device</button>
+        </div>
+        {% include "signin/_passkey_status.html" %}
+    </section>
+
+    <section class="section" aria-labelledby="authenticator-title">
+        <h2 id="authenticator-title" class="section-title">Authenticator app</h2>
+        <div class="state">
+            <span class="state-icon {% if not authenticator %}state-icon-off{% endif %}"><i data-lucide="{% if authenticator %}shield-check{% else %}smartphone{% endif %}"></i></span>
+            <div>
+                <p class="big text-[28px]">{{ authenticator|yesno:"On,Off" }}</p>
+                <p class="item-sub">A 6-digit code from it, with your password, signs you in when no passkey is to hand.</p>
+            </div>
+        </div>
+        <div class="actions">
+            <form method="post" action="{% url 'start_authenticator' %}">
+                {% csrf_token %}
+                {% if authenticator %}
+                    <button class="btn btn-quiet"><i data-lucide="refresh-cw"></i>Replace with a new one</button>
+                {% else %}
+                    <button class="btn"><i data-lucide="plus"></i>Set up</button>
+                {% endif %}
+            </form>
+            {% if authenticator %}
+                <form method="post" action="{% url 'remove_authenticator' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-danger"><i data-lucide="trash-2"></i>Remove</button>
+                </form>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="password-title">
+        <h2 id="password-title" class="section-title">Password</h2>
+        <p class="note">It signs you in only together with a code from the authenticator app. Changing it signs out every other device.</p>
+        <div class="actions">
+            <a href="{% url 'password' %}" class="btn btn-quiet"><i data-lucide="rectangle-ellipsis"></i>Change password</a>
+        </div>
+    </section>
+
+    <section class="section" aria-labelledby="codes-title">
+        <h2 id="codes-title" class="section-title">Recovery codes <small>{{ recovery_codes_left }} of {{ recovery_codes_total }} left</small></h2>
+        <p class="note">Each signs you in once, in place of the authenticator app's code, if your phone is lost.</p>
+        <div class="meter" aria-hidden="true">{% for i in "0123456789" %}<span {% if forloop.counter <= recovery_codes_left %}class="on"{% endif %}></span>{% endfor %}</div>
+        <form method="post" action="{% url 'make_recovery_codes' %}" class="actions">
+            {% csrf_token %}
+            <button class="btn btn-quiet"><i data-lucide="refresh-cw"></i>Make new codes</button>
+        </form>
+        <p class="note">Your old codes stop working, saved or not.</p>
+    </section>
 {% endblock %}

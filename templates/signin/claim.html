@@ -6,7 +6,7 @@
     <form method="post" class="mt-8">
         {% csrf_token %}
         <label class="block">
-            <span class="text-[13px] font-medium text-ink-2">Setup code</span>
+            <span class="label">Setup code</span>
             <input class="field mt-1.5 text-center font-mono text-[20px] tracking-[.12em] tabular-nums" name="code" value="{{ form.code.value|default:'' }}" inputmode="numeric" autocomplete="off" required autofocus>
             {% include "signin/_errors.html" with field=form.code %}
         </label>

@@ -12,11 +12,11 @@
                 <p class="flex items-center gap-2 text-[14px] font-medium text-bad"><i data-lucide="triangle-alert" class="size-4"></i>That email and password don't match.</p>
             {% endif %}
             <label class="block">
-                <span class="text-[13px] font-medium text-ink-2">Email</span>
+                <span class="label">Email</span>
                 <input class="field mt-1.5" type="email" name="username" value="{{ form.username.value|default:'' }}" autocomplete="username" required autofocus>
             </label>
             <label class="block">
-                <span class="text-[13px] font-medium text-ink-2">Password</span>
+                <span class="label">Password</span>
                 <input class="field mt-1.5" type="password" name="password" autocomplete="current-password" required>
             </label>
         </div>

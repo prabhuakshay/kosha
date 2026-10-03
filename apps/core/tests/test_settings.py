@@ -1,5 +1,3 @@
-import re
-
 import pytest
 from django.urls import reverse
 
@@ -55,9 +53,9 @@ def test_the_sidebar_leads_to_settings(signed_in):
     assert tags(response, "a", href=reverse("settings"), **{"aria-current": "page"})
 
 
-def breadcrumbs(response):
-    nav = re.search(r'<nav aria-label="Breadcrumb".*?</nav>', response.text, re.DOTALL)
-    return nav and re.findall(r'href="([^"]+)"', nav[0])
+def selected(response):
+    rows = tags(response, "a", **{"class": "row"})
+    return rows and [r["href"] for r in rows if r.get("aria-current") == "page"]
 
 
 SETTINGS, SECURITY = reverse("settings"), reverse("security")
@@ -65,29 +63,39 @@ SETTINGS, SECURITY = reverse("settings"), reverse("security")
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    ("name", "trail"),
+    ("name", "rows"),
     [
-        ("home", None),
-        ("settings", None),
-        ("security", [SETTINGS]),
-        ("password", [SETTINGS, SECURITY]),
-        ("sessions", [SETTINGS, SECURITY]),
-        ("security_log", [SETTINGS, SECURITY]),
+        ("home", []),
+        ("settings", []),
+        ("security", [SECURITY]),
+        ("password", [SECURITY]),
+        ("sessions", [reverse("sessions")]),
+        ("security_log", [reverse("security_log")]),
     ],
 )
-def test_pages_inside_settings_show_the_way_back_up(signed_in, name, trail):
-    assert breadcrumbs(signed_in.get(reverse(name))) == trail
+def test_pages_inside_settings_sit_beside_its_list(signed_in, name, rows):
+    response = signed_in.get(reverse(name))
+
+    assert selected(response) == rows
+    if name != "home":
+        assert links(response, "security_log")
 
 
 @pytest.mark.django_db
-def test_confirm_shows_the_way_back_to_settings(signed_in, clock):
+def test_confirm_sits_beside_the_settings_list(signed_in, clock):
     clock.advance(minutes=11)
 
-    assert breadcrumbs(signed_in.get(reverse("confirm"))) == [SETTINGS]
+    assert selected(signed_in.get(reverse("confirm"))) == []
 
 
 @pytest.mark.django_db
-def test_new_recovery_codes_show_the_way_back_up(signed_in):
+def test_new_recovery_codes_go_back_to_signing_in(signed_in):
     response = signed_in.post(reverse("make_recovery_codes"), follow=True)
 
-    assert breadcrumbs(response) == [SETTINGS, SECURITY]
+    assert selected(response) == [SECURITY]
+    assert tags(
+        response,
+        "a",
+        href=SECURITY,
+        **{"aria-label": "Back to Signing in"},
+    )

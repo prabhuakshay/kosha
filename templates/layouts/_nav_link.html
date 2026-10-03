@@ -1,5 +1,11 @@
+{% comment %}
+    A link in the app rail; without `to`, a feature still to come. It is the
+    current one on `to` itself and on any page named in `also`.
+{% endcomment %}
 {% with current=request.resolver_match.url_name %}
-    <a href="{% url to %}"
-       class="flex h-9 items-center gap-3 rounded-lg px-2.5 text-[14px] font-medium {% if current == to %}bg-well text-ink{% else %}text-ink-2 hover:bg-well hover:text-ink{% endif %}"
-       {% if current == to %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}" class="{% if current == to %}text-accent{% endif %}"></i>{{ label }}</a>
+    {% if to %}
+        <a href="{% url to %}" class="rail-link" title="{{ label }}" {% if current == to or current in also.split %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i><span class="rail-label">{{ label }}</span></a>
+    {% else %}
+        <span class="rail-link" aria-disabled="true" title="{{ label }} · soon"><i data-lucide="{{ icon }}"></i><span class="rail-label">{{ label }}</span><span class="rail-soon">Soon</span></span>
+    {% endif %}
 {% endwith %}

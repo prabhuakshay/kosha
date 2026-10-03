@@ -1,15 +1,38 @@
 {% extends "layouts/signed_in.html" %}
 {% comment %}
-    A page inside Settings. Desktops show the way back up as breadcrumbs,
-    starting at Settings and going on with the page's `trail`; phones get the
-    `back` link, to Settings unless the page says otherwise.
+    A page in Settings, shown as the detail beside the Settings list. Phones
+    show only the page, under a `back` link to Settings unless the page says
+    otherwise; Settings itself empties `open` so phones show only the list.
 {% endcomment %}
-{% block back %}{% include "layouts/_back.html" with to="settings" label="Settings" %}{% endblock %}
-{% block crumbs %}
-    <nav aria-label="Breadcrumb" class="hidden lg:block">
-        <ol class="flex items-center gap-1.5 text-[13px] font-medium text-ink-2">
-            <li><a href="{% url 'settings' %}" class="hover:text-ink">Settings</a></li>
-            {% block trail %}{% endblock %}
-        </ol>
-    </nav>
+{% block panes %}
+    <div class="split {% block open %}split-open{% endblock %}">
+        <div class="split-list">
+            <header class="topbar">
+                <div class="flex h-13 items-center gap-2.5 px-5">
+                    {% include "_mark.html" %}
+                    <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
+                </div>
+            </header>
+            <h2 class="list-head display list-title">Settings</h2>
+            <p class="group-label">Security</p>
+            <nav class="rows" aria-label="Security">
+                {% include "layouts/_row.html" with to="security" icon="fingerprint" title="Signing in" sub="Passkeys, authenticator app, password, recovery codes" also="new_authenticator password new_recovery_codes" %}
+                {% include "layouts/_row.html" with to="sessions" icon="monitor-smartphone" title="Sessions" sub="Every device signed in" %}
+                {% include "layouts/_row.html" with to="security_log" icon="scroll-text" title="Security log" sub="Sign-ins and changes" %}
+            </nav>
+        </div>
+        <div class="split-detail">
+            <header class="topbar">
+                <div class="flex h-13 items-center gap-2.5 px-5">
+                    {% block back %}{% include "layouts/_back.html" with to="settings" label="Settings" %}{% endblock %}
+                    <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
+                </div>
+            </header>
+            <main class="pane">
+                <div class="pane-inner">
+                    {% block main %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
 {% endblock %}
