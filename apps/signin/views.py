@@ -153,6 +153,7 @@ def recovery_codes(request: HttpRequest) -> HttpResponse:
     if ways.has_recovery_codes(request.user):
         return redirect("home")
     codes = ways.issue_recovery_codes(request.user)
+    security_log.record(request, security_log.Kind.RECOVERY_CODES_ISSUED)
     return render(request, "signin/recovery_codes.html", {"codes": codes})
 
 

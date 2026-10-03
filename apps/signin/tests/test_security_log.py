@@ -15,6 +15,7 @@ from apps.signin.testing import (
     authenticator_code,
     claim,
     enter_code,
+    set_up_authenticator,
     sign_in,
     sign_in_with_passkey,
 )
@@ -86,6 +87,41 @@ def test_claim_logs_signing_in_with_the_password(client):
     claim(client)
 
     assert logged() == [(Kind.SIGNED_IN, "Password")]
+
+
+@pytest.mark.django_db
+def test_recovery_codes_are_logged_once_at_claim(client):
+    claim(client)
+    set_up_authenticator(client)
+
+    client.get(reverse("recovery_codes"))
+    client.get(reverse("recovery_codes"))
+
+    assert logged() == [
+        (Kind.RECOVERY_CODES_ISSUED, ""),
+        (Kind.AUTHENTICATOR_SET_UP, ""),
+        (Kind.SIGNED_IN, "Password"),
+    ]
+    entry = SecurityLogEntry.objects.first()
+    assert (entry.address, entry.device) == ("198.51.100.7", "Chrome on macOS")
+
+
+@pytest.mark.django_db
+@pytest.mark.usefixtures("authenticator")
+def test_recovery_codes_after_a_server_reset_are_logged(client):
+    call_command("break_glass", "--ways-to-sign-in", stdout=StringIO())
+    sign_in(client)
+    set_up_authenticator(client)
+
+    response = client.get(reverse("recovery_codes"))
+
+    assert response.status_code == 200
+    assert logged() == [
+        (Kind.RECOVERY_CODES_ISSUED, ""),
+        (Kind.AUTHENTICATOR_SET_UP, ""),
+        (Kind.SIGNED_IN, "Password"),
+        (Kind.RESET_ON_SERVER, "Ways to sign in"),
+    ]
 
 
 @pytest.mark.django_db
