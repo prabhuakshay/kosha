@@ -129,6 +129,7 @@ COPY apps/ apps/
 COPY templates/ templates/
 COPY --from=assets /app/static/ static/
 COPY docker/gunicorn.conf.py docker/
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 
 # Settings refuse to load without these. The values exist only for this
 # command; the database URL is parsed and never connected to.
@@ -145,4 +146,5 @@ USER app
 
 EXPOSE 8000
 
+ENTRYPOINT ["entrypoint"]
 CMD ["gunicorn", "--config", "docker/gunicorn.conf.py", "config.wsgi:application"]

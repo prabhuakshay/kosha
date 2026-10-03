@@ -11,8 +11,10 @@ from apps.core.testing import tags
 @pytest.fixture(params=["sign_in", "home"])
 def page_response(request, client):
     """A signed-out page and a signed-in one, both on the base layout."""
+    # Without an Owner, sign-in redirects to Claim.
+    owner = request.getfixturevalue("owner")
     if request.param == "home":
-        client.force_login(request.getfixturevalue("owner"))
+        client.force_login(owner)
     return client.get(reverse(request.param))
 
 

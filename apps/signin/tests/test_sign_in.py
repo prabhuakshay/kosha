@@ -4,6 +4,8 @@ from django.urls import URLResolver, get_resolver, reverse
 from apps.core.testing import EMAIL, PASSWORD
 
 PUBLIC = {"sign_in", "manifest", "service_worker"}
+# Open only while unclaimed; test_claim covers them.
+CLAIM = {"claim", "claim_owner"}
 
 
 def sign_in(client, email=EMAIL, password=PASSWORD, **extra):
@@ -24,7 +26,7 @@ def kosha_routes(patterns=None):
 
 @pytest.mark.django_db
 def test_every_page_but_the_public_ones_needs_sign_in(client):
-    for name in set(kosha_routes()) - PUBLIC - {"sign_out"}:
+    for name in set(kosha_routes()) - PUBLIC - CLAIM - {"sign_out"}:
         url = reverse(name)
 
         response = client.get(url)
@@ -34,6 +36,7 @@ def test_every_page_but_the_public_ones_needs_sign_in(client):
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("owner")
 def test_public_pages_open_without_sign_in(client):
     for name in PUBLIC:
         assert client.get(reverse(name)).status_code == 200, name

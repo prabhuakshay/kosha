@@ -67,7 +67,7 @@ uv run prek install
 npm install
 cp .env.example .env   # then set DEBUG=true, SECRET_KEY and DATABASE_URL
 uv run manage.py migrate
-uv run manage.py createsuperuser
+uv run manage.py setup_code   # the code that Claims your install
 npm run watch          # in a second terminal: rebuilds the stylesheet on change
 uv run manage.py runserver
 ```
@@ -97,9 +97,10 @@ bash setup-r2.sh       # walks you through the R2 bucket and token, fills in S3_
 # edit .env: SECRET_KEY, ALLOWED_HOSTS, DATABASE_URL,
 # SECURE_PROXY_SSL_HEADER=true, and KOSHA_VERSION to pin a release
 docker compose -f compose.prod.yaml up -d
-docker compose -f compose.prod.yaml run --rm migrate python manage.py createsuperuser
+docker compose -f compose.prod.yaml logs django | grep "Setup code"
 ```
 
+- **Claim:** open Kosha and enter the Setup code from the log to become its Owner, its only sign-in. `docker compose -f compose.prod.yaml exec django python manage.py setup_code` prints it again. Once claimed, there is no Setup code. See [ADR 0002](docs/adr/0002-one-owner-per-install.md).
 - **Migrations** run once in a `migrate` container before the app starts; if they fail, the app does not start.
 - **The app** listens on `127.0.0.1:8000` only (`DOCKER_HOST_PORT`). Point your proxy at it and have the proxy set `X-Forwarded-Proto`.
 - **Database:** a Postgres on the same host is reached as `host.docker.internal`.

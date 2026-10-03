@@ -5,5 +5,6 @@ set -eu
 
 uv sync --frozen
 python manage.py migrate --noinput
+python manage.py setup_code
 
 exec "$@"
