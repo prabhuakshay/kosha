@@ -76,13 +76,14 @@ class BalanceAccountForm(AccountForm):
             self.initial["opened_on"] = timezone.localdate()
 
     def clean_opening_balance(self) -> Decimal:
-        """Hold the Opening balance to the Base currency's decimal places.
+        """Hold the Opening balance to the currency's places, and a Closed one at 0.
 
         Returns:
             The Opening balance.
 
         Raises:
-            ValidationError: It has more decimal places than the currency.
+            ValidationError: It has more decimal places than the currency, or
+                the Account is Closed and it isn't zero.
         """
         amount = self.cleaned_data["opening_balance"]
         places = decimal_places()
@@ -93,6 +94,9 @@ class BalanceAccountForm(AccountForm):
                 else f"Amounts in {base_currency()} have at most {places} decimal "
                 "places."
             )
+            raise forms.ValidationError(msg)
+        if self.instance.closed and amount:
+            msg = "A closed account's balance must stay zero. Reopen it first."
             raise forms.ValidationError(msg)
         return amount
 
