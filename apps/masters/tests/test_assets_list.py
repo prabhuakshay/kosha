@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from apps.core.testing import tags
 from apps.masters.models import Account
+from apps.masters.testing import groups, rows
 
 ASSETS = reverse("masters:assets")
 
@@ -12,22 +13,6 @@ ASSETS = reverse("masters:assets")
 def asset(name, kind, balance):
     return Account.objects.create(
         type=Account.Type.ASSET, kind=kind, name=name, opening_balance=balance
-    )
-
-
-def groups(response):
-    """Each Kind's label and subtotal, then its rows' names and balances."""
-    return re.findall(
-        r'data-kind>([^<]+)</span><span class="amount" data-subtotal="\w+">([^<]+)<',
-        response.text,
-    )
-
-
-def rows(response):
-    return re.findall(
-        r'font-semibold">([^<]+)</span>\s*<span class="amount text-\[14px\]" '
-        r"data-balance>([^<]+)<",
-        response.text,
     )
 
 

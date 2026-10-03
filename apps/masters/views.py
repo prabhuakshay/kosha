@@ -1,5 +1,6 @@
 """Masters: the Accounts, Categories and Tags everything else refers to."""
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from django.contrib import messages
@@ -10,19 +11,14 @@ from django.utils.formats import date_format
 
 from apps.core import history
 from apps.core.money import write
-from apps.masters.forms import AssetAccountForm
-from apps.masters.models import Account
+from apps.masters.forms import AccountForm
+from apps.masters.models import KINDS, Account
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
 
 # Lists still to come: what belongs in each, for their empty states.
 COMING = {
-    "liabilities": (
-        "Liabilities",
-        "credit-card",
-        "Money you owe: credit cards, loans, a mortgage and debts to people.",
-    ),
     "income": (
         "Income",
         "arrow-down-left",
@@ -112,91 +108,161 @@ def coming(request: HttpRequest, name: str) -> HttpResponse:
     )
 
 
-def assets(request: HttpRequest) -> HttpResponse:
-    """List the Asset accounts by Kind.
+@dataclass(frozen=True)
+class Listing:
+    """A list of Asset accounts or Liabilities: its routes and what it says."""
+
+    type: Account.Type
+    plural: str
+    title: str
+    noun: str
+    icon: str
+    about: str
+    lede: str
+    total: str
+    opening_note: str
+
+    @property
+    def list(self) -> str:
+        """The list's route name."""
+        return f"masters:{self.plural}"
+
+    @property
+    def detail(self) -> str:
+        """The route name of an Account's detail."""
+        return f"masters:{self.type}"
+
+    @property
+    def new(self) -> str:
+        """The route name of the form adding an Account."""
+        return f"masters:new_{self.type}"
+
+    @property
+    def edit(self) -> str:
+        """The route name of the form account an Account."""
+        return f"masters:edit_{self.type}"
+
+
+ASSETS = Listing(
+    type=Account.Type.ASSET,
+    plural="assets",
+    title="Assets",
+    noun="asset account",
+    icon="wallet",
+    about="Money you have: bank accounts, deposits, cash and investments, money "
+    "you've lent, and things you own such as a house or gold.",
+    lede="Money you have, or something you own.",
+    total="Total",
+    opening_note="What it held when you started tracking it. Use a minus sign "
+    "only if it was overdrawn.",
+)
+LIABILITIES = Listing(
+    type=Account.Type.LIABILITY,
+    plural="liabilities",
+    title="Liabilities",
+    noun="liability",
+    icon="credit-card",
+    about="Money you owe: credit cards, loans, a mortgage and debts to people.",
+    lede="Money you owe, even if you can spend from it, such as a credit card.",
+    total="Total owed",
+    opening_note="What you owed when you started tracking it. Use a minus sign "
+    "only if you were in credit.",
+)
+
+
+def account_list(request: HttpRequest, listing: Listing) -> HttpResponse:
+    """List the Asset accounts or Liabilities by Kind.
 
     Args:
         request: The incoming request.
+        listing: Which list.
 
     Returns:
-        The Assets list.
+        The list.
     """
-    return render(request, "masters/assets.html", assets_list())
+    return render(request, "masters/accounts.html", list_pane(listing))
 
 
-def asset(request: HttpRequest, pk: int) -> HttpResponse:
-    """Show an Asset account beside the Assets list.
+def account_detail(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
+    """Show an Asset account or Liability beside its list.
 
     Args:
         request: The incoming request.
+        listing: Which list.
         pk: The Account's id.
 
     Returns:
         The Account's detail.
     """
-    account = get_object_or_404(Account, pk=pk, type=Account.Type.ASSET)
+    account = get_object_or_404(Account, pk=pk, type=listing.type)
     return render(
         request,
-        "masters/asset.html",
+        "masters/account.html",
         {
             "account": account,
             "history": history.of(account),
-            **assets_list(selected=account),
+            **list_pane(listing, selected=account),
         },
     )
 
 
-def new_asset(request: HttpRequest) -> HttpResponse:
-    """Add an Asset account.
+def new_account(request: HttpRequest, listing: Listing) -> HttpResponse:
+    """Add an Asset account or Liability.
 
     Args:
         request: The incoming request.
+        listing: Which list.
 
     Returns:
         The form, or a redirect to the new Account once added.
     """
-    form = AssetAccountForm(
-        request.POST or None, instance=Account(type=Account.Type.ASSET)
-    )
+    form = AccountForm(request.POST or None, instance=Account(type=listing.type))
     if form.is_valid():
         with transaction.atomic():
             account = form.save()
             record(account, history.Action.CREATED)
         messages.success(request, f"Added {account.name}.")
-        return redirect("masters:asset", account.pk)
-    return render(request, "masters/asset_form.html", {"form": form, **assets_list()})
+        return redirect(listing.detail, account.pk)
+    return render(
+        request, "masters/account_form.html", {"form": form, **list_pane(listing)}
+    )
 
 
-def edit_asset(request: HttpRequest, pk: int) -> HttpResponse:
-    """Change an Asset account.
+def edit_account(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
+    """Change an Asset account or Liability, keeping it the same type.
 
     Args:
         request: The incoming request.
+        listing: Which list.
         pk: The Account's id.
 
     Returns:
         The form, or a redirect to the Account once changed.
     """
-    account = get_object_or_404(Account, pk=pk, type=Account.Type.ASSET)
+    account = get_object_or_404(Account, pk=pk, type=listing.type)
     # Taken before the form, which writes what's posted into the Account.
     before = snapshot(account)
-    form = AssetAccountForm(request.POST or None, instance=account)
+    form = AccountForm(request.POST or None, instance=account)
     if form.is_valid():
         with transaction.atomic():
             form.save()
             if changed := history.changes(before, snapshot(account)):
                 record(account, history.Action.EDITED, changed)
         messages.success(request, "Saved.")
-        return redirect("masters:asset", account.pk)
+        return redirect(listing.detail, account.pk)
     return render(
         request,
-        "masters/asset_form.html",
-        {"form": form, "account": account, **assets_list(selected=account)},
+        "masters/account_form.html",
+        {
+            "form": form,
+            "account": account,
+            **list_pane(listing, selected=account),
+        },
     )
 
 
 def snapshot(account: Account) -> dict[str, str]:
-    """An Asset account's fields, written out as its History shows them.
+    """An Account's fields, written out as its History shows them.
 
     Args:
         account: The Account.
@@ -234,23 +300,25 @@ def record(
     )
 
 
-def assets_list(selected: Account | None = None) -> dict:
-    """What the Assets list pane shows: Accounts grouped by Kind, with totals.
+def list_pane(listing: Listing, selected: Account | None = None) -> dict:
+    """What a list pane shows: its Accounts grouped by Kind, with totals.
 
     Args:
+        listing: Which list.
         selected: The Account open beside the list, if any.
 
     Returns:
         The template context for the list pane.
     """
-    accounts = Account.objects.filter(type=Account.Type.ASSET).order_by(Lower("name"))
+    of_type = Account.objects.filter(type=listing.type).order_by(Lower("name"))
     groups = []
-    for kind in Account.Kind:
-        of_kind = [a for a in accounts if a.kind == kind]
+    for kind in KINDS[listing.type]:
+        of_kind = [a for a in of_type if a.kind == kind]
         if of_kind:
             groups.append((kind, of_kind, sum(a.balance for a in of_kind)))
     return {
+        "listing": listing,
         "groups": groups,
-        "total": sum(a.balance for a in accounts),
+        "total": sum(a.balance for a in of_type),
         "selected": selected,
     }

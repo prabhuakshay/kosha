@@ -1,9 +1,9 @@
-{% extends "masters/asset_page.html" %}
+{% extends "masters/account_page.html" %}
 {% load money %}
 {% block title %}{{ account.name }} · Kosha{% endblock %}
 {% block main %}
     <h1 class="display page-title">{{ account.name }}</h1>
-    <p class="mt-3 flex items-center gap-2 text-[15px] text-ink-2"><i data-lucide="{{ account.icon }}" class="size-4"></i><span data-kind>{{ account.get_kind_display }}</span> · Asset account</p>
+    <p class="mt-3 flex items-center gap-2 text-[15px] text-ink-2"><i data-lucide="{{ account.icon }}" class="size-4"></i><span data-kind>{{ account.get_kind_display }}</span> · {{ account.get_type_display }}</p>
     {% include "signin/_messages.html" %}
     <section class="section">
         <p class="label">Balance</p>
@@ -15,7 +15,7 @@
         <div><dt>Notes</dt><dd class="whitespace-pre-line">{{ account.notes|default:"None" }}</dd></div>
     </dl>
     <div class="actions">
-        <a href="{% url 'masters:edit_asset' account.pk %}" class="btn btn-quiet"><i data-lucide="pencil"></i>Edit</a>
+        <a href="{% url listing.edit account.pk %}" class="btn btn-quiet"><i data-lucide="pencil"></i>Edit</a>
     </div>
     <section class="section">
         <h2 class="section-title">History</h2>

@@ -1,7 +1,5 @@
-import re
 from datetime import timedelta
 from decimal import Decimal
-from html import unescape
 
 import pytest
 from django.urls import reverse
@@ -9,20 +7,9 @@ from django.utils.timezone import localdate
 
 from apps.core.testing import tags
 from apps.masters.models import Account
-from apps.masters.testing import add, edit
+from apps.masters.testing import add, edit, errors, field_value
 
 ASSETS, NEW = reverse("masters:assets"), reverse("masters:new_asset")
-
-
-def errors(response):
-    found = re.findall(
-        r'<p class="mt-1.5 text-\[13px\] font-medium text-bad">([^<]+)', response.text
-    )
-    return [unescape(e) for e in found]
-
-
-def field_value(response, name):
-    return tags(response, "input", name=name)[0]["value"]
 
 
 @pytest.mark.django_db
