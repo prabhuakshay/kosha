@@ -566,6 +566,12 @@
     color: var(--accent);
   }
 
+  /* Native apps hide the tab bar while the keyboard is open; core/app.js
+     says when it is. */
+  .keyboard .tabs {
+    display: none;
+  }
+
   .tab[aria-disabled] {
     opacity: 0.55;
     cursor: default;

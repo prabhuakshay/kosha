@@ -31,6 +31,14 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register(document.currentScript.dataset.serviceWorker);
 }
 
+// iOS scrolls the page up over the keyboard rather than shrinking it, which
+// brings the tab bar up with it. The keyboard shrinks only what's visible, so
+// a much shorter visible area, not zoomed in, means it's open.
+visualViewport?.addEventListener("resize", () => {
+  const open = visualViewport.scale === 1 && visualViewport.height < innerHeight * 0.75;
+  document.documentElement.classList.toggle("keyboard", open);
+});
+
 // j and k step through a list pane's rows, as in a mail app.
 document.addEventListener("keydown", (event) => {
   const by = { j: 1, k: -1 }[event.key];
