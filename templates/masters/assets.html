@@ -5,9 +5,9 @@
 {% block main %}
     {% if groups %}
         {% comment %}Phones show only the list here; desktops have room to say so.{% endcomment %}
-        {% include "masters/_placeholder.html" with icon="wallet" heading="Assets" text="Choose an account from the list. Its details open here." %}
+        {% include "layouts/_placeholder.html" with icon="wallet" heading="Assets" text="Choose an account from the list. Its details open here." %}
     {% else %}
         {% url 'masters:new_asset' as add %}
-        {% include "masters/_placeholder.html" with icon="wallet" heading="No asset accounts yet" text="Money you have: bank, savings, cash and investment accounts, money you've lent, and things you own such as a house or gold." add=add add_label="New asset account" %}
+        {% include "layouts/_placeholder.html" with icon="wallet" heading="No asset accounts yet" text="Money you have: bank, savings, cash and investment accounts, money you've lent, and things you own such as a house or gold." add=add add_label="New asset account" %}
     {% endif %}
 {% endblock %}

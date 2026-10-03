@@ -3,7 +3,7 @@ import re
 import pytest
 from django.urls import reverse
 
-from apps.core.testing import tags
+from apps.core.testing import sub_links, tags
 from apps.masters.models import Account
 
 MASTERS = reverse("masters:masters")
@@ -21,20 +21,14 @@ def test_the_rail_and_tab_bar_lead_to_masters(signed_in):
 LISTS = ["assets", "liabilities", "income", "expenses", "categories", "tags"]
 
 
-def list_links(response, container):
-    """The hrefs of the list links inside the element of class `container`."""
-    html = response.text
-    start = html.index(f'class="{container}"')
-    inside = html[start : html.index("</div>", start)]
-    return re.findall(r'<a href="([^"]+)" class="sub-link"', inside)
-
-
 @pytest.mark.django_db
 def test_the_wide_rail_shows_the_lists_only_while_in_masters(signed_in):
     inside = signed_in.get(reverse("masters:assets"))
     outside = signed_in.get(reverse("home"))
 
-    assert list_links(inside, "rail-sub") == [reverse(f"masters:{n}") for n in LISTS]
+    assert sub_links(inside, 'class="rail-sub"') == [
+        reverse(f"masters:{n}") for n in LISTS
+    ]
     assert 'class="rail-sub"' not in outside.text
 
 
@@ -45,7 +39,9 @@ def test_the_icon_rail_opens_the_lists_in_a_flyout(signed_in, name):
 
     assert tags(response, "button", popovertarget="masters-flyout")
     assert "popover" in tags(response, "div", id="masters-flyout")[0]
-    assert list_links(response, "flyout") == [reverse(f"masters:{n}") for n in LISTS]
+    assert sub_links(response, 'id="masters-flyout"') == [
+        reverse(f"masters:{n}") for n in LISTS
+    ]
 
 
 @pytest.mark.django_db
