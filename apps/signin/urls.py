@@ -1,10 +1,10 @@
-"""Claiming the install, and signing in and out."""
+"""Claiming the install, signing in and out, and Security."""
 
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_not_required
 from django.urls import path
 
-from apps.signin import passkeys, views
+from apps.signin import passkeys, security, views
 from apps.signin.pause import refused_while_paused
 
 urlpatterns = [
@@ -43,6 +43,21 @@ urlpatterns = [
         passkeys.sign_in_complete,
         name="passkey_sign_in_complete",
     ),
+    path("confirm/", security.confirm, name="confirm"),
+    path("security/", security.security, name="security"),
+    path("security/password/", security.password, name="password"),
+    path(
+        "security/recovery-codes/",
+        security.make_recovery_codes,
+        name="make_recovery_codes",
+    ),
+    path(
+        "security/recovery-codes/new/",
+        security.new_recovery_codes,
+        name="new_recovery_codes",
+    ),
+    path("security/sessions/", security.signed_in_sessions, name="sessions"),
+    path("security/log/", security.log, name="security_log"),
     # Public so a page left open past its sign-in can still sign out cleanly.
     path(
         "sign-out/",

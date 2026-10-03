@@ -1,4 +1,4 @@
-"""The app shell: home, and what makes Kosha installable."""
+"""The app shell: home, settings, and what makes Kosha installable."""
 
 from django.contrib.auth.decorators import login_not_required
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -20,6 +20,18 @@ def home(request: HttpRequest) -> HttpResponse:
         The home page.
     """
     return render(request, "core/home.html")
+
+
+def settings(request: HttpRequest) -> HttpResponse:
+    """List the settings, each leading to its own page.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The settings page.
+    """
+    return render(request, "core/settings.html")
 
 
 # Browsers fetch the manifest without cookies, so it can't sit behind sign-in.

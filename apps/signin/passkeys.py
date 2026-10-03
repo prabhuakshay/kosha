@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING
 from django.contrib.auth.decorators import login_not_required
 from django_otp_webauthn import exceptions, views
 
-from apps.signin import security_log, ways
+from apps.signin import confirmation, security_log, ways
 from apps.signin.middleware import part_of_signing_in
 from apps.signin.pause import refused_while_paused
 
 if TYPE_CHECKING:
+    from django.http import JsonResponse
     from django_otp_webauthn.models import AbstractWebAuthnCredential
 
 
@@ -45,20 +46,42 @@ class BeginRegistration(FirstWayOnly, views.BeginCredentialRegistrationView):
 class CompleteRegistration(FirstWayOnly, views.CompleteCredentialRegistrationView):
     """Save the new Passkey, which also finishes signing in."""
 
+    def post(self, *args: object, **kwargs: object) -> JsonResponse:
+        """Save the Passkey as the library does.
+
+        A first Passkey finishes signing in, so it opens a Confirmation.
+
+        Args:
+            *args: Positional URL arguments.
+            **kwargs: Keyword URL arguments.
+
+        Returns:
+            The new Passkey's id.
+        """
+        signing_in = not self.request.user.is_verified()
+        response = super().post(*args, **kwargs)
+        if signing_in:
+            confirmation.start(self.request)
+        return response
+
 
 class CompleteSignIn(views.CompleteCredentialAuthenticationView):
-    """Sign in with a Passkey alone, or after the password, and log it."""
+    """Sign in with a Passkey alone or after the password, or Confirm it's you."""
 
     def complete_auth(self, device: AbstractWebAuthnCredential) -> None:
-        """Sign in as the library does, and log how.
+        """Sign in as the library does, opening a Confirmation, and log how.
 
         Args:
             device: The Passkey just used.
         """
-        signed_in = self.request.user.is_authenticated
-        how = "Password and passkey" if signed_in else "Passkey"
+        owner = self.request.user
+        # Already signed in, the Passkey only confirms it's them.
+        signing_in = not owner.is_verified()
+        how = "Password and passkey" if owner.is_authenticated else "Passkey"
         super().complete_auth(device)
-        security_log.record(self.request, security_log.Kind.SIGNED_IN, how)
+        confirmation.start(self.request)
+        if signing_in:
+            security_log.record(self.request, security_log.Kind.SIGNED_IN, how)
 
 
 register_begin = part_of_signing_in(BeginRegistration.as_view())

@@ -1,0 +1,9 @@
+<p class="mt-1 text-[14px] text-ink-2">{{ user.email }}</p>
+{% comment %}Desktops reach Settings from the sidebar instead.{% endcomment %}
+<ul class="mt-5 divide-y rounded-xl border lg:hidden">
+    {% include "layouts/_row.html" with to="settings" icon="settings" title="Settings" sub="Security and more" %}
+</ul>
+<form method="post" action="{% url 'sign_out' %}" class="mt-4">
+    {% csrf_token %}
+    <button class="btn btn-danger"><i data-lucide="log-out"></i>Sign out</button>
+</form>

@@ -30,7 +30,7 @@ One of ten single-use codes, shown once, that stand in for the Authenticator app
 _Avoid_: backup code
 
 **Confirmation**:
-A fresh Passkey or Authenticator app check, good for 10 minutes, that the Owner must pass before changing a Way to sign in, the password or the Recovery codes. Finishing a sign-in counts as one, even by Recovery code, so an Owner who lost their Authenticator app can set up another. Shown on screen as "Confirm it's you".
+A fresh Passkey or Authenticator app check, good for 10 minutes, that the Owner must pass before seeing Security or changing a Way to sign in, the password or the Recovery codes. Finishing a sign-in counts as one, even by Recovery code, so an Owner who lost their Authenticator app can set up another. Shown on screen as "Confirm it's you".
 _Avoid_: sudo, re-auth, step-up
 
 **Session**:

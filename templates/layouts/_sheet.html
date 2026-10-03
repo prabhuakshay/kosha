@@ -1,0 +1,12 @@
+{% comment %}
+    A bottom sheet on a phone, a centred dialog on a desktop, opened by a
+    button with `popovertarget="{{ id }}"`. `body` is the template inside it.
+{% endcomment %}
+<div id="{{ id }}" popover aria-labelledby="{{ id }}-title" class="inset-x-0 top-auto bottom-0 mx-auto w-full max-w-sm rounded-t-[20px] bg-surface px-5 pt-2 pb-[calc(env(safe-area-inset-bottom)+2rem)] text-ink shadow-[0_-12px_40px_-20px_rgb(0_0_0/.4)] backdrop:bg-scrim lg:inset-0 lg:m-auto lg:max-w-md lg:rounded-2xl lg:p-6 lg:shadow-[0_24px_60px_-24px_rgb(0_0_0/.5)]">
+    <div class="mx-auto h-1 w-9 rounded-full bg-line lg:hidden"></div>
+    <div class="mt-3 flex items-center gap-3 lg:mt-0">
+        <h2 id="{{ id }}-title" class="display text-[24px] leading-none">{{ title }}</h2>
+        <button type="button" popovertarget="{{ id }}" popovertargetaction="hide" class="ml-auto grid size-9 place-items-center rounded-full bg-well text-ink-2" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    {% include body %}
+</div>

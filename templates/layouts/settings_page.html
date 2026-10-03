@@ -1,0 +1,15 @@
+{% extends "layouts/signed_in.html" %}
+{% comment %}
+    A page inside Settings. Desktops show the way back up as breadcrumbs,
+    starting at Settings and going on with the page's `trail`; phones get the
+    `back` link, to Settings unless the page says otherwise.
+{% endcomment %}
+{% block back %}{% include "layouts/_back.html" with to="settings" label="Settings" %}{% endblock %}
+{% block crumbs %}
+    <nav aria-label="Breadcrumb" class="hidden lg:block">
+        <ol class="flex items-center gap-1.5 text-[13px] font-medium text-ink-2">
+            <li><a href="{% url 'settings' %}" class="hover:text-ink">Settings</a></li>
+            {% block trail %}{% endblock %}
+        </ol>
+    </nav>
+{% endblock %}
