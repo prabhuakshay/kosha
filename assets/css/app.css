@@ -1068,17 +1068,13 @@
 /* On a phone, going deeper slides the new screen in from the right, and
    going back slides it away; core/transitions.js says which way. */
 @media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
-  @view-transition {
-    navigation: auto;
-  }
-
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 0.38s;
+    animation-duration: 0.22s;
     animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
   }
 
-  html:active-view-transition-type(forward) {
+  html[data-direction="forward"] {
     &::view-transition-old(root) {
       animation-name: slide-to-left;
     }
@@ -1088,7 +1084,7 @@
     }
   }
 
-  html:active-view-transition-type(back) {
+  html[data-direction="back"] {
     &::view-transition-old(root) {
       z-index: 1;
       animation-name: slide-to-right;
