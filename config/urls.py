@@ -12,4 +12,5 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     path("", include("apps.signin.urls")),
     path("", include("apps.core.urls")),
+    path("masters/", include("apps.masters.urls")),
 ]

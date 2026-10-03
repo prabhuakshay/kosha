@@ -1,0 +1,4 @@
+{% comment %}A list in Masters, the current one on `to` and on any page named in `also`.{% endcomment %}
+{% with current=request.resolver_match.view_name %}
+    <a href="{% url to %}" class="sub-link" {% if current == to or current in also.split %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i>{{ label }}</a>
+{% endwith %}

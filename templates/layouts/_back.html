@@ -1,1 +1,2 @@
-<a href="{% url to %}" aria-label="Back to {{ label }}" class="topbar-up" data-up><i data-lucide="chevron-left"></i>{{ label }}</a>
+{% comment %}The way back to `to`, or to `href` for a page whose URL takes arguments.{% endcomment %}
+<a href="{% if href %}{{ href }}{% else %}{% url to %}{% endif %}" aria-label="Back to {{ label }}" class="topbar-up" data-up><i data-lucide="chevron-left"></i>{{ label }}</a>

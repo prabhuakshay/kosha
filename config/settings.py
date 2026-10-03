@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "django_otp_webauthn",
     "axes",
     "apps.core",
+    "apps.masters",
     "apps.signin",
     "apps.users",
 ]

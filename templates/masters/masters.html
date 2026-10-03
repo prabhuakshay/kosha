@@ -1,0 +1,22 @@
+{% extends "layouts/split.html" %}
+{% block title %}Masters · Kosha{% endblock %}
+{% block open %}{% endblock %}
+{% block list %}
+    <h2 class="list-head display list-title">Masters</h2>
+    <p class="group-label">Accounts</p>
+    <nav class="rows" aria-label="Accounts">
+        {% include "layouts/_row.html" with to="masters:assets" icon="wallet" title="Assets" sub=assets %}
+        {% include "layouts/_row.html" with to="masters:liabilities" icon="credit-card" title="Liabilities" sub=liabilities %}
+        {% include "layouts/_row.html" with to="masters:income" icon="arrow-down-left" title="Income" sub=income %}
+        {% include "layouts/_row.html" with to="masters:expenses" icon="arrow-up-right" title="Expenses" sub=expenses %}
+    </nav>
+    <p class="group-label">Classification</p>
+    <nav class="rows" aria-label="Classification">
+        {% include "layouts/_row.html" with to="masters:categories" icon="shapes" title="Categories" sub="None yet" %}
+        {% include "layouts/_row.html" with to="masters:tags" icon="tag" title="Tags" sub="None yet" %}
+    </nav>
+{% endblock %}
+{% block main %}
+    {% comment %}Phones show only the list here; desktops have room to say so.{% endcomment %}
+    {% include "masters/_placeholder.html" with icon="wallet" heading="Masters" text="Your accounts, categories and tags. Choose a list to open it here." %}
+{% endblock %}

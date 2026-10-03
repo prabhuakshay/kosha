@@ -1,0 +1,12 @@
+{% comment %}
+    Masters in the app rail. The wide rail links to it and, while in Masters,
+    shows its lists beneath; the icon-only rail opens them in a flyout.
+{% endcomment %}
+{% with here=request.resolver_match.namespace index=request.resolver_match.view_name %}
+    <a href="{% url 'masters:masters' %}" class="rail-link rail-wide" title="Masters" {% if index == "masters:masters" %}aria-current="page"{% elif here == "masters" %}aria-current="true"{% endif %}><i data-lucide="wallet"></i><span class="rail-label">Masters</span></a>
+    {% if here == "masters" %}
+        <div class="rail-sub">{% include "masters/_lists.html" %}</div>
+    {% endif %}
+    <button type="button" popovertarget="masters-flyout" class="rail-link rail-narrow" title="Masters" {% if here == "masters" %}aria-current="true"{% endif %}><i data-lucide="wallet"></i></button>
+    <div id="masters-flyout" popover class="flyout">{% include "masters/_lists.html" %}</div>
+{% endwith %}
