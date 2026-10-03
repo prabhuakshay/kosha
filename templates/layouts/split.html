@@ -1,0 +1,35 @@
+{% extends "layouts/signed_in.html" %}
+{% comment %}
+    A section's list beside the page open from it. A section fills `list`
+    with its list pane and `back` with the way back to it; its pages fill
+    `main`. Phones show only the page, under `back`; a page that empties
+    `open` shows phones only the list. A page deeper than the list fills
+    `crumbs` with the same way back.
+{% endcomment %}
+{% block panes %}
+    <div class="split {% block open %}split-open{% endblock %}">
+        <div class="split-list">
+            <header class="topbar">
+                <div class="flex h-13 items-center gap-2.5 px-5">
+                    {% include "_mark.html" %}
+                    <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
+                </div>
+            </header>
+            {% block list %}{% endblock %}
+        </div>
+        <div class="split-detail">
+            <header class="topbar">
+                <div class="flex h-13 items-center gap-2.5 px-5">
+                    {% block back %}{% endblock %}
+                    <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
+                </div>
+            </header>
+            <main class="pane">
+                <div class="pane-inner">
+                    {% block crumbs %}{% endblock %}
+                    {% block main %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+{% endblock %}
