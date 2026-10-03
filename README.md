@@ -95,15 +95,16 @@ curl -o .env https://raw.githubusercontent.com/prabhuakshay/kosha/main/.env.exam
 curl -O https://raw.githubusercontent.com/prabhuakshay/kosha/main/scripts/setup-r2.sh
 bash setup-r2.sh       # walks you through the R2 bucket and token, fills in S3_*
 # edit .env: SECRET_KEY, ALLOWED_HOSTS, DATABASE_URL, CSRF_TRUSTED_ORIGINS
-# (or WEBAUTHN_ORIGINS), SECURE_PROXY_SSL_HEADER=true, and KOSHA_VERSION to
-# pin a release
+# (or WEBAUTHN_ORIGINS), SECURE_PROXY_SSL_HEADER=true, USE_X_FORWARDED_FOR=true,
+# and KOSHA_VERSION to pin a release
 docker compose -f compose.prod.yaml up -d
 docker compose -f compose.prod.yaml logs django | grep "Setup code"
 ```
 
 - **Claim:** open Kosha and enter the Setup code from the log to become its Owner, its only sign-in. `docker compose -f compose.prod.yaml exec django python manage.py setup_code` prints it again. Then add a Passkey or set up an Authenticator app, and save your ten Recovery codes. Passkeys are bound to `WEBAUTHN_RP_ID` (by default the host of the first of `WEBAUTHN_ORIGINS`, or of the HTTPS `CSRF_TRUSTED_ORIGINS`), so settle it before Claiming. Once claimed, there is no Setup code. See [ADR 0002](docs/adr/0002-one-owner-per-install.md).
 - **Migrations** run once in a `migrate` container before the app starts; if they fail, the app does not start.
-- **The app** listens on `127.0.0.1:8000` only (`DOCKER_HOST_PORT`). Point your proxy at it and have the proxy set `X-Forwarded-Proto`.
+- **The app** listens on `127.0.0.1:8000` only (`DOCKER_HOST_PORT`). Point your proxy at it and have the proxy set `X-Forwarded-Proto` and add the client's address to `X-Forwarded-For`. With `USE_X_FORWARDED_FOR=true`, Kosha takes the client's address from that header, so 5 wrong passwords or codes Pause the address that sent them for an hour rather than the proxy, which would Pause everyone.
+- **Locked out:** if you lose every Way to sign in, or the password, `docker compose -f compose.prod.yaml exec django python manage.py break_glass --ways-to-sign-in` removes your Passkeys, Authenticator app and Recovery codes so the password alone signs you in to set up new ones; `--password` sets and prints a new password; pass both to reset both. Either way it signs out every Session, lifts every Pause and records "Reset on the server" in the Security log.
 - **Database:** a Postgres on the same host is reached as `host.docker.internal`.
 - **Uploaded files** are stored in R2 and served only through short-lived signed URLs; Kosha refuses to start without the `S3_*` settings. See [ADR 0001](docs/adr/0001-media-in-a-private-r2-bucket.md).
 - **Upgrading:** change `KOSHA_VERSION` in `.env` and run `docker compose -f compose.prod.yaml up -d`.

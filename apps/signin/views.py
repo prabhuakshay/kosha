@@ -1,5 +1,7 @@
 """Claiming the install, and signing in and out."""
 
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import views as auth_views
@@ -9,9 +11,10 @@ from django.shortcuts import redirect, render, resolve_url
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django_otp import login as otp_login
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import default_key
 
-from apps.signin import ways
+from apps.signin import pause, security_log, ways
 from apps.signin.claim import is_claimed
 from apps.signin.forms import (
     CodeForm,
@@ -20,6 +23,9 @@ from apps.signin.forms import (
     SetupCodeForm,
 )
 from apps.signin.middleware import part_of_signing_in
+
+if TYPE_CHECKING:
+    from django.contrib.auth.forms import AuthenticationForm
 
 # Passkeys add a backend, so signing in by password must name its own.
 PASSWORD_BACKEND = "django.contrib.auth.backends.ModelBackend"  # ruff: ignore[hardcoded-password-string]
@@ -77,6 +83,7 @@ def claim_owner(request: HttpRequest) -> HttpResponse:
     form = OwnerForm(request.POST or None)
     if form.is_valid():
         login(request, form.save(), backend=PASSWORD_BACKEND)
+        security_log.record(request, security_log.Kind.SIGNED_IN, "Password")
         return redirect("choose_way")
     return render(request, "signin/claim_owner.html", {"form": form})
 
@@ -140,6 +147,7 @@ def recovery_codes(request: HttpRequest) -> HttpResponse:
 
 
 @part_of_signing_in
+@pause.refused_while_paused
 def code_step(request: HttpRequest) -> HttpResponse:
     """After the password, a Passkey or a code from the Authenticator app.
 
@@ -159,7 +167,13 @@ def code_step(request: HttpRequest) -> HttpResponse:
     form = CodeForm(owner, request.POST or None)
     if form.is_valid():
         otp_login(request, form.device)
+        code = "recovery" if isinstance(form.device, StaticDevice) else "authenticator"
+        security_log.record(
+            request, security_log.Kind.SIGNED_IN, f"Password and {code} code"
+        )
         return redirect(_next(request))
+    if form.is_bound:
+        pause.wrong_code(request, owner)
     return render(
         request,
         "signin/code_step.html",
@@ -193,6 +207,32 @@ class SignInView(auth_views.LoginView):
         if not is_claimed():
             return redirect("claim")
         return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form: AuthenticationForm) -> HttpResponse:
+        """Sign in, logging it when the password is all there is to sign in with.
+
+        Args:
+            form: The right email and password.
+
+        Returns:
+            A redirect on, to the code step or setting up a Way to sign in.
+        """
+        response = super().form_valid(form)
+        if not ways.has_way_to_sign_in(form.get_user()):
+            security_log.record(self.request, security_log.Kind.SIGNED_IN, "Password")
+        return response
+
+    def form_invalid(self, form: AuthenticationForm) -> HttpResponse:
+        """Log the wrong email or password.
+
+        Args:
+            form: The wrong email or password.
+
+        Returns:
+            The form with its error.
+        """
+        security_log.failed(self.request, security_log.Kind.WRONG_PASSWORD)
+        return super().form_invalid(form)
 
 
 @login_not_required
