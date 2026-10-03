@@ -121,6 +121,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         """
         return super().normalize_username(username).strip().lower()
 
+    @property
+    def initials(self) -> str:
+        """The first letters of the first two words of the name, for the avatar.
+
+        Returns:
+            Up to two capital letters.
+        """
+        return "".join(word[0] for word in self.name.split()[:2]).upper()
+
     def get_full_name(self) -> str:
         """Return the user's name.
 

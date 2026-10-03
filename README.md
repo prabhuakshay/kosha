@@ -45,6 +45,7 @@ Your financial data is personal. Kosha keeps it on infrastructure you control, w
 | Deployment      | Docker image on [GHCR](https://github.com/prabhuakshay/kosha/pkgs/container/kosha) (amd64, arm64) |
 | Packaging       | [uv](https://github.com/astral-sh/uv)                                 |
 | Lint and format | [Ruff](https://github.com/astral-sh/ruff), every rule enabled         |
+| Tests           | [pytest](https://pytest.org/) + [pytest-django](https://pytest-django.readthedocs.io/) |
 | Git hooks       | [prek](https://github.com/j178/prek)                                  |
 
 ## Getting started
@@ -114,6 +115,7 @@ Static files are compiled and collected into the image and served by [WhiteNoise
 ```bash
 uv run ruff check .        # lint
 uv run ruff format .       # format
+uv run pytest              # test, against the database in DATABASE_URL
 uv run prek run -a         # run every hook against the whole repo
 docker build --target prod -t kosha:smoke . && scripts/smoke-test.sh kosha:smoke
 ```
