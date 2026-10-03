@@ -112,6 +112,18 @@
     --selected: #1e5a45;
     --on-selected: #f3f7f4;
     --bar: rgb(250 250 248 / 0.86);
+    --category-forest: #2f6b52;
+    --category-sage: #5f7f52;
+    --category-teal: #2b7473;
+    --category-sky: #3a6a8c;
+    --category-indigo: #525c99;
+    --category-plum: #7a5689;
+    --category-rose: #9d5068;
+    --category-rust: #a3552f;
+    --category-ochre: #906618;
+    --category-olive: #6c6c26;
+    --category-earth: #7f6148;
+    --category-stone: #656d69;
     color-scheme: light;
     -webkit-tap-highlight-color: transparent;
   }
@@ -140,6 +152,18 @@
       --selected: #2b4f41;
       --on-selected: #e9f3ee;
       --bar: rgb(27 29 29 / 0.86);
+      --category-forest: #7fbf9f;
+      --category-sage: #a3c095;
+      --category-teal: #79c0bd;
+      --category-sky: #8cb5d4;
+      --category-indigo: #a4acdd;
+      --category-plum: #c3a2d1;
+      --category-rose: #e29bb0;
+      --category-rust: #e5a07d;
+      --category-ochre: #d9b25e;
+      --category-olive: #bfbf75;
+      --category-earth: #c8a888;
+      --category-stone: #a8b0ac;
       color-scheme: dark;
     }
   }
@@ -167,6 +191,18 @@
     --selected: #2b4f41;
     --on-selected: #e9f3ee;
     --bar: rgb(27 29 29 / 0.86);
+    --category-forest: #7fbf9f;
+    --category-sage: #a3c095;
+    --category-teal: #79c0bd;
+    --category-sky: #8cb5d4;
+    --category-indigo: #a4acdd;
+    --category-plum: #c3a2d1;
+    --category-rose: #e29bb0;
+    --category-rust: #e5a07d;
+    --category-ochre: #d9b25e;
+    --category-olive: #bfbf75;
+    --category-earth: #c8a888;
+    --category-stone: #a8b0ac;
     color-scheme: dark;
   }
 
@@ -918,6 +954,119 @@
     background: color-mix(in srgb, var(--on-selected) 16%, transparent);
     color: var(--on-selected);
     box-shadow: none;
+  }
+
+  /* A Category's palette color, by its key. */
+  .color-forest {
+    --category: var(--category-forest);
+  }
+
+  .color-sage {
+    --category: var(--category-sage);
+  }
+
+  .color-teal {
+    --category: var(--category-teal);
+  }
+
+  .color-sky {
+    --category: var(--category-sky);
+  }
+
+  .color-indigo {
+    --category: var(--category-indigo);
+  }
+
+  .color-plum {
+    --category: var(--category-plum);
+  }
+
+  .color-rose {
+    --category: var(--category-rose);
+  }
+
+  .color-rust {
+    --category: var(--category-rust);
+  }
+
+  .color-ochre {
+    --category: var(--category-ochre);
+  }
+
+  .color-olive {
+    --category: var(--category-olive);
+  }
+
+  .color-earth {
+    --category: var(--category-earth);
+  }
+
+  .color-stone {
+    --category: var(--category-stone);
+  }
+
+  .category-tile {
+    background: color-mix(in srgb, var(--category) 14%, var(--surface));
+    color: var(--category);
+    box-shadow: none;
+  }
+
+  .category-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 999px;
+    background: var(--category);
+  }
+
+  .row[aria-current] .category-dot {
+    box-shadow: 0 0 0 2px var(--on-selected);
+  }
+
+  /* A choice of colors or icons, each a radio button drawn as a tile. */
+  .picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .pick {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    background: var(--surface);
+    color: var(--ink-2);
+    box-shadow: 0 0 0 1px var(--line);
+    cursor: pointer;
+  }
+
+  .pick input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .pick:hover {
+    color: var(--ink);
+  }
+
+  .pick:has(:checked) {
+    color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  .pick:has(:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .pick .category-dot {
+    width: 1.375rem;
+    height: 1.375rem;
   }
 
   /* A phone shows the list or the detail, never both. */

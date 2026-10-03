@@ -1,0 +1,38 @@
+{% extends "masters/category_page.html" %}
+{% block title %}{{ category.name }} · Kosha{% endblock %}
+{% block main %}
+    <div class="mb-4">{% include "masters/_category_tile.html" %}</div>
+    <h1 class="display page-title">{{ category.name }}</h1>
+    <p class="mt-3 text-[15px] text-ink-2">Category{% if category.closed %} · <span class="font-semibold" data-closed-badge>Closed</span>{% endif %}</p>
+    {% include "signin/_messages.html" %}
+    <dl class="facts">
+        <div><dt>Color</dt><dd data-color-name>{{ category.get_color_display }}</dd></div>
+        <div><dt>Icon</dt><dd data-icon-name>{{ category.get_icon_display|default:"None" }}</dd></div>
+    </dl>
+    <div class="actions">
+        <a href="{% url 'masters:edit_category' category.pk %}" class="btn btn-quiet"><i data-lucide="pencil"></i>Edit</a>
+        {% if category.closed %}
+            <form method="post" action="{% url 'masters:reopen_category' category.pk %}">
+                {% csrf_token %}
+                <button class="btn btn-quiet"><i data-lucide="archive-restore"></i>Reopen</button>
+            </form>
+        {% else %}
+            <button type="button" popovertarget="close-category" class="btn btn-quiet"><i data-lucide="archive"></i>Close</button>
+            {% url "masters:close_category" category.pk as close %}
+            {% include "layouts/_sheet.html" with id="close-category" title="Close "|add:category.name|add:"?" body="layouts/_confirm.html" text="It leaves your everyday lists but keeps its history. You can reopen it any time." action=close icon="archive" button="Close category" %}
+        {% endif %}
+        {% if not category.in_use %}
+            <button type="button" popovertarget="delete-category" class="btn btn-danger"><i data-lucide="trash-2"></i>Delete</button>
+            {% url "masters:delete_category" category.pk as delete %}
+            {% include "layouts/_sheet.html" with id="delete-category" title="Delete "|add:category.name|add:"?" body="layouts/_confirm.html" text="It's gone for good, though History keeps that it existed. To keep it out of the way instead, close it." action=delete icon="trash-2" button="Delete category" %}
+        {% endif %}
+    </div>
+    <section class="section">
+        <h2 class="section-title">History</h2>
+        <ul class="items">
+            {% for entry in history %}
+                {% include "core/_history_entry.html" %}
+            {% endfor %}
+        </ul>
+    </section>
+{% endblock %}

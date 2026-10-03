@@ -1,5 +1,6 @@
-"""Accounts: where money is, and who it goes to and comes from."""
+"""Accounts and Categories: where money is, who it moves between, and why."""
 
+from collections import Counter
 from decimal import Decimal
 
 from django.db import models
@@ -109,3 +110,103 @@ ICONS = {
     Account.Kind.MORTGAGE: "calendar-clock",
     Account.Kind.DEBT: "handshake",
 }
+
+
+class Category(models.Model):
+    """What money was spent or received for, in or out."""
+
+    # Their light and dark values are theme tokens in the stylesheet.
+    class Color(models.TextChoices):
+        FOREST = "forest", "Forest"
+        SAGE = "sage", "Sage"
+        TEAL = "teal", "Teal"
+        SKY = "sky", "Sky"
+        INDIGO = "indigo", "Indigo"
+        PLUM = "plum", "Plum"
+        ROSE = "rose", "Rose"
+        RUST = "rust", "Rust"
+        OCHRE = "ochre", "Ochre"
+        OLIVE = "olive", "Olive"
+        EARTH = "earth", "Earth"
+        STONE = "stone", "Stone"
+
+    # Lucide's names for them.
+    class Icon(models.TextChoices):
+        SHOPPING_CART = "shopping-cart", "Shopping cart"
+        SHOPPING_BAG = "shopping-bag", "Shopping bag"
+        UTENSILS = "utensils", "Cutlery"
+        COFFEE = "coffee", "Coffee"
+        HOUSE = "house", "House"
+        SOFA = "sofa", "Sofa"
+        WRENCH = "wrench", "Wrench"
+        ZAP = "zap", "Electricity"
+        DROPLET = "droplet", "Water"
+        FLAME = "flame", "Flame"
+        WIFI = "wifi", "Wi-Fi"
+        SMARTPHONE = "smartphone", "Phone"
+        TV = "tv", "TV"
+        CAR = "car", "Car"
+        FUEL = "fuel", "Fuel"
+        BUS = "bus", "Bus"
+        TRAIN = "train-front", "Train"
+        BIKE = "bike", "Bicycle"
+        PLANE = "plane", "Plane"
+        PALM = "tree-palm", "Holiday"
+        HEART_PULSE = "heart-pulse", "Health"
+        PILL = "pill", "Medicine"
+        DUMBBELL = "dumbbell", "Fitness"
+        SCISSORS = "scissors", "Grooming"
+        SHIRT = "shirt", "Clothes"
+        GRADUATION_CAP = "graduation-cap", "Education"
+        BOOK = "book-open", "Books"
+        BABY = "baby", "Children"
+        PAW_PRINT = "paw-print", "Pets"
+        GIFT = "gift", "Gift"
+        HAND_HEART = "hand-heart", "Charity"
+        FILM = "film", "Film"
+        MUSIC = "music", "Music"
+        GAMEPAD = "gamepad-2", "Games"
+        PARTY = "party-popper", "Celebration"
+        SHIELD = "shield", "Insurance"
+        RECEIPT = "receipt", "Bills"
+        LANDMARK = "landmark", "Tax"
+        BRIEFCASE = "briefcase", "Work"
+        LAPTOP = "laptop", "Laptop"
+        BANKNOTE = "banknote", "Cash"
+        COINS = "coins", "Coins"
+        PERCENT = "percent", "Interest"
+        TRENDING_UP = "trending-up", "Returns"
+        PACKAGE = "package", "Parcel"
+
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=16, choices=Color)
+    icon = models.CharField(max_length=32, choices=Icon, blank=True)
+    closed = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "categories"
+        constraints = [
+            models.UniqueConstraint(Lower("name"), name="category_name_unique")
+        ]
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def in_use(self) -> bool:
+        """Whether anything refers to the Category, so it can't be deleted.
+
+        Returns:
+            False, until transactions refer to Categories.
+        """
+        return False
+
+    @classmethod
+    def least_used_color(cls) -> Category.Color:
+        """The palette color fewest Categories have, Closed ones included.
+
+        Returns:
+            That color, the earliest in the palette if several tie.
+        """
+        used = Counter(cls.objects.values_list("color", flat=True))
+        return min(cls.Color, key=lambda color: used[color])

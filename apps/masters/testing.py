@@ -1,4 +1,4 @@
-"""Helpers for tests that add and edit Accounts, as the Owner would."""
+"""Helpers for tests that add and edit Accounts and Categories, as the Owner would."""
 
 import re
 from html import unescape
@@ -9,7 +9,7 @@ from django.utils.timezone import localdate
 
 from apps.core.testing import tags
 from apps.masters.listings import LISTINGS
-from apps.masters.models import KINDS, Account
+from apps.masters.models import KINDS, Account, Category
 
 if TYPE_CHECKING:
     from django.http import HttpResponse
@@ -187,7 +187,20 @@ def listed(client: Client, type_: Account.Type) -> tuple[list[str], list[str]]:
     Returns:
         The open Accounts' names, then those in the Closed section.
     """
-    text = client.get(reverse(LISTINGS[type_].list)).text
+    return listed_at(client, reverse(LISTINGS[type_].list))
+
+
+def listed_at(client: Client, address: str) -> tuple[list[str], list[str]]:
+    """The names in a list in Masters.
+
+    Args:
+        client: A signed-in client.
+        address: The list's address.
+
+    Returns:
+        The open ones' names, then those in the Closed section.
+    """
+    text = client.get(address).text
     open_part, _, closed_part = text.partition("data-closed")
 
     def names(part: str) -> list[str]:
@@ -195,6 +208,40 @@ def listed(client: Client, type_: Account.Type) -> tuple[list[str], list[str]]:
         return [unescape(n) for n in found]
 
     return names(open_part), names(closed_part)
+
+
+def category(
+    name: str = "Groceries",
+    color: str = "forest",
+    icon: str = "",
+    *,
+    closed: bool = False,
+) -> Category:
+    """Make a Category straight in the database.
+
+    Args:
+        name: Its name.
+        color: Its palette color's key.
+        icon: Its icon's key, if any.
+        closed: Whether it's Closed.
+
+    Returns:
+        The Category.
+    """
+    return Category.objects.create(name=name, color=color, icon=icon, closed=closed)
+
+
+def category_url(action: str, category: Category) -> str:
+    """The address of a Category's detail, or of an action on it.
+
+    Args:
+        action: A route prefix such as ``close_``, or nothing for the detail.
+        category: The Category.
+
+    Returns:
+        The address.
+    """
+    return reverse(f"masters:{action}category", args=[category.pk])
 
 
 def notices(response: HttpResponse) -> list[str]:

@@ -7,7 +7,7 @@ from django import forms
 from django.utils import timezone
 
 from apps.core.money import base_currency, decimal_places
-from apps.masters.models import KINDS, Account
+from apps.masters.models import KINDS, Account, Category
 
 if TYPE_CHECKING:
     from datetime import date
@@ -114,6 +114,56 @@ class BalanceAccountForm(AccountForm):
             msg = "The opening date can't be in the future."
             raise forms.ValidationError(msg)
         return opened_on
+
+
+class CategoryForm(forms.ModelForm):
+    """A Category's name, palette color and icon from the curated set.
+
+    A new Category is offered the least-used color, and given it if none is
+    posted.
+    """
+
+    class Meta:
+        model = Category
+        fields = ["name", "color", "icon"]
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        self.fields["color"].required = False
+        if not self.instance.pk:
+            self.initial["color"] = Category.least_used_color()
+
+    def clean_name(self) -> str:
+        """Refuse a name another Category has, ignoring case.
+
+        Returns:
+            The name.
+
+        Raises:
+            ValidationError: Another Category has it.
+        """
+        name = self.cleaned_data["name"]
+        clash = (
+            Category.objects.filter(name__iexact=name)
+            .exclude(pk=self.instance.pk)
+            .first()
+        )
+        if clash:
+            msg = f"There's already a Category called “{clash.name}”."
+            raise forms.ValidationError(msg)
+        return name
+
+    def clean_color(self) -> str:
+        """Keep the color, or give the least-used one if none was chosen.
+
+        Returns:
+            The color's key.
+        """
+        return (
+            self.cleaned_data["color"]
+            or self.instance.color
+            or Category.least_used_color()
+        )
 
 
 def in_places(amount: Decimal) -> Decimal:
