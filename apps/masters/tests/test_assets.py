@@ -9,20 +9,9 @@ from django.utils.timezone import localdate
 
 from apps.core.testing import tags
 from apps.masters.models import Account
+from apps.masters.testing import add, edit
 
 ASSETS, NEW = reverse("masters:assets"), reverse("masters:new_asset")
-
-
-def add(client, **fields):
-    data = {
-        "name": "HDFC Savings",
-        "kind": "savings",
-        "opening_balance": "0",
-        "opened_on": localdate().isoformat(),
-        "notes": "",
-        **fields,
-    }
-    return client.post(NEW, data)
 
 
 def errors(response):
@@ -154,29 +143,6 @@ def test_an_asset_account_may_share_a_name_with_another_type(signed_in):
     add(signed_in, name="Amazon", kind="lent")
 
     assert Account.objects.filter(name="Amazon").count() == 2
-
-
-def edit(client, account, **fields):
-    data = {
-        "name": account.name,
-        "kind": account.kind,
-        "opening_balance": str(account.opening_balance),
-        "opened_on": account.opened_on.isoformat(),
-        "notes": account.notes,
-        **fields,
-    }
-    return client.post(reverse("masters:edit_asset", args=[account.pk]), data)
-
-
-@pytest.fixture
-def hdfc():
-    return Account.objects.create(
-        type=Account.Type.ASSET,
-        kind="bank",
-        name="HDFC",
-        opening_balance="320000",
-        opened_on=localdate(),
-    )
 
 
 @pytest.mark.django_db

@@ -3,9 +3,12 @@
 from typing import TYPE_CHECKING
 
 from django.contrib import messages
+from django.db import transaction
 from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.formats import date_format
 
+from apps.core import history
 from apps.core.money import write
 from apps.masters.forms import AssetAccountForm
 from apps.masters.models import Account
@@ -135,7 +138,11 @@ def asset(request: HttpRequest, pk: int) -> HttpResponse:
     return render(
         request,
         "masters/asset.html",
-        {"account": account, **assets_list(selected=account)},
+        {
+            "account": account,
+            "history": history.of(account),
+            **assets_list(selected=account),
+        },
     )
 
 
@@ -152,7 +159,9 @@ def new_asset(request: HttpRequest) -> HttpResponse:
         request.POST or None, instance=Account(type=Account.Type.ASSET)
     )
     if form.is_valid():
-        account = form.save()
+        with transaction.atomic():
+            account = form.save()
+            record(account, history.Action.CREATED)
         messages.success(request, f"Added {account.name}.")
         return redirect("masters:asset", account.pk)
     return render(request, "masters/asset_form.html", {"form": form, **assets_list()})
@@ -169,15 +178,59 @@ def edit_asset(request: HttpRequest, pk: int) -> HttpResponse:
         The form, or a redirect to the Account once changed.
     """
     account = get_object_or_404(Account, pk=pk, type=Account.Type.ASSET)
+    # Taken before the form, which writes what's posted into the Account.
+    before = snapshot(account)
     form = AssetAccountForm(request.POST or None, instance=account)
     if form.is_valid():
-        form.save()
+        with transaction.atomic():
+            form.save()
+            if changed := history.changes(before, snapshot(account)):
+                record(account, history.Action.EDITED, changed)
         messages.success(request, "Saved.")
         return redirect("masters:asset", account.pk)
     return render(
         request,
         "masters/asset_form.html",
         {"form": form, "account": account, **assets_list(selected=account)},
+    )
+
+
+def snapshot(account: Account) -> dict[str, str]:
+    """An Asset account's fields, written out as its History shows them.
+
+    Args:
+        account: The Account.
+
+    Returns:
+        Each field's name and value.
+    """
+    return {
+        "Name": account.name,
+        "Kind": account.get_kind_display(),
+        "Opening balance": write(account.opening_balance),
+        "Opened on": date_format(account.opened_on, "j M Y")
+        if account.opened_on
+        else "",
+        "Notes": account.notes,
+    }
+
+
+def record(
+    account: Account, action: history.Action, changes: list[list[str]] | None = None
+) -> None:
+    """Add an entry about an Account to History.
+
+    Args:
+        account: The Account, as it is after the change.
+        action: What happened to it.
+        changes: Each changed field as ``[name, old, new]``.
+    """
+    history.record(
+        account,
+        action,
+        type_=account.get_type_display(),
+        name=account.name,
+        changes=changes,
     )
 
 
