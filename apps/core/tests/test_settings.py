@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 
 from apps.core.testing import tags
+from apps.signin.testing import add_passkey
 
 
 def links(response, name):
@@ -99,3 +100,50 @@ def test_new_recovery_codes_go_back_to_signing_in(signed_in):
         href=SECURITY,
         **{"aria-label": "Back to Signing in"},
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("name", "here"),
+    [
+        ("password", "Password"),
+        ("new_recovery_codes", "New recovery codes"),
+        ("new_authenticator", "Authenticator app"),
+    ],
+)
+def test_pages_under_signing_in_show_the_way_back_up(signed_in, name, here):
+    if name == "new_recovery_codes":
+        response = signed_in.post(reverse("make_recovery_codes"), follow=True)
+    elif name == "new_authenticator":
+        response = signed_in.post(reverse("start_authenticator"), follow=True)
+    else:
+        response = signed_in.get(reverse(name))
+
+    assert tags(response, "nav", **{"aria-label": "Breadcrumb"})
+    assert links(response, "settings")
+    assert links(response, "security")
+    assert f'<li aria-current="page">{here}</li>' in response.text
+
+
+def asks_first(response, sheet, action):
+    """The form posting to `action` is only in a sheet a button opens."""
+    return (
+        tags(response, "button", type="button", popovertarget=sheet)
+        and "popover" in tags(response, "div", id=sheet)[0]
+        and len(tags(response, "form", action=action)) == 1
+    )
+
+
+@pytest.mark.django_db
+def test_destructive_changes_to_signing_in_ask_first(signed_in, owner):
+    passkey = add_passkey(owner)
+
+    response = signed_in.get(SECURITY)
+
+    assert asks_first(
+        response,
+        f"remove-passkey-{passkey.pk}",
+        reverse("remove_passkey", args=[passkey.pk]),
+    )
+    assert asks_first(response, "remove-authenticator", reverse("remove_authenticator"))
+    assert asks_first(response, "make-recovery-codes", reverse("make_recovery_codes"))

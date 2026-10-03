@@ -1,5 +1,11 @@
 lucide.createIcons();
 
+// Pages are no-store, but a browser may still restore one from its
+// back/forward cache, showing a sign-in step that's done or a stale page.
+addEventListener("pageshow", (event) => {
+  if (event.persisted) location.reload();
+});
+
 for (const button of document.querySelectorAll("[data-copy]")) {
   button.addEventListener("click", () => {
     navigator.clipboard.writeText(document.getElementById(button.dataset.copy).innerText);

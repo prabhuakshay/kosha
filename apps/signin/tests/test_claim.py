@@ -137,17 +137,18 @@ def test_owner_signs_in_later_whatever_the_email_case(client):
 
 
 @pytest.mark.django_db
-def test_every_claim_route_is_gone_once_claimed(django_user_model):
+def test_every_claim_route_goes_home_once_claimed(django_user_model):
     code = printed_code()
     midway = Client()
     enter_setup_code(midway, code)
     claim(Client())
 
+    home = reverse("home")
     for client in (Client(), midway):
-        assert client.get(reverse("claim")).status_code == 404
-        assert client.post(reverse("claim"), {"code": code}).status_code == 404
-        assert client.get(reverse("claim_owner")).status_code == 404
-        assert client.post(reverse("claim_owner"), DETAILS).status_code == 404
+        assert client.get(reverse("claim"))["Location"] == home
+        assert client.post(reverse("claim"), {"code": code})["Location"] == home
+        assert client.get(reverse("claim_owner"))["Location"] == home
+        assert client.post(reverse("claim_owner"), DETAILS)["Location"] == home
     assert django_user_model.objects.count() == 1
 
 

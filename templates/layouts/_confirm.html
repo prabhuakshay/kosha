@@ -1,0 +1,10 @@
+{% comment %}
+    A `_sheet.html` body that asks before a destructive POST to `action`.
+    Cancel takes the focus, so a stray Enter doesn't do it.
+{% endcomment %}
+<p class="note text-[15px]">{{ text }}</p>
+<form method="post" action="{{ action }}" class="actions md:flex-row-reverse">
+    {% csrf_token %}
+    <button class="btn btn-danger"><i data-lucide="{{ icon }}"></i>{{ button }}</button>
+    <button type="button" popovertarget="{{ id }}" popovertargetaction="hide" class="btn btn-quiet" autofocus>Cancel</button>
+</form>
