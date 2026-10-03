@@ -59,12 +59,12 @@ class Account(models.Model):
 
     @property
     def icon(self) -> str:
-        """The Lucide icon for the Account's Kind.
+        """The Lucide icon for the Account's Kind, or its type if it has none.
 
         Returns:
             The icon's name.
         """
-        return ICONS[self.kind]
+        return ICONS[self.kind or self.type]
 
 
 # In the order each type's list groups them.
@@ -86,6 +86,8 @@ KINDS = {
 }
 
 ICONS = {
+    Account.Type.EXPENSE: "arrow-up-right",
+    Account.Type.INCOME: "arrow-down-left",
     Account.Kind.BANK: "landmark",
     Account.Kind.DEPOSIT: "piggy-bank",
     Account.Kind.CASH: "banknote",

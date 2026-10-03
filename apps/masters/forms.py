@@ -16,10 +16,41 @@ if TYPE_CHECKING:
 CLASH_NOUN = {
     Account.Type.ASSET: "an Asset account",
     Account.Type.LIABILITY: "a Liability",
+    Account.Type.EXPENSE: "an Expense account",
+    Account.Type.INCOME: "an Income account",
 }
 
 
 class AccountForm(forms.ModelForm):
+    """An Account's name and notes, all an Expense or Income account has."""
+
+    class Meta:
+        model = Account
+        fields = ["name", "notes"]
+
+    def clean_name(self) -> str:
+        """Refuse a name another Account of the same type has, ignoring case.
+
+        Returns:
+            The name.
+
+        Raises:
+            ValidationError: Another Account of the same type has it.
+        """
+        name = self.cleaned_data["name"]
+        clash = (
+            Account.objects.filter(type=self.instance.type, name__iexact=name)
+            .exclude(pk=self.instance.pk)
+            .first()
+        )
+        if clash:
+            noun = CLASH_NOUN[self.instance.type]
+            msg = f"There's already {noun} called “{clash.name}”."
+            raise forms.ValidationError(msg)
+        return name
+
+
+class BalanceAccountForm(AccountForm):
     """An Asset account's or Liability's name, Kind, Opening balance and more.
 
     Only Kinds of the Account's own type are offered or accepted.
@@ -43,27 +74,6 @@ class AccountForm(forms.ModelForm):
             self.initial["opening_balance"] = in_places(self.instance.opening_balance)
         else:
             self.initial["opened_on"] = timezone.localdate()
-
-    def clean_name(self) -> str:
-        """Refuse a name another Account of the same type has, ignoring case.
-
-        Returns:
-            The name.
-
-        Raises:
-            ValidationError: Another Account of the same type has it.
-        """
-        name = self.cleaned_data["name"]
-        clash = (
-            Account.objects.filter(type=self.instance.type, name__iexact=name)
-            .exclude(pk=self.instance.pk)
-            .first()
-        )
-        if clash:
-            noun = CLASH_NOUN[self.instance.type]
-            msg = f"There's already {noun} called “{clash.name}”."
-            raise forms.ValidationError(msg)
-        return name
 
     def clean_opening_balance(self) -> Decimal:
         """Hold the Opening balance to the Base currency's decimal places.

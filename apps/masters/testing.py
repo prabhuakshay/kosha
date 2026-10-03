@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.utils.timezone import localdate
 
 from apps.core.testing import tags
-from apps.masters.models import Account
+from apps.masters.models import KINDS, Account
+from apps.masters.views import LISTINGS
 
 if TYPE_CHECKING:
     from django.http import HttpResponse
@@ -17,6 +18,8 @@ if TYPE_CHECKING:
 FILLED_IN = {
     Account.Type.ASSET: {"name": "HDFC Savings", "kind": "bank"},
     Account.Type.LIABILITY: {"name": "HDFC Regalia", "kind": "credit_card"},
+    Account.Type.EXPENSE: {"name": "Amazon"},
+    Account.Type.INCOME: {"name": "Acme Corp"},
 }
 
 
@@ -27,20 +30,17 @@ def add(
 
     Args:
         client: A signed-in client.
-        type_: An Asset account or a Liability.
+        type_: The Account's type.
         **fields: Values to submit in place of the defaults.
 
     Returns:
         The response.
     """
-    data = {
-        **FILLED_IN[type_],
-        "opening_balance": "0",
-        "opened_on": localdate().isoformat(),
-        "notes": "",
-        **fields,
-    }
-    return client.post(reverse(f"masters:new_{type_}"), data)
+    data = {**FILLED_IN[type_], "notes": ""}
+    if type_ in KINDS:
+        data |= {"opening_balance": "0", "opened_on": localdate().isoformat()}
+    data |= fields
+    return client.post(reverse(LISTINGS[type_].new), data)
 
 
 def edit(client: Client, account: Account, **fields: str) -> HttpResponse:
@@ -54,15 +54,15 @@ def edit(client: Client, account: Account, **fields: str) -> HttpResponse:
     Returns:
         The response.
     """
-    data = {
-        "name": account.name,
-        "kind": account.kind,
-        "opening_balance": str(account.opening_balance),
-        "opened_on": account.opened_on.isoformat(),
-        "notes": account.notes,
-        **fields,
-    }
-    return client.post(reverse(f"masters:edit_{account.type}", args=[account.pk]), data)
+    data = {"name": account.name, "notes": account.notes}
+    if account.type in KINDS:
+        data |= {
+            "kind": account.kind,
+            "opening_balance": str(account.opening_balance),
+            "opened_on": account.opened_on.isoformat(),
+        }
+    data |= fields
+    return client.post(reverse(LISTINGS[account.type].edit, args=[account.pk]), data)
 
 
 def errors(response: HttpResponse) -> list[str]:
@@ -122,3 +122,17 @@ def rows(response: HttpResponse) -> list[tuple[str, str]]:
         r"data-balance>([^<]+)<",
         response.text,
     )
+
+
+def history(response: HttpResponse) -> tuple[list[str], list[str]]:
+    """What an Account's History says, as its detail pane shows it.
+
+    Args:
+        response: The Account's detail.
+
+    Returns:
+        Each entry's action, and each changed field written out.
+    """
+    actions = re.findall(r"data-history-action>([^<]+)<", response.text)
+    changes = re.findall(r"data-history-change>([^<]+)<", response.text)
+    return actions, [unescape(c) for c in changes]
