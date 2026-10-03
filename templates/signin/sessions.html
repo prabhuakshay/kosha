@@ -21,9 +21,10 @@
         {% endfor %}
     </ul>
     {% if sessions|length > 1 %}
-        <form method="post" action="{% url 'sign_out_others' %}" class="actions">
-            {% csrf_token %}
-            <button class="btn btn-danger"><i data-lucide="log-out"></i>Sign out everywhere else</button>
-        </form>
+        <div class="actions">
+            <button type="button" popovertarget="sign-out-others" class="btn btn-danger"><i data-lucide="log-out"></i>Sign out everywhere else</button>
+        </div>
+        {% url 'sign_out_others' as sign_out %}
+        {% include "layouts/_sheet.html" with id="sign-out-others" title="Sign out everywhere else?" body="layouts/_confirm.html" text="Every other device will need to sign in again. This one stays signed in." action=sign_out icon="log-out" button="Sign out others" %}
     {% endif %}
 {% endblock %}

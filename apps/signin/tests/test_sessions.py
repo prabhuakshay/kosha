@@ -105,3 +105,17 @@ def test_signing_out_everywhere_else_is_offered_only_with_others(signed_in):
     response = signed_in.get(SESSIONS)
 
     assert not tags(response, "form", action=SIGN_OUT_OTHERS)
+
+
+@pytest.mark.django_db
+def test_signing_out_everywhere_else_asks_first(authenticator):
+    windows = browser_at("198.51.100.9", FIREFOX_ON_WINDOWS)
+    sign_in_fully(windows, authenticator)
+    iphone = browser_at("203.0.113.5", SAFARI_ON_IPHONE)
+    sign_in_fully(iphone, authenticator, 1)
+
+    response = iphone.get(SESSIONS)
+
+    assert tags(response, "button", type="button", popovertarget="sign-out-others")
+    assert "popover" in tags(response, "div", id="sign-out-others")[0]
+    assert tags(response, "form", action=SIGN_OUT_OTHERS)

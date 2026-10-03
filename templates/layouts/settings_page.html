@@ -3,6 +3,7 @@
     A page in Settings, shown as the detail beside the Settings list. Phones
     show only the page, under a `back` link to Settings unless the page says
     otherwise; Settings itself empties `open` so phones show only the list.
+    A page deeper than the list fills `crumbs` with the same way back.
 {% endcomment %}
 {% block panes %}
     <div class="split {% block open %}split-open{% endblock %}">
@@ -30,6 +31,7 @@
             </header>
             <main class="pane">
                 <div class="pane-inner">
+                    {% block crumbs %}{% endblock %}
                     {% block main %}{% endblock %}
                 </div>
             </main>

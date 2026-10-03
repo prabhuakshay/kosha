@@ -6,7 +6,9 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_not_required
-from django.http import Http404, HttpRequest, HttpResponse
+
+# At runtime: LoginView.as_view() reads dispatch's annotations.
+from django.http import HttpRequest, HttpResponse  # ruff: ignore[typing-only-third-party-import]
 from django.shortcuts import redirect, render, resolve_url
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -52,11 +54,6 @@ def next_url(request: HttpRequest) -> str:
     return resolve_url(settings.LOGIN_REDIRECT_URL)
 
 
-def _unclaimed_only() -> None:
-    if is_claimed():
-        raise Http404
-
-
 @login_not_required
 def claim(request: HttpRequest) -> HttpResponse:
     """Step 1 of Claim: the Setup code from the server's log.
@@ -65,9 +62,11 @@ def claim(request: HttpRequest) -> HttpResponse:
         request: The incoming request.
 
     Returns:
-        The form, or a redirect to step 2 once the code is right.
+        The form, a redirect to step 2 once the code is right, or a redirect
+        home once the install is claimed.
     """
-    _unclaimed_only()
+    if is_claimed():
+        return redirect("home")
     form = SetupCodeForm(request.POST or None)
     if form.is_valid():
         request.session[CODE_ACCEPTED] = True
@@ -83,9 +82,10 @@ def claim_owner(request: HttpRequest) -> HttpResponse:
         request: The incoming request.
 
     Returns:
-        The form, or a redirect home signed in once the Owner exists.
+        The form, or a redirect home once the install is claimed.
     """
-    _unclaimed_only()
+    if is_claimed():
+        return redirect("home")
     if not request.session.get(CODE_ACCEPTED):
         return redirect("claim")
     form = OwnerForm(request.POST or None)

@@ -17,10 +17,11 @@
                             <span class="item-title"><span class="truncate" data-passkey-name>{{ passkey.name|default:"Passkey" }}</span></span>
                             <span class="item-sub block">Added {{ passkey.created_at|date:"j M Y" }} · {% if passkey.last_used_at %}Last used {{ passkey.last_used_at|date:"j M Y" }}{% else %}Never used{% endif %}</span>
                         </span>
-                        <form method="post" action="{% url 'remove_passkey' passkey.pk %}">
-                            {% csrf_token %}
-                            <button class="btn btn-danger btn-small"><i data-lucide="trash-2" class="size-3.5"></i>Remove</button>
-                        </form>
+                        <button type="button" popovertarget="remove-passkey-{{ passkey.pk }}" class="btn btn-danger btn-small"><i data-lucide="trash-2" class="size-3.5"></i>Remove</button>
+                        {% url 'remove_passkey' passkey.pk as remove %}
+                        {% with pk=passkey.pk|stringformat:"s" %}
+                            {% include "layouts/_sheet.html" with id="remove-passkey-"|add:pk title="Remove this passkey?" body="layouts/_confirm.html" text="It won't sign you in any more. To use it again, you'd add it again." action=remove icon="trash-2" button="Remove passkey" %}
+                        {% endwith %}
                     </li>
                 {% endfor %}
             </ul>
@@ -51,10 +52,9 @@
                 {% endif %}
             </form>
             {% if authenticator %}
-                <form method="post" action="{% url 'remove_authenticator' %}">
-                    {% csrf_token %}
-                    <button class="btn btn-danger"><i data-lucide="trash-2"></i>Remove</button>
-                </form>
+                <button type="button" popovertarget="remove-authenticator" class="btn btn-danger"><i data-lucide="trash-2"></i>Remove</button>
+                {% url 'remove_authenticator' as remove %}
+                {% include "layouts/_sheet.html" with id="remove-authenticator" title="Remove the authenticator app?" body="layouts/_confirm.html" text="Its codes won't sign you in any more. Until you set one up again, only a passkey will." action=remove icon="trash-2" button="Remove app" %}
             {% endif %}
         </div>
     </section>
@@ -71,10 +71,10 @@
         <h2 id="codes-title" class="section-title">Recovery codes <small>{{ recovery_codes_left }} of {{ recovery_codes_total }} left</small></h2>
         <p class="note">Each signs you in once, in place of the authenticator app's code, if your phone is lost.</p>
         <div class="meter" aria-hidden="true">{% for i in "0123456789" %}<span {% if forloop.counter <= recovery_codes_left %}class="on"{% endif %}></span>{% endfor %}</div>
-        <form method="post" action="{% url 'make_recovery_codes' %}" class="actions">
-            {% csrf_token %}
-            <button class="btn btn-quiet"><i data-lucide="refresh-cw"></i>Make new codes</button>
-        </form>
-        <p class="note">Your old codes stop working, saved or not.</p>
+        <div class="actions">
+            <button type="button" popovertarget="make-recovery-codes" class="btn btn-quiet"><i data-lucide="refresh-cw"></i>Make new codes</button>
+        </div>
+        {% url 'make_recovery_codes' as make %}
+        {% include "layouts/_sheet.html" with id="make-recovery-codes" title="Make new recovery codes?" body="layouts/_confirm.html" text="Your old codes stop working straight away, saved or not. You'll see the new ones once." action=make icon="refresh-cw" button="Make new codes" %}
     </section>
 {% endblock %}

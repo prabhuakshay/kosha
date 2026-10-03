@@ -455,6 +455,35 @@
     line-height: 1.05;
   }
 
+  .crumbs {
+    display: none;
+    margin-bottom: 1.25rem;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .crumbs li + li::before {
+    content: "/";
+    margin-right: 0.375rem;
+    color: var(--ink-3);
+  }
+
+  .crumbs a:hover {
+    color: var(--accent);
+  }
+
+  .crumbs [aria-current] {
+    color: var(--ink);
+  }
+
   .lede {
     margin-top: 0.625rem;
     max-width: 52ch;
@@ -771,6 +800,10 @@
 
     .page-title {
       font-size: 44px;
+    }
+
+    .crumbs {
+      display: block;
     }
 
     .sheet {

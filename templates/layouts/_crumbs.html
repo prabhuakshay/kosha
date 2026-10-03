@@ -1,0 +1,11 @@
+{% comment %}
+    The way back up from a page under `to` in Settings, for desktops, which
+    hide the top bar and its back link.
+{% endcomment %}
+<nav aria-label="Breadcrumb" class="crumbs">
+    <ol>
+        <li><a href="{% url 'settings' %}">Settings</a></li>
+        <li><a href="{% url to %}">{{ label }}</a></li>
+        <li aria-current="page">{{ here }}</li>
+    </ol>
+</nav>

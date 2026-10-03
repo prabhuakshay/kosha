@@ -103,3 +103,14 @@ def test_service_worker_covers_the_app_and_caches_nothing(client):
     assert 'addEventListener("install"' in body
     assert 'addEventListener("fetch"' not in body
     assert "caches." not in body
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("name", ["home", "security", "sign_in"])
+def test_pages_are_never_stored_so_back_asks_the_server(client, signed_in, name):
+    if name == "sign_in":
+        client.post(reverse("sign_out"))
+
+    response = client.get(reverse(name))
+
+    assert "no-store" in response["Cache-Control"]
