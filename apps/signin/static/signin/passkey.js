@@ -35,25 +35,34 @@ async function signIn(button) {
   return result.redirect_url;
 }
 
-for (const button of document.querySelectorAll("[data-passkey]")) {
+// Loaded once for every page: htmx swaps pages in without running their
+// scripts, so it listens on the document rather than on each button.
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-passkey]");
+  if (!button) return;
   const status = document.getElementById(button.getAttribute("aria-describedby"));
-  if (!window.PublicKeyCredential?.parseCreationOptionsFromJSON) {
-    button.disabled = true;
-    status.textContent = "This browser can't use passkeys.";
-    continue;
+  button.disabled = true;
+  status.textContent = "";
+  try {
+    const ceremony = button.dataset.passkey === "register" ? register : signIn;
+    location.assign(await ceremony(button));
+  } catch (error) {
+    button.disabled = false;
+    status.textContent =
+      error.name === "NotAllowedError"
+        ? "Cancelled. Try again when you're ready."
+        : error.message || "That didn't work. Try again.";
   }
-  button.addEventListener("click", async () => {
+});
+
+function refuseWithoutPasskeys(root) {
+  if (window.PublicKeyCredential?.parseCreationOptionsFromJSON) return;
+  for (const button of root.querySelectorAll("[data-passkey]")) {
     button.disabled = true;
-    status.textContent = "";
-    try {
-      const ceremony = button.dataset.passkey === "register" ? register : signIn;
-      location.assign(await ceremony(button));
-    } catch (error) {
-      button.disabled = false;
-      status.textContent =
-        error.name === "NotAllowedError"
-          ? "Cancelled. Try again when you're ready."
-          : error.message || "That didn't work. Try again.";
-    }
-  });
+    document.getElementById(button.getAttribute("aria-describedby")).textContent =
+      "This browser can't use passkeys.";
+  }
 }
+
+refuseWithoutPasskeys(document);
+document.addEventListener("htmx:load", (event) => refuseWithoutPasskeys(event.target));

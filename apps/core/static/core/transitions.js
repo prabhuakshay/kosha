@@ -1,18 +1,20 @@
-// Loaded blocking in <head>: pagereveal fires before deferred scripts run.
-const DIRECTION = "kosha.direction";
+// Loaded blocking in <head>, so it hears the first tap. htmx swaps each page
+// in inside a view transition; on a phone, going deeper slides the new screen
+// in and going back slides it away, as a navigation stack would. Everything
+// else, such as a tab, switches at once, as native tab bars do.
+const SLIDES = matchMedia("(max-width: 767px) and (prefers-reduced-motion: no-preference)");
+let direction = null;
 
 addEventListener("click", (event) => {
   const link = event.target.closest("[data-up], .row");
-  if (link) sessionStorage.setItem(DIRECTION, link.matches("[data-up]") ? "back" : "forward");
+  direction = link && (link.matches("[data-up]") ? "back" : "forward");
 });
 
-addEventListener("pagereveal", (event) => {
-  if (!event.viewTransition) return;
-  let direction = sessionStorage.getItem(DIRECTION);
-  sessionStorage.removeItem(DIRECTION);
-  const activation = window.navigation?.activation;
-  if (activation?.navigationType === "traverse" && activation.from) {
-    direction = activation.entry.index < activation.from.index ? "back" : "forward";
+document.addEventListener("htmx:beforeTransition", (event) => {
+  if (!direction || !SLIDES.matches) {
+    event.preventDefault();
+    return;
   }
-  if (direction) event.viewTransition.types.add(direction);
+  document.documentElement.dataset.direction = direction;
+  direction = null;
 });
