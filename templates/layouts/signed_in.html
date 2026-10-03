@@ -3,10 +3,10 @@
 {% comment %}
     Signed in. Desktops get the app rail, icons only on narrower ones; phones
     get a top bar with the wordmark, or a `back` link, and a tab bar. `panes`
-    is one scrolling pane unless a layout splits it (layouts/split.html).
+    is one scrolling pane unless a layout splits it (layouts/split.html); a
+    page deeper than its section fills `crumbs` with the way back for desktops.
 {% endcomment %}
 {% block content %}
-    {% with settings_pages="base_currency history security password sessions security_log new_authenticator new_recovery_codes confirm" %}
     <div class="shell">
         <nav class="rail" aria-label="Main">
             <div class="rail-brand flex h-10 items-center gap-2.5">
@@ -15,11 +15,11 @@
             </div>
             <div class="mt-6 grid gap-0.5">
                 {% include "layouts/_nav_link.html" with to="home" icon="house" label="Home" %}
-                {% include "layouts/_masters_nav.html" %}
+                {% include "layouts/_section_nav.html" with name="masters" to="masters:masters" icon="wallet" label="Masters" links="masters/_lists.html" %}
                 {% include "layouts/_nav_link.html" with icon="arrow-left-right" label="Transactions" %}
                 {% include "layouts/_nav_link.html" with icon="piggy-bank" label="Budgets" %}
                 {% include "layouts/_nav_link.html" with icon="chart-column" label="Reports" %}
-                {% include "layouts/_nav_link.html" with to="settings" icon="settings" label="Settings" also=settings_pages %}
+                {% include "layouts/_section_nav.html" with name="settings" to="settings" icon="settings" label="Settings" links="core/_settings_links.html" %}
             </div>
             <button type="button" popovertarget="owner-menu" class="rail-owner" aria-label="Owner menu">
                 <span class="avatar">{{ user.initials }}</span>
@@ -38,19 +38,21 @@
                     </div>
                 </header>
                 <main class="pane">
-                    {% block main %}{% endblock %}
+                    <div class="pane-inner">
+                        {% block crumbs %}{% endblock %}
+                        {% block main %}{% endblock %}
+                    </div>
                 </main>
             </div>
         {% endblock %}
     </div>
     <nav class="tabs" aria-label="Main">
         {% include "layouts/_tab.html" with to="home" icon="house" label="Home" %}
-        {% include "layouts/_tab.html" with to="masters:masters" icon="wallet" label="Masters" section="masters" %}
+        {% include "layouts/_tab.html" with to="masters:masters" icon="wallet" label="Masters" of="masters" %}
         {% include "layouts/_tab.html" with icon="arrow-left-right" label="Activity" %}
         {% include "layouts/_tab.html" with icon="piggy-bank" label="Budgets" %}
-        {% include "layouts/_tab.html" with to="settings" icon="settings" label="Settings" also=settings_pages %}
+        {% include "layouts/_tab.html" with to="settings" icon="settings" label="Settings" of="settings" %}
     </nav>
     {% include "layouts/_sheet.html" with id="owner-menu" title=user.name body="layouts/_owner_menu.html" %}
-    {% endwith %}
     {% block sheets %}{% endblock %}
 {% endblock %}

@@ -1,13 +1,21 @@
-{% extends "layouts/settings_page.html" %}
+{% extends "layouts/split.html" %}
 {% block title %}Settings · Kosha{% endblock %}
 {% block open %}{% endblock %}
+{% block list %}
+    <h2 class="list-head display list-title">Settings</h2>
+    <p class="group-label">Kosha</p>
+    <nav class="rows" aria-label="Kosha">
+        {% include "layouts/_row.html" with to="base_currency" icon="coins" title="Base currency" sub="What every amount is in" %}
+        {% include "layouts/_row.html" with to="history" icon="history" title="History" sub="Every change to Masters and Settings" %}
+    </nav>
+    <p class="group-label">Security</p>
+    <nav class="rows" aria-label="Security">
+        {% include "layouts/_row.html" with to="security" icon="fingerprint" title="Signing in" sub="Passkeys, authenticator app, password, recovery codes" %}
+        {% include "layouts/_row.html" with to="sessions" icon="monitor-smartphone" title="Sessions" sub="Every device signed in" %}
+        {% include "layouts/_row.html" with to="security_log" icon="scroll-text" title="Security log" sub="Sign-ins and changes" %}
+    </nav>
+{% endblock %}
 {% block main %}
     {% comment %}Phones show only the list here; desktops have room to say so.{% endcomment %}
-    <div class="grid min-h-[60dvh] place-items-center text-center">
-        <div>
-            <span class="tile mx-auto size-14 rounded-2xl"><i data-lucide="settings" class="size-6"></i></span>
-            <h1 class="display mt-5 text-[28px]">Settings</h1>
-            <p class="note mx-auto max-w-[32ch]">Choose a setting from the list. Its details open here.</p>
-        </div>
-    </div>
+    {% include "layouts/_placeholder.html" with icon="settings" heading="Settings" text="Choose a setting from the list. Its details open here." %}
 {% endblock %}

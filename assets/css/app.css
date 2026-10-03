@@ -381,8 +381,8 @@
     color: #ffffff;
   }
 
-  /* Masters' lists: under its link in the wide rail, or in a flyout from
-     the icon-only rail. */
+  /* A section's links: under its link in the wide rail, or in a flyout
+     from the icon-only rail. */
   .rail-sub {
     display: none;
     margin: 0.125rem 0 0.375rem 1.25rem;
@@ -450,16 +450,27 @@
   }
 
   @supports (position-area: right) {
-    .rail-narrow {
+    [popovertarget="masters-flyout"] {
       anchor-name: --masters;
+    }
+
+    [popovertarget="settings-flyout"] {
+      anchor-name: --settings;
     }
 
     .flyout {
       top: auto;
       left: auto;
-      position-anchor: --masters;
       position-area: right span-bottom;
       margin-left: 0.75rem;
+    }
+
+    #masters-flyout {
+      position-anchor: --masters;
+    }
+
+    #settings-flyout {
+      position-anchor: --settings;
     }
   }
 
