@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import SetPasswordForm
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -201,7 +201,9 @@ def password(request: HttpRequest) -> HttpResponse:
     Returns:
         The form, or a redirect to Security once changed.
     """
-    form = PasswordChangeForm(request.user, request.POST or None)
+    # No current password: the Confirmation is the stronger check, and an
+    # Owner who forgot it must be able to set a new one after a Passkey.
+    form = SetPasswordForm(request.user, request.POST or None)
     if form.is_valid():
         update_session_auth_hash(request, form.save())
         sessions.sign_out_others(request)
