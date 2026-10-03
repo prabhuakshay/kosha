@@ -31,7 +31,6 @@ Your financial data is personal. Kosha keeps it on infrastructure you control, w
 - **Transactions** — record, import and categorise income and spending
 - **Budgets** — set monthly limits per category and track progress
 - **Reports** — net worth, cash flow and spending trends over time
-- **Multi-currency** — hold accounts in different currencies
 
 ## Tech stack
 
@@ -39,6 +38,8 @@ Your financial data is personal. Kosha keeps it on infrastructure you control, w
 | --------------- | --------------------------------------------------------------------- |
 | Language        | [Python 3.14](https://www.python.org/)                                |
 | Web framework   | [Django](https://www.djangoproject.com/)                              |
+| Database        | [PostgreSQL](https://www.postgresql.org/)                              |
+| App server      | [Gunicorn](https://gunicorn.org/) + [WhiteNoise](https://whitenoise.readthedocs.io/) |
 | Packaging       | [uv](https://github.com/astral-sh/uv)                                 |
 | Lint and format | [Ruff](https://github.com/astral-sh/ruff), every rule enabled         |
 | Git hooks       | [prek](https://github.com/j178/prek)                                  |
@@ -48,6 +49,8 @@ Your financial data is personal. Kosha keeps it on infrastructure you control, w
 ### Prerequisites
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- [PostgreSQL](https://www.postgresql.org/download/)
+- [Mailpit](https://mailpit.axllent.org/docs/install/) to catch outgoing email
 
 ### Setup
 
@@ -56,7 +59,28 @@ git clone https://github.com/prabhuakshay/kosha.git
 cd kosha
 uv sync
 uv run prek install
+cp .env.example .env   # then set DEBUG=true, SECRET_KEY and DATABASE_URL
+uv run manage.py migrate
+uv run manage.py createsuperuser
+uv run manage.py runserver
 ```
+
+Every setting is configured through environment variables or `.env`. See [`.env.example`](.env.example) for the full list.
+
+## Deployment
+
+Defaults are production-safe: `DEBUG` is off, HTTPS is enforced and HSTS is on. At minimum set `SECRET_KEY`, `ALLOWED_HOSTS` and `DATABASE_URL`, then:
+
+```bash
+export UV_NO_DEV=1   # keep dev tools out of every uv sync and uv run
+uv sync --locked
+uv run manage.py check --deploy
+uv run manage.py migrate
+uv run manage.py collectstatic --noinput
+uv run gunicorn config.wsgi --bind 0.0.0.0:8000
+```
+
+Static files are served by [WhiteNoise](https://whitenoise.readthedocs.io/). Behind a TLS-terminating reverse proxy, set `SECURE_PROXY_SSL_HEADER=true`.
 
 ## Development
 
