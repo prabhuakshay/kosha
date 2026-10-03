@@ -17,6 +17,15 @@
             {% endfor %}
         </nav>
     {% endfor %}
+{% elif accounts %}
+    <nav class="rows mt-4" aria-label="{{ listing.title }}">
+        {% for account in accounts %}
+            <a href="{% url listing.detail account.pk %}" class="row" {% if account == selected %}aria-current="page"{% endif %}>
+                <span class="tile"><i data-lucide="{{ account.icon }}"></i></span>
+                <span class="min-w-0 flex-1 truncate text-[15px] font-semibold">{{ account.name }}</span>
+            </a>
+        {% endfor %}
+    </nav>
 {% else %}
     <p class="list-note">None yet</p>
 {% endif %}

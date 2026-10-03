@@ -85,6 +85,9 @@ def test_the_index_lists_every_list_with_counts_and_totals(signed_in):
         name="HDFC",
         opening_balance=45000,
     )
+    Account.objects.create(type=Account.Type.EXPENSE, name="Amazon")
+    Account.objects.create(type=Account.Type.EXPENSE, name="BESCOM")
+    Account.objects.create(type=Account.Type.INCOME, name="Acme")
 
     response = signed_in.get(MASTERS)
 
@@ -93,8 +96,8 @@ def test_the_index_lists_every_list_with_counts_and_totals(signed_in):
     assert row_subs(response) == {
         "Assets": "2 · ₹3,20,000.00",
         "Liabilities": "1 · ₹45,000.00",
-        "Income": "None yet",
-        "Expenses": "None yet",
+        "Income": "1",
+        "Expenses": "2",
         "Categories": "None yet",
         "Tags": "None yet",
     }
@@ -138,6 +141,12 @@ def test_an_empty_assets_list_offers_the_first_one(signed_in):
         reverse("masters:new_liability"),
         reverse("masters:liability", args=[1]),
         reverse("masters:edit_liability", args=[1]),
+        reverse("masters:new_expense_account"),
+        reverse("masters:expense_account", args=[1]),
+        reverse("masters:edit_expense_account", args=[1]),
+        reverse("masters:new_income_account"),
+        reverse("masters:income_account", args=[1]),
+        reverse("masters:edit_income_account", args=[1]),
     ],
 )
 def test_every_masters_page_needs_signing_in(client, path):

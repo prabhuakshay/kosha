@@ -11,7 +11,7 @@ from django.utils.formats import date_format
 
 from apps.core import history
 from apps.core.money import write
-from apps.masters.forms import AccountForm
+from apps.masters.forms import AccountForm, BalanceAccountForm
 from apps.masters.models import KINDS, Account
 
 if TYPE_CHECKING:
@@ -19,16 +19,6 @@ if TYPE_CHECKING:
 
 # Lists still to come: what belongs in each, for their empty states.
 COMING = {
-    "income": (
-        "Income",
-        "arrow-down-left",
-        "Income accounts: who pays you, such as an employer, a client or a tenant.",
-    ),
-    "expenses": (
-        "Expenses",
-        "arrow-up-right",
-        "Expense accounts: who you pay, such as a shop, a landlord or a utility.",
-    ),
     "categories": (
         "Categories",
         "shapes",
@@ -110,17 +100,28 @@ def coming(request: HttpRequest, name: str) -> HttpResponse:
 
 @dataclass(frozen=True)
 class Listing:
-    """A list of Asset accounts or Liabilities: its routes and what it says."""
+    """A list of Accounts of one type: its routes and what it says."""
 
     type: Account.Type
+    route: str
     plural: str
     title: str
     noun: str
     icon: str
     about: str
     lede: str
-    total: str
-    opening_note: str
+    total: str = ""
+    opening_note: str = ""
+
+    @property
+    def kinds(self) -> list[Account.Kind]:
+        """The Kinds the list groups by, if its type has any."""
+        return KINDS.get(self.type, [])
+
+    @property
+    def form(self) -> type[AccountForm]:
+        """The form adding or changing one of its Accounts."""
+        return BalanceAccountForm if self.kinds else AccountForm
 
     @property
     def list(self) -> str:
@@ -130,21 +131,22 @@ class Listing:
     @property
     def detail(self) -> str:
         """The route name of an Account's detail."""
-        return f"masters:{self.type}"
+        return f"masters:{self.route}"
 
     @property
     def new(self) -> str:
         """The route name of the form adding an Account."""
-        return f"masters:new_{self.type}"
+        return f"masters:new_{self.route}"
 
     @property
     def edit(self) -> str:
-        """The route name of the form account an Account."""
-        return f"masters:edit_{self.type}"
+        """The route name of the form editing an Account."""
+        return f"masters:edit_{self.route}"
 
 
 ASSETS = Listing(
     type=Account.Type.ASSET,
+    route="asset",
     plural="assets",
     title="Assets",
     noun="asset account",
@@ -158,6 +160,7 @@ ASSETS = Listing(
 )
 LIABILITIES = Listing(
     type=Account.Type.LIABILITY,
+    route="liability",
     plural="liabilities",
     title="Liabilities",
     noun="liability",
@@ -168,10 +171,33 @@ LIABILITIES = Listing(
     opening_note="What you owed when you started tracking it. Use a minus sign "
     "only if you were in credit.",
 )
+INCOME = Listing(
+    type=Account.Type.INCOME,
+    route="income_account",
+    plural="income",
+    title="Income",
+    noun="income account",
+    icon="arrow-down-left",
+    about="Income accounts: who pays you, such as an employer, a client or a tenant.",
+    lede="Someone who pays you, such as an employer, a client or a tenant.",
+)
+EXPENSES = Listing(
+    type=Account.Type.EXPENSE,
+    route="expense_account",
+    plural="expenses",
+    title="Expenses",
+    noun="expense account",
+    icon="arrow-up-right",
+    about="Expense accounts: who you pay, such as a shop, a landlord or a utility.",
+    lede="Someone you pay, such as a shop, a landlord or a utility.",
+)
+LISTINGS = {
+    listing.type: listing for listing in (ASSETS, LIABILITIES, INCOME, EXPENSES)
+}
 
 
 def account_list(request: HttpRequest, listing: Listing) -> HttpResponse:
-    """List the Asset accounts or Liabilities by Kind.
+    """List Accounts of one type, by Kind if it has them.
 
     Args:
         request: The incoming request.
@@ -184,7 +210,7 @@ def account_list(request: HttpRequest, listing: Listing) -> HttpResponse:
 
 
 def account_detail(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
-    """Show an Asset account or Liability beside its list.
+    """Show an Account beside its list.
 
     Args:
         request: The incoming request.
@@ -207,7 +233,7 @@ def account_detail(request: HttpRequest, listing: Listing, pk: int) -> HttpRespo
 
 
 def new_account(request: HttpRequest, listing: Listing) -> HttpResponse:
-    """Add an Asset account or Liability.
+    """Add an Account.
 
     Args:
         request: The incoming request.
@@ -216,7 +242,7 @@ def new_account(request: HttpRequest, listing: Listing) -> HttpResponse:
     Returns:
         The form, or a redirect to the new Account once added.
     """
-    form = AccountForm(request.POST or None, instance=Account(type=listing.type))
+    form = listing.form(request.POST or None, instance=Account(type=listing.type))
     if form.is_valid():
         with transaction.atomic():
             account = form.save()
@@ -229,7 +255,7 @@ def new_account(request: HttpRequest, listing: Listing) -> HttpResponse:
 
 
 def edit_account(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
-    """Change an Asset account or Liability, keeping it the same type.
+    """Change an Account, keeping it the same type.
 
     Args:
         request: The incoming request.
@@ -242,7 +268,7 @@ def edit_account(request: HttpRequest, listing: Listing, pk: int) -> HttpRespons
     account = get_object_or_404(Account, pk=pk, type=listing.type)
     # Taken before the form, which writes what's posted into the Account.
     before = snapshot(account)
-    form = AccountForm(request.POST or None, instance=account)
+    form = listing.form(request.POST or None, instance=account)
     if form.is_valid():
         with transaction.atomic():
             form.save()
@@ -270,6 +296,8 @@ def snapshot(account: Account) -> dict[str, str]:
     Returns:
         Each field's name and value.
     """
+    if account.type not in KINDS:
+        return {"Name": account.name, "Notes": account.notes}
     return {
         "Name": account.name,
         "Kind": account.get_kind_display(),
@@ -301,7 +329,7 @@ def record(
 
 
 def list_pane(listing: Listing, selected: Account | None = None) -> dict:
-    """What a list pane shows: its Accounts grouped by Kind, with totals.
+    """What a list pane shows: its Accounts, grouped by Kind with totals if any.
 
     Args:
         listing: Which list.
@@ -310,14 +338,15 @@ def list_pane(listing: Listing, selected: Account | None = None) -> dict:
     Returns:
         The template context for the list pane.
     """
-    of_type = Account.objects.filter(type=listing.type).order_by(Lower("name"))
+    of_type = list(Account.objects.filter(type=listing.type).order_by(Lower("name")))
     groups = []
-    for kind in KINDS[listing.type]:
+    for kind in listing.kinds:
         of_kind = [a for a in of_type if a.kind == kind]
         if of_kind:
             groups.append((kind, of_kind, sum(a.balance for a in of_kind)))
     return {
         "listing": listing,
+        "accounts": of_type,
         "groups": groups,
         "total": sum(a.balance for a in of_type),
         "selected": selected,

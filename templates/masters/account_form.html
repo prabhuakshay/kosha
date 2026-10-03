@@ -25,26 +25,28 @@
                 <input class="field mt-1.5" name="name" value="{{ form.name.value|default:'' }}" maxlength="100" required {% if not account %}autofocus{% endif %}>
                 {% include "signin/_errors.html" with field=form.name %}
             </label>
-            <label class="block">
-                <span class="label">Kind</span>
-                <select class="field mt-1.5" name="kind" required>
-                    {% for value, label in form.fields.kind.choices %}
-                        <option value="{{ value }}" {% if value == form.kind.value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                {% include "signin/_errors.html" with field=form.kind %}
-            </label>
-            <label class="block">
-                <span class="label">Opening balance</span>
-                <input class="field mt-1.5" name="opening_balance" value="{{ form.opening_balance.value|default_if_none:'' }}" inputmode="decimal" required>
-                <span class="note mt-1.5 block">{{ listing.opening_note }}</span>
-                {% include "signin/_errors.html" with field=form.opening_balance %}
-            </label>
-            <label class="block">
-                <span class="label">Opened on</span>
-                <input class="field mt-1.5" type="date" name="opened_on" value="{{ form.opened_on.value|date:'Y-m-d'|default:form.opened_on.value }}" max="{% now 'Y-m-d' %}" required>
-                {% include "signin/_errors.html" with field=form.opened_on %}
-            </label>
+            {% if listing.kinds %}
+                <label class="block">
+                    <span class="label">Kind</span>
+                    <select class="field mt-1.5" name="kind" required>
+                        {% for value, label in form.fields.kind.choices %}
+                            <option value="{{ value }}" {% if value == form.kind.value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% include "signin/_errors.html" with field=form.kind %}
+                </label>
+                <label class="block">
+                    <span class="label">Opening balance</span>
+                    <input class="field mt-1.5" name="opening_balance" value="{{ form.opening_balance.value|default_if_none:'' }}" inputmode="decimal" required>
+                    <span class="note mt-1.5 block">{{ listing.opening_note }}</span>
+                    {% include "signin/_errors.html" with field=form.opening_balance %}
+                </label>
+                <label class="block">
+                    <span class="label">Opened on</span>
+                    <input class="field mt-1.5" type="date" name="opened_on" value="{{ form.opened_on.value|date:'Y-m-d'|default:form.opened_on.value }}" max="{% now 'Y-m-d' %}" required>
+                    {% include "signin/_errors.html" with field=form.opened_on %}
+                </label>
+            {% endif %}
             <label class="block">
                 <span class="label">Notes</span>
                 <textarea class="field field-text mt-1.5" name="notes" rows="3">{{ form.notes.value|default:'' }}</textarea>

@@ -3,15 +3,19 @@
 {% block title %}{{ account.name }} · Kosha{% endblock %}
 {% block main %}
     <h1 class="display page-title">{{ account.name }}</h1>
-    <p class="mt-3 flex items-center gap-2 text-[15px] text-ink-2"><i data-lucide="{{ account.icon }}" class="size-4"></i><span data-kind>{{ account.get_kind_display }}</span> · {{ account.get_type_display }}</p>
+    <p class="mt-3 flex items-center gap-2 text-[15px] text-ink-2"><i data-lucide="{{ account.icon }}" class="size-4"></i>{% if account.kind %}<span data-kind>{{ account.get_kind_display }}</span> · {% endif %}{{ account.get_type_display }}</p>
     {% include "signin/_messages.html" %}
-    <section class="section">
-        <p class="label">Balance</p>
-        <p class="big mt-2 text-[40px]" data-balance>{{ account.balance|money }}</p>
-    </section>
+    {% if listing.kinds %}
+        <section class="section">
+            <p class="label">Balance</p>
+            <p class="big mt-2 text-[40px]" data-balance>{{ account.balance|money }}</p>
+        </section>
+    {% endif %}
     <dl class="facts">
-        <div><dt>Opening balance</dt><dd data-opening-balance>{{ account.opening_balance|money }}</dd></div>
-        <div><dt>Opened on</dt><dd>{{ account.opened_on|date:"j M Y" }}</dd></div>
+        {% if listing.kinds %}
+            <div><dt>Opening balance</dt><dd data-opening-balance>{{ account.opening_balance|money }}</dd></div>
+            <div><dt>Opened on</dt><dd>{{ account.opened_on|date:"j M Y" }}</dd></div>
+        {% endif %}
         <div><dt>Notes</dt><dd class="whitespace-pre-line">{{ account.notes|default:"None" }}</dd></div>
     </dl>
     <div class="actions">

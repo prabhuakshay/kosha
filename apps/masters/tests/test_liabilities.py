@@ -1,7 +1,6 @@
 import re
 from datetime import timedelta
 from decimal import Decimal
-from html import unescape
 
 import pytest
 from django.urls import reverse
@@ -9,7 +8,15 @@ from django.utils.timezone import localdate
 
 from apps.core.testing import tags
 from apps.masters.models import Account
-from apps.masters.testing import add, edit, errors, field_value, groups, rows
+from apps.masters.testing import (
+    add,
+    edit,
+    errors,
+    field_value,
+    groups,
+    history,
+    rows,
+)
 
 LIABILITY = Account.Type.LIABILITY
 LIABILITIES, NEW = reverse("masters:liabilities"), reverse("masters:new_liability")
@@ -269,12 +276,6 @@ def test_only_liabilities_open_as_liabilities(signed_in, hdfc):
     assert detail(signed_in, hdfc).status_code == 404
     card = liability("HDFC", "credit_card", "1")
     assert signed_in.get(reverse("masters:asset", args=[card.pk])).status_code == 404
-
-
-def history(response):
-    actions = re.findall(r"data-history-action>([^<]+)<", response.text)
-    changes = re.findall(r"data-history-change>([^<]+)<", response.text)
-    return actions, [unescape(c) for c in changes]
 
 
 @pytest.mark.django_db
