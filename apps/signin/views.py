@@ -132,6 +132,7 @@ def set_up_authenticator(request: HttpRequest) -> HttpResponse:
         del request.session[AUTHENTICATOR_KEY]
         otp_login(request, device)
         confirmation.start(request)
+        security_log.record(request, security_log.Kind.AUTHENTICATOR_SET_UP)
         return redirect("recovery_codes")
     return render(
         request,

@@ -1,5 +1,5 @@
 import pytest
-from django.urls import URLResolver, get_resolver, reverse
+from django.urls import NoReverseMatch, URLResolver, get_resolver, reverse
 
 from apps.core.testing import EMAIL, PASSWORD
 from apps.signin.testing import authenticator_code, enter_code, sign_in
@@ -29,10 +29,17 @@ def kosha_routes(patterns=None):
             yield pattern.name
 
 
+def url_of(name):
+    try:
+        return reverse(name)
+    except NoReverseMatch:
+        return reverse(name, args=[1])
+
+
 @pytest.mark.django_db
 def test_every_page_but_the_public_ones_needs_sign_in(client):
     for name in set(kosha_routes()) - PUBLIC - CLAIM - PASSKEY_SIGN_IN - {"sign_out"}:
-        url = reverse(name)
+        url = url_of(name)
 
         response = client.get(url)
 
@@ -53,7 +60,7 @@ def test_every_page_but_signing_in_needs_the_code_step(client):
         - PASSKEY_SIGN_IN
         - {"sign_out"}
     ):
-        url = reverse(name)
+        url = url_of(name)
 
         response = client.get(url)
 

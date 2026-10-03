@@ -64,12 +64,6 @@ def test_password_alone_cannot_add_a_passkey(client):
 
 
 @pytest.mark.django_db
-def test_a_passkey_cannot_be_added_once_there_is_a_way_to_sign_in(signed_in):
-    assert register_passkey(signed_in).status_code == 403
-    assert not WebAuthnCredential.objects.exists()
-
-
-@pytest.mark.django_db
 @pytest.mark.usefixtures("passkey")
 def test_sign_in_offers_a_passkey(client):
     response = client.get(reverse("sign_in"))

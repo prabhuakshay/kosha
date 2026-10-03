@@ -1,0 +1,8 @@
+{% extends "layouts/settings_page.html" %}
+{% block title %}Authenticator app · Kosha{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="security" label="Security" %}{% endblock %}
+{% block trail %}{% include "layouts/_crumb.html" with to="security" label="Security" %}{% endblock %}
+{% block main %}
+    <h1 class="display mt-2 text-[32px] leading-none lg:text-[40px]">Scan this code</h1>
+    {% include "signin/_authenticator_setup.html" %}
+{% endblock %}

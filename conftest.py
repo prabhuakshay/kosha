@@ -71,15 +71,18 @@ def authenticator(owner):
 def browser(monkeypatch):
     """Stand in for the browser and authenticator, which no test can run.
 
-    Registering makes a new Passkey; signing in answers with the Owner's first.
+    Registering makes a new Passkey; signing in answers with the Owner's first,
+    marking it used as the real helper does.
     """
+
+    def authenticate_complete(self, **kwargs):
+        passkey = WebAuthnCredential.objects.first()
+        passkey.set_last_used_timestamp(commit=True)
+        return passkey
+
     monkeypatch.setattr(
         WebAuthnHelper,
         "register_complete",
         lambda self, user, **kwargs: add_passkey(user),
     )
-    monkeypatch.setattr(
-        WebAuthnHelper,
-        "authenticate_complete",
-        lambda self, **kwargs: WebAuthnCredential.objects.first(),
-    )
+    monkeypatch.setattr(WebAuthnHelper, "authenticate_complete", authenticate_complete)
