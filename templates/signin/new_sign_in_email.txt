@@ -1,0 +1,12 @@
+{% autoescape off %}Kosha was just signed in to from a device or network it hasn't seen before.
+
+When: {{ entry.at|date:"j M Y" }}, {{ entry.at|time:"g:i A"|lower }}
+Device: {{ entry.device }}
+Address: {{ entry.address }}
+How: {{ entry.detail }}
+
+If this was you, there's nothing to do.
+
+If it wasn't, someone else got in. Sign in, choose Sign out everywhere else, then change your password and the ways you sign in:
+{{ sessions_url }}
+{% endautoescape %}

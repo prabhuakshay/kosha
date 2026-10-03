@@ -8,6 +8,7 @@ from io import StringIO
 from typing import TYPE_CHECKING
 
 from django.core.management import call_command
+from django.test import Client
 from django.urls import reverse
 from django_otp.oath import TOTP
 from django_otp.plugins.otp_static.models import StaticDevice
@@ -17,11 +18,35 @@ from apps.core.testing import EMAIL, PASSWORD
 
 if TYPE_CHECKING:
     from django.http import HttpResponse
-    from django.test import Client
+    from django_otp.plugins.otp_totp.models import TOTPDevice
 
     from apps.users.models import User
 
 DETAILS = {"name": "Asha Rao", "email": EMAIL, "password": PASSWORD}
+CHROME_ON_MAC = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
+)
+SAFARI_ON_IPHONE = (
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 "
+    "(KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+)
+FIREFOX_ON_WINDOWS = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0"
+)
+
+
+def browser_at(address: str, user_agent: str = CHROME_ON_MAC) -> Client:
+    """A browser of its own, at an address.
+
+    Args:
+        address: Where it connects from.
+        user_agent: What it says it is.
+
+    Returns:
+        A test client with no Session yet.
+    """
+    return Client(REMOTE_ADDR=address, HTTP_USER_AGENT=user_agent)
 
 
 def printed_code() -> str:
@@ -166,6 +191,24 @@ def enter_code(client: Client, code: str, next_url: str | None = None) -> HttpRe
     """
     url = reverse("code_step") + (f"?next={next_url}" if next_url else "")
     return client.post(url, {"code": code})
+
+
+def sign_in_fully(
+    client: Client, authenticator: TOTPDevice, steps_ahead: int = 0
+) -> HttpResponse:
+    """Sign in with the password and a code from the Authenticator app.
+
+    Args:
+        client: The test client.
+        authenticator: The Owner's Authenticator app.
+        steps_ahead: Which code to type; each is used once, so a later sign-in
+            needs a later one.
+
+    Returns:
+        The response to the code.
+    """
+    sign_in(client)
+    return enter_code(client, authenticator_code(authenticator.bin_key, steps_ahead))
 
 
 def add_recovery_code(owner: User, code: str = "k7m2x9qa") -> str:

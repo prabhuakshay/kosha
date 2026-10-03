@@ -83,7 +83,7 @@ class CompleteSignIn(views.CompleteCredentialAuthenticationView):
         super().complete_auth(device)
         confirmation.start(self.request)
         if signing_in:
-            security_log.record(self.request, security_log.Kind.SIGNED_IN, how)
+            security_log.signed_in(self.request, how)
 
 
 register_begin = part_of_signing_in(BeginRegistration.as_view())

@@ -5,4 +5,29 @@
 {% block main %}
     <h1 class="display mt-2 text-[32px] leading-none lg:text-[40px]">Sessions</h1>
     <p class="mt-2 text-[15px] leading-6 text-ink-2">Every device signed in to Kosha. Each stays signed in for 30 days after its last visit.</p>
+    {% for message in messages %}
+        <p class="mt-4 text-[14px] font-medium text-good" role="status">{{ message }}</p>
+    {% endfor %}
+    <ul class="mt-6 divide-y rounded-xl border bg-surface">
+        {% for session in sessions %}
+            <li class="flex gap-3 px-3.5 py-3">
+                <span class="tile"><i data-lucide="monitor-smartphone"></i></span>
+                <div class="min-w-0 flex-1">
+                    <p class="flex flex-wrap items-baseline gap-x-2 text-[15px] font-semibold">
+                        <span data-session-device>{{ session.device }}</span>
+                        {% if session.current %}<span class="text-[12px] font-semibold text-good">This device</span>{% endif %}
+                        {% if session.password_only %}<span class="text-[12px] font-semibold text-bad">Password only</span>{% endif %}
+                    </p>
+                    <p class="text-[13px] leading-5 text-ink-2 tabular-nums">{{ session.address|default:"Unknown address" }}{% if session.signed_in_at %} · Signed in {{ session.signed_in_at|date:"j M Y" }}{% endif %}</p>
+                    <p class="text-[13px] leading-5 text-ink-2 tabular-nums">Active {{ session.last_active|date:"j M Y" }}, {{ session.last_active|time:"g:i A"|lower }}</p>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    {% if sessions|length > 1 %}
+        <form method="post" action="{% url 'sign_out_others' %}" class="mt-6">
+            {% csrf_token %}
+            <button class="btn btn-danger"><i data-lucide="log-out" class="size-4"></i>Sign out everywhere else</button>
+        </form>
+    {% endif %}
 {% endblock %}

@@ -77,6 +77,11 @@ urlpatterns = [
         name="new_recovery_codes",
     ),
     path("security/sessions/", security.signed_in_sessions, name="sessions"),
+    path(
+        "security/sessions/sign-out-others/",
+        security.sign_out_others,
+        name="sign_out_others",
+    ),
     path("security/log/", security.log, name="security_log"),
     # Public so a page left open past its sign-in can still sign out cleanly.
     path(

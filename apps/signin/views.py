@@ -91,7 +91,7 @@ def claim_owner(request: HttpRequest) -> HttpResponse:
     form = OwnerForm(request.POST or None)
     if form.is_valid():
         login(request, form.save(), backend=PASSWORD_BACKEND)
-        security_log.record(request, security_log.Kind.SIGNED_IN, "Password")
+        security_log.signed_in(request, "Password")
         return redirect("choose_way")
     return render(request, "signin/claim_owner.html", {"form": form})
 
@@ -179,9 +179,7 @@ def code_step(request: HttpRequest) -> HttpResponse:
         otp_login(request, form.device)
         confirmation.start(request)
         code = "recovery" if isinstance(form.device, StaticDevice) else "authenticator"
-        security_log.record(
-            request, security_log.Kind.SIGNED_IN, f"Password and {code} code"
-        )
+        security_log.signed_in(request, f"Password and {code} code")
         return redirect(next_url(request))
     if form.is_bound:
         pause.wrong_code(request, owner)
@@ -230,7 +228,7 @@ class SignInView(auth_views.LoginView):
         """
         response = super().form_valid(form)
         if not ways.has_way_to_sign_in(form.get_user()):
-            security_log.record(self.request, security_log.Kind.SIGNED_IN, "Password")
+            security_log.signed_in(self.request, "Password")
         return response
 
     def form_invalid(self, form: AuthenticationForm) -> HttpResponse:
