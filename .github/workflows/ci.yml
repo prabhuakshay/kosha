@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check --output-format=github .
+      - run: uv run ruff format --check .
+
+  django:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: kosha
+          POSTGRES_PASSWORD: kosha
+          POSTGRES_DB: kosha
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      SECRET_KEY: ci-only-${{ github.run_id }}-not-a-real-secret-key-padding-to-fifty-chars
+      ALLOWED_HOSTS: kosha.example.com
+      DATABASE_URL: postgres://kosha:kosha@localhost:5432/kosha
+      # Opt-in HSTS settings, enabled so --fail-level WARNING catches anything else.
+      SECURE_HSTS_INCLUDE_SUBDOMAINS: "true"
+      SECURE_HSTS_PRELOAD: "true"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked --no-dev
+      - run: uv run --no-dev manage.py check --deploy --fail-level WARNING
+      - run: uv run --no-dev manage.py makemigrations --check --dry-run
+      - run: uv run --no-dev manage.py migrate --noinput
+      - run: uv run --no-dev manage.py collectstatic --noinput
