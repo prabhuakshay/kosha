@@ -69,10 +69,9 @@ def test_every_security_screen_needs_a_confirmation(signed_in, clock, name):
     assert response["Location"] == f"{reverse('confirm')}?next={reverse(name)}"
 
 
-def change_password(client, old=PASSWORD, new=NEW_PASSWORD):
+def change_password(client, new=NEW_PASSWORD):
     return client.post(
-        reverse("password"),
-        {"old_password": old, "new_password1": new, "new_password2": new},
+        reverse("password"), {"new_password1": new, "new_password2": new}
     )
 
 
@@ -102,14 +101,16 @@ def test_changing_the_password_keeps_this_session_and_signs_out_the_others(
 
 
 @pytest.mark.django_db
-def test_a_wrong_current_password_changes_nothing(signed_in, owner):
-    response = change_password(signed_in, old="not it")
+@pytest.mark.usefixtures("browser")
+def test_a_forgotten_password_is_changed_after_signing_in_with_a_passkey(client, owner):
+    add_passkey(owner)
+    sign_in_with_passkey(client)
 
-    assert response.status_code == 200
-    assert "Your old password was entered incorrectly." in response.text
+    response = change_password(client)
+
+    assert response["Location"] == SECURITY
     owner.refresh_from_db()
-    assert owner.check_password(PASSWORD)
-    assert logged(Kind.PASSWORD_CHANGED) == 0
+    assert owner.check_password(NEW_PASSWORD)
 
 
 @pytest.mark.django_db
