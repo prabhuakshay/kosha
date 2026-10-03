@@ -1,16 +1,13 @@
 """Writing and reading the Security log."""
 
 import logging
-from datetime import timedelta
-from itertools import groupby
 from typing import TYPE_CHECKING
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils import timezone
-from django.utils.formats import date_format
 
+from apps.core import days
 from apps.signin import client
 from apps.signin.models import SecurityLogEntry
 
@@ -96,12 +93,4 @@ def by_day() -> list[tuple[str, list[SecurityLogEntry]]]:
     Returns:
         Each day's name, such as ``Today`` or ``28 Sep 2026``, and its entries.
     """
-    today = timezone.localdate()
-    names = {today: "Today", today - timedelta(days=1): "Yesterday"}
-    days = groupby(
-        SecurityLogEntry.objects.all(), key=lambda e: timezone.localdate(e.at)
-    )
-    return [
-        (names.get(day) or date_format(day, "j M Y"), list(entries))
-        for day, entries in days
-    ]
+    return days.by_day(SecurityLogEntry.objects.all(), at=lambda e: e.at)
