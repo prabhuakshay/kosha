@@ -5,7 +5,6 @@ import pytest
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
-from django_otp_webauthn.helpers import WebAuthnHelper
 from django_otp_webauthn.models import WebAuthnCredential
 
 from apps.core.testing import tags
@@ -20,24 +19,6 @@ from apps.signin.testing import (
 from config import settings as settings_module
 
 pytestmark = pytest.mark.usefixtures("browser")
-
-
-@pytest.fixture
-def browser(monkeypatch):
-    """Stand in for the browser and authenticator, which no test can run.
-
-    Registering makes a new Passkey; signing in answers with the Owner's first.
-    """
-    monkeypatch.setattr(
-        WebAuthnHelper,
-        "register_complete",
-        lambda self, user, **kwargs: add_passkey(user),
-    )
-    monkeypatch.setattr(
-        WebAuthnHelper,
-        "authenticate_complete",
-        lambda self, **kwargs: WebAuthnCredential.objects.first(),
-    )
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_not_required
 from django.urls import path
 
 from apps.signin import passkeys, views
+from apps.signin.pause import refused_while_paused
 
 urlpatterns = [
     path("claim/", views.claim, name="claim"),
@@ -26,7 +27,11 @@ urlpatterns = [
         name="passkey_register_complete",
     ),
     path("recovery-codes/", views.recovery_codes, name="recovery_codes"),
-    path("sign-in/", login_not_required(views.SignInView.as_view()), name="sign_in"),
+    path(
+        "sign-in/",
+        login_not_required(refused_while_paused(views.SignInView.as_view())),
+        name="sign_in",
+    ),
     path("sign-in/code/", views.code_step, name="code_step"),
     path(
         "sign-in/passkey/begin/",

@@ -1,0 +1,8 @@
+{% extends "layouts/signed_out.html" %}
+{% block title %}Too many tries · Kosha{% endblock %}
+{% block main %}
+    <span class="tile mt-10 size-12 text-bad"><i data-lucide="hourglass" class="size-6"></i></span>
+    <h1 class="display mt-5 text-[42px] leading-none lg:text-[48px]">Too many tries</h1>
+    <p class="mt-3 max-w-[34ch] text-[15px] leading-6 text-ink-2">Signing in from here is paused for an hour after {{ failure_limit }} wrong passwords or codes. Try again {% if until %}after {{ until|time:"g:i A"|lower }}{% else %}later{% endif %}, or from another network.</p>
+    <a href="{% url 'sign_in' %}" class="btn mt-8">Back to sign in</a>
+{% endblock %}

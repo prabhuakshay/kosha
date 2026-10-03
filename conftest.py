@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING
 import pytest
 from django.utils import timezone
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp_webauthn.helpers import WebAuthnHelper
+from django_otp_webauthn.models import WebAuthnCredential
 
 from apps.core.testing import EMAIL, PASSWORD
-from apps.signin.testing import authenticator_code, enter_code
+from apps.signin.testing import add_passkey, authenticator_code, enter_code
 
 if TYPE_CHECKING:
     from pytest_django.fixtures import SettingsWrapper
@@ -63,3 +65,21 @@ def clock(monkeypatch: pytest.MonkeyPatch) -> object:
 @pytest.fixture
 def authenticator(owner):
     return TOTPDevice.objects.create(user=owner, name="Authenticator app")
+
+
+@pytest.fixture
+def browser(monkeypatch):
+    """Stand in for the browser and authenticator, which no test can run.
+
+    Registering makes a new Passkey; signing in answers with the Owner's first.
+    """
+    monkeypatch.setattr(
+        WebAuthnHelper,
+        "register_complete",
+        lambda self, user, **kwargs: add_passkey(user),
+    )
+    monkeypatch.setattr(
+        WebAuthnHelper,
+        "authenticate_complete",
+        lambda self, **kwargs: WebAuthnCredential.objects.first(),
+    )

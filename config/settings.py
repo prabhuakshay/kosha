@@ -9,6 +9,7 @@ and the R2 ``S3_*`` values set, the app runs in production mode. Set
 ``DEBUG=true`` for local development.
 """
 
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
     "django_otp_webauthn",
+    "axes",
     "apps.core",
     "apps.signin",
     "apps.users",
@@ -76,6 +78,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
+    # Last, so the paused page it swaps in still gets the CSP header.
+    "axes.middleware.AxesMiddleware",
 ]
 
 TEMPLATES = [
@@ -113,6 +117,8 @@ CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
 
 AUTH_USER_MODEL = "users.User"
 AUTHENTICATION_BACKENDS = [
+    # First, so a paused address is refused before any password is checked.
+    "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
     "django_otp_webauthn.backends.WebAuthnBackend",
 ]
@@ -144,6 +150,20 @@ OTP_WEBAUTHN_RP_ID = (
     or urlsplit(OTP_WEBAUTHN_ALLOWED_ORIGINS[0]).hostname
 )
 OTP_WEBAUTHN_RP_NAME = "Kosha"
+
+# A Pause: 5 wrong passwords or codes from an address pause it for an hour.
+# By address only, so a stranger guessing can never pause the Owner elsewhere.
+AXES_LOCKOUT_PARAMETERS = ["ip_address"]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(hours=1)
+# Off, or a right password would wipe the count of wrong Authenticator codes.
+AXES_RESET_ON_SUCCESS = False
+# Tries refused during a Pause don't restart its hour.
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
+AXES_CLIENT_IP_CALLABLE = "apps.signin.client.address"
+AXES_LOCKOUT_CALLABLE = "apps.signin.pause.paused_page"
+# The Security log records sign-ins already.
+AXES_DISABLE_ACCESS_LOG = True
 
 validators = "django.contrib.auth.password_validation"
 AUTH_PASSWORD_VALIDATORS = [
@@ -179,6 +199,11 @@ SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=False)
 # otherwise clients can spoof HTTPS.
 if env.bool("SECURE_PROXY_SSL_HEADER", default=False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Project setting, not Django's. Behind a proxy every request comes from the
+# proxy, so the client's address is the one the proxy adds to X-Forwarded-For.
+# Without such a proxy, clients could choose their own address and escape a
+# Pause.
+USE_X_FORWARDED_FOR = env.bool("USE_X_FORWARDED_FOR", default=False)
 
 # Templates must add {{ csp_nonce }} to inline <script> and <style> tags.
 SECURE_CSP = {
