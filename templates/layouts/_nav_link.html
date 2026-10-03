@@ -1,0 +1,5 @@
+{% with current=request.resolver_match.url_name %}
+    <a href="{% url to %}"
+       class="flex h-9 items-center gap-3 rounded-lg px-2.5 text-[14px] font-medium {% if current == to %}bg-well text-ink{% else %}text-ink-2 hover:bg-well hover:text-ink{% endif %}"
+       {% if current == to %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}" class="{% if current == to %}text-accent{% endif %}"></i>{{ label }}</a>
+{% endwith %}

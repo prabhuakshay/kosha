@@ -69,14 +69,17 @@ docker run -d --name "$db" --network "$run" \
 # --- Static assets --------------------------------------------------------
 
 in_image sh -c 'test -s staticfiles/css/app.css' || fail "stylesheet missing or empty"
-in_image grep -q 'min-h-screen' staticfiles/css/app.css \
+in_image grep -q 'min-h-dvh' staticfiles/css/app.css \
   || fail "stylesheet lacks a utility class the base template uses"
 for js in htmx.min.js alpine.min.js lucide.min.js; do
   in_image test -s "staticfiles/js/$js" || fail "$js missing or empty"
 done
 in_image grep -q 'CSP Parser Error' staticfiles/js/alpine.min.js \
   || fail "alpine.min.js is not Alpine's CSP build"
-pass "compiled and vendored assets collected"
+for file in fonts/public-sans-latin-wght-normal.woff2 icons/icon-512.png core/app.js; do
+  in_image test -s "staticfiles/$file" || fail "$file missing or empty"
+done
+pass "compiled, vendored and committed assets collected"
 
 # --- Required configuration -----------------------------------------------
 

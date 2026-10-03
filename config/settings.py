@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.core",
+    "apps.signin",
     "apps.users",
 ]
 
@@ -61,6 +62,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Every view needs sign-in unless it opts out with @login_not_required.
+    "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
@@ -100,6 +103,14 @@ CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
 # -----------------------------------------------------------------------------
 
 AUTH_USER_MODEL = "users.User"
+LOGIN_URL = "sign_in"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "sign_in"
+
+# A sign-in lasts 30 days from the last visit, so the installed app rarely
+# asks again.
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+SESSION_SAVE_EVERY_REQUEST = True
 
 validators = "django.contrib.auth.password_validation"
 AUTH_PASSWORD_VALIDATORS = [

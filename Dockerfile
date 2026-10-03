@@ -77,6 +77,8 @@ RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 COPY assets/ assets/
 COPY templates/ templates/
 COPY apps/ apps/
+# Fonts and icons are committed; the build adds the stylesheet and scripts.
+COPY static/ static/
 
 RUN npm run build
 
