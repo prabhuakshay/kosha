@@ -222,3 +222,6 @@ __marimo__/
 # Kosha
 staticfiles/
 media/
+node_modules/
+static/css/app.css
+static/js/

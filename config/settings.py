@@ -3,9 +3,9 @@
 Every deployment-specific value is read from the environment, falling back to a
 ``.env`` file in the project root. See ``.env.example`` for the full list.
 
-Defaults are secure: with only ``SECRET_KEY``, ``ALLOWED_HOSTS`` and
-``DATABASE_URL`` set, the app runs in production mode. Set ``DEBUG=true`` for
-local development.
+Defaults are secure: with only ``SECRET_KEY``, ``ALLOWED_HOSTS``,
+``DATABASE_URL`` and the R2 ``S3_*`` values set, the app runs in production
+mode. Set ``DEBUG=true`` for local development.
 """
 
 from pathlib import Path
@@ -48,10 +48,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "apps.core",
     "apps.users",
 ]
 
 MIDDLEWARE = [
+    "apps.core.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     # WhiteNoise must sit directly after SecurityMiddleware.
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -162,13 +164,34 @@ USE_TZ = True
 # -----------------------------------------------------------------------------
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 # Relative paths resolve against the project root; absolute paths are kept.
 STATIC_ROOT = BASE_DIR / env.str("STATIC_ROOT", default="staticfiles")
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / env.str("MEDIA_ROOT", default="media")
 
+# See docs/adr/0001-media-in-a-private-r2-bucket.md.
+if DEBUG and not env.str("S3_BUCKET_NAME", default=""):
+    media_storage = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+else:
+    media_storage = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": env.str("S3_BUCKET_NAME"),
+            "endpoint_url": env.str("S3_ENDPOINT_URL"),
+            "access_key": env.str("S3_ACCESS_KEY_ID"),
+            "secret_key": env.str("S3_SECRET_ACCESS_KEY"),
+            # R2 rejects ACLs.
+            "default_acl": None,
+            "querystring_auth": True,
+            "querystring_expire": env.int("S3_QUERYSTRING_EXPIRE", default=300),
+            "file_overwrite": False,
+            "signature_version": "s3v4",
+        },
+    }
+
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": media_storage,
     # Hashed filenames let browsers cache static files forever.
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"

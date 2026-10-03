@@ -1,0 +1,83 @@
+# Production stack:
+#
+#   docker compose -f compose.prod.yaml up -d
+#
+#   migrate   applies migrations once, then exits
+#   django    gunicorn, started only after migrate succeeds
+#
+# Runs the published image; `build:` exists only for `--build` when changing
+# the image itself. No database service and no media volume: Postgres is
+# yours, and media lives in a private R2 bucket (docs/adr/0001).
+#
+# The app publishes on loopback only. A TLS-terminating proxy on this host
+# forwards to it and must set X-Forwarded-Proto, stripping any client copy.
+
+name: kosha
+
+x-app: &app
+  image: ghcr.io/prabhuakshay/kosha:${KOSHA_VERSION:-latest}
+  build:
+    context: .
+    target: prod
+  # Raw so a `$` in a secret is not interpolated away. Requires Compose v2.30+.
+  env_file:
+    - path: .env
+      required: true
+      format: raw
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m,mode=1777
+    # Gunicorn's worker heartbeat.
+    - /dev/shm:size=64m
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  logging:
+    driver: json-file
+    options:
+      max-size: ${DOCKER_LOG_MAX_SIZE:-10m}
+      max-file: ${DOCKER_LOG_MAX_FILE:-3}
+
+services:
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["python", "manage.py", "migrate", "--noinput"]
+
+  django:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      # Loopback only: docker/gunicorn.conf.py trusts forwarded headers from
+      # any peer on the strength of this binding.
+      - "127.0.0.1:${DOCKER_HOST_PORT:-8000}:8000"
+    restart: unless-stopped
+    # Above GUNICORN_GRACEFUL_TIMEOUT so a deploy drains in-flight requests.
+    stop_grace_period: 45s
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz/', timeout=5).status == 200 else 1)",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: ${DOCKER_CPU_LIMIT:-2.0}
+          memory: ${DOCKER_MEMORY_LIMIT:-1g}

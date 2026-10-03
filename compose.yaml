@@ -1,0 +1,95 @@
+# Development stack: `docker compose up`.
+#
+#   django    autoreloading runserver over the bind-mounted working tree
+#   tailwind  Tailwind CLI rebuilding static/css/app.css on change
+#
+# No database service: DATABASE_URL in your .env is used as-is. A server on
+# your own machine is reached as host.docker.internal, not localhost.
+
+name: kosha-dev
+
+services:
+  django:
+    build:
+      context: .
+      target: dev
+      args:
+        DOCKER_UID: ${DOCKER_UID:-1000}
+        DOCKER_GID: ${DOCKER_GID:-1000}
+    # Files written into the working tree must stay editable by you.
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    # Raw so a `$` in a secret is not interpolated away. Requires Compose v2.30+.
+    env_file:
+      - path: .env
+        required: true
+        format: raw
+    volumes:
+      - .:/app
+      - /app/.venv
+      - /app/node_modules
+      - /app/staticfiles
+      - /app/.ruff_cache
+      - uv-cache:/cache/uv
+    ports:
+      - "${DOCKER_HOST_PORT:-8000}:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # For `breakpoint()` via `docker compose attach django`.
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz/', timeout=4).status == 200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      # Covers the entrypoint's `uv sync` on a cold cache.
+      start_period: 120s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1g
+    depends_on:
+      tailwind:
+        condition: service_healthy
+
+  tailwind:
+    build:
+      context: .
+      target: tailwind
+      args:
+        DOCKER_UID: ${DOCKER_UID:-1000}
+        DOCKER_GID: ${DOCKER_GID:-1000}
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    # Without a TTY the watcher exits when stdin closes.
+    tty: true
+    volumes:
+      - .:/app
+      - /app/node_modules
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "test -s static/css/app.css && test -s static/js/htmx.min.js && test -s static/js/alpine.min.js && test -s static/js/lucide.min.js",
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+      # Covers the first npm install.
+      start_period: 180s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m
+
+volumes:
+  uv-cache:
