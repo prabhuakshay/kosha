@@ -103,7 +103,7 @@ def test_the_index_lists_every_list_with_counts_and_totals(signed_in):
         ("expenses", "who you pay"),
         ("categories", "What money is spent or received for"),
         ("tags", "The context money moves in"),
-        ("assets", "bank, savings, cash and investment accounts"),
+        ("assets", "bank accounts, deposits, cash and investments"),
     ],
 )
 def test_an_empty_list_says_what_belongs_there(signed_in, name, says):

@@ -29,8 +29,8 @@ def field_value(response, name):
 def test_the_owner_adds_an_asset_account_and_sees_it(signed_in):
     response = add(
         signed_in,
-        name="HDFC Savings",
-        kind="savings",
+        name="HDFC FD",
+        kind="deposit",
         opening_balance="320000.50",
         opened_on="2026-04-01",
         notes="Salary comes in here",
@@ -39,8 +39,8 @@ def test_the_owner_adds_an_asset_account_and_sees_it(signed_in):
     account = Account.objects.get()
     assert response["Location"] == reverse("masters:asset", args=[account.pk])
     page = signed_in.get(response["Location"])
-    assert '<h1 class="display page-title">HDFC Savings</h1>' in page.text
-    assert "data-kind>Savings<" in page.text
+    assert '<h1 class="display page-title">HDFC FD</h1>' in page.text
+    assert "data-kind>Deposit<" in page.text
     assert "data-balance>₹3,20,000.50<" in page.text
     assert "1 Apr 2026" in page.text
     assert "Salary comes in here" in page.text
@@ -112,7 +112,7 @@ def test_only_asset_kinds_are_offered(signed_in):
     response = signed_in.get(NEW)
 
     offered = [o["value"] for o in tags(response, "option")]
-    assert offered == ["bank", "savings", "cash", "investment", "lent", "property"]
+    assert offered == ["bank", "deposit", "cash", "investment", "lent", "property"]
 
 
 @pytest.mark.django_db
@@ -160,7 +160,7 @@ def test_the_owner_edits_an_asset_account_and_changes_its_kind(signed_in, hdfc):
         signed_in,
         hdfc,
         name="HDFC Salary",
-        kind="savings",
+        kind="deposit",
         opening_balance="1000",
         notes="Joint",
     )
@@ -169,7 +169,7 @@ def test_the_owner_edits_an_asset_account_and_changes_its_kind(signed_in, hdfc):
     hdfc.refresh_from_db()
     assert (hdfc.name, hdfc.kind, hdfc.opening_balance, hdfc.notes) == (
         "HDFC Salary",
-        "savings",
+        "deposit",
         1000,
         "Joint",
     )

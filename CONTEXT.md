@@ -55,14 +55,14 @@ _Avoid_: default currency, home currency
 Any Asset account, Liability, Expense account, Income account, or Revaluation. Its name is unique among Accounts of the same type, ignoring case. Never created from typed text, only on purpose.
 
 **Asset account**:
-An Account holding money the Owner has: a Bank, Savings, Cash, Investment, Lent or Property account. Lent is money others owe the Owner; Property is something they own that isn't money, such as a house, land, a vehicle or gold.
+An Account holding money the Owner has: a Bank, Deposit, Cash, Investment, Lent or Property account. Bank is an account money comes in to and is spent from, whatever the bank calls it; Deposit is money put away for a fixed term, such as a fixed or recurring deposit. Lent is money others owe the Owner; Property is something they own that isn't money, such as a house, land, a vehicle or gold.
 
 **Liability**:
 An Account holding money the Owner owes, which they can also spend from: a Credit card, Loan, Mortgage or Debt to a person.
 _Avoid_: debt account
 
 **Kind**:
-What sort of Asset account or Liability an Account is, such as Savings or Credit card. It can change within the same type but never from an Asset account to a Liability or back.
+What sort of Asset account or Liability an Account is, such as Deposit or Credit card. It can change within the same type but never from an Asset account to a Liability or back.
 _Avoid_: role, subtype
 
 **Expense account**:
@@ -81,7 +81,7 @@ _Avoid_: depreciation, adjustment, unrealised gains
 Everything in Asset accounts minus everything in Liabilities.
 
 **Liquid net worth**:
-Net worth counting only Bank, Savings, Cash and Investment accounts, less Credit cards: what the Owner could actually use.
+Net worth counting only Bank, Deposit, Cash and Investment accounts, less Credit cards: what the Owner could actually use.
 
 **Opening balance**:
 What an Asset account or Liability held on the day the Owner started tracking it in Kosha.

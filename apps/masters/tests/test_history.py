@@ -37,7 +37,7 @@ def test_editing_an_asset_account_lists_each_changed_field(signed_in, hdfc):
         signed_in,
         hdfc,
         name="HDFC Salary",
-        kind="savings",
+        kind="deposit",
         opening_balance="1500.5",
         notes="Joint",
     )
@@ -46,7 +46,7 @@ def test_editing_an_asset_account_lists_each_changed_field(signed_in, hdfc):
     assert actions(page) == ["Edited"]
     assert changes(page) == [
         "Name: HDFC → HDFC Salary",
-        "Kind: Bank → Savings",
+        "Kind: Bank → Deposit",
         "Opening balance: ₹3,20,000.00 → ₹1,500.50",
         "Notes: None → Joint",
     ]
