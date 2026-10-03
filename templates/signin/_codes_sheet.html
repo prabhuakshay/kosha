@@ -1,6 +1,0 @@
-<p class="mt-2 text-[14px] leading-5 text-ink-2">{{ recovery_codes_left }} of {{ recovery_codes_total }} left. Each signs you in once if your phone is lost.</p>
-<form method="post" action="{% url 'make_recovery_codes' %}" class="mt-6">
-    {% csrf_token %}
-    <button class="btn"><i data-lucide="refresh-cw" class="size-4"></i>Make new codes</button>
-</form>
-<p class="mt-3 text-[13px] text-ink-2">Your old codes stop working, saved or not.</p>

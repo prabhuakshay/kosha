@@ -7,17 +7,17 @@
         {% csrf_token %}
         <div class="grid gap-4">
             <label class="block">
-                <span class="text-[13px] font-medium text-ink-2">Name</span>
+                <span class="label">Name</span>
                 <input class="field mt-1.5" name="name" value="{{ form.name.value|default:'' }}" autocomplete="name" required autofocus>
                 {% include "signin/_errors.html" with field=form.name %}
             </label>
             <label class="block">
-                <span class="text-[13px] font-medium text-ink-2">Email</span>
+                <span class="label">Email</span>
                 <input class="field mt-1.5" type="email" name="email" value="{{ form.email.value|default:'' }}" autocomplete="email" required>
                 {% include "signin/_errors.html" with field=form.email %}
             </label>
             <label class="block">
-                <span class="text-[13px] font-medium text-ink-2">Password</span>
+                <span class="label">Password</span>
                 <input class="field mt-1.5" type="password" name="password" autocomplete="new-password" required>
                 {% include "signin/_errors.html" with field=form.password %}
             </label>

@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="static/icons/icon.svg" width="96" height="96" alt="Kosha logo">
+
 # Kosha
 
 **A self-hosted personal finance app built with Django.**

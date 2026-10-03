@@ -1,9 +1,13 @@
-{% extends "layouts/signed_in.html" %}
+{% extends "layouts/settings_page.html" %}
 {% block title %}Settings · Kosha{% endblock %}
-{% block back %}{% include "layouts/_back.html" with to="home" label="Home" %}{% endblock %}
+{% block open %}{% endblock %}
 {% block main %}
-    <h1 class="display mt-2 text-[32px] leading-none lg:text-[40px]">Settings</h1>
-    <ul class="mt-6 divide-y rounded-xl border bg-surface">
-        {% include "layouts/_row.html" with to="security" icon="shield-check" title="Security" sub="Passkeys, password, sessions and the log" %}
-    </ul>
+    {% comment %}Phones show only the list here; desktops have room to say so.{% endcomment %}
+    <div class="grid min-h-[60dvh] place-items-center text-center">
+        <div>
+            <span class="tile mx-auto size-14 rounded-2xl"><i data-lucide="settings" class="size-6"></i></span>
+            <h1 class="display mt-5 text-[28px]">Settings</h1>
+            <p class="note mx-auto max-w-[32ch]">Choose a setting from the list. Its details open here.</p>
+        </div>
+    </div>
 {% endblock %}

@@ -7,7 +7,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 
 # Matches the light theme's page colour, so the splash screen doesn't flash.
-THEME_COLOR = "#f5f6f5"
+THEME_COLOR = "#fafaf8"
 
 
 def home(request: HttpRequest) -> HttpResponse:
