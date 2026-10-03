@@ -9,6 +9,7 @@ urlpatterns = [
     path("settings/", views.settings, name="settings"),
     path("settings/base-currency/", views.base_currency, name="base_currency"),
     path("settings/history/", views.history_page, name="history"),
+    path("settings/appearance/", views.appearance_page, name="appearance"),
     path("manifest.webmanifest", views.manifest, name="manifest"),
     path("sw.js", views.service_worker, name="service_worker"),
 ]

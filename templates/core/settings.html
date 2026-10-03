@@ -8,6 +8,10 @@
         {% include "layouts/_row.html" with to="base_currency" icon="coins" title="Base currency" sub="What every amount is in" %}
         {% include "layouts/_row.html" with to="history" icon="history" title="History" sub="Every change to Masters and Settings" %}
     </nav>
+    <p class="group-label">This browser</p>
+    <nav class="rows" aria-label="This browser">
+        {% include "layouts/_row.html" with to="appearance" icon=theme.icon title="Appearance" sub=theme.label %}
+    </nav>
     <p class="group-label">Security</p>
     <nav class="rows" aria-label="Security">
         {% include "layouts/_row.html" with to="security" icon="fingerprint" title="Signing in" sub="Passkeys, authenticator app, password, recovery codes" %}
