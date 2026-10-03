@@ -1,10 +1,16 @@
 """The app shell: home, settings, and what makes Kosha installable."""
 
+from decimal import Decimal
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_not_required
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.templatetags.static import static
 from django.urls import reverse
+
+from apps.core.forms import BaseCurrencyForm
+from apps.core.models import Setting
 
 # Matches the light theme's page colour, so the splash screen doesn't flash.
 THEME_COLOR = "#fafaf8"
@@ -32,6 +38,27 @@ def settings(request: HttpRequest) -> HttpResponse:
         The settings page.
     """
     return render(request, "core/settings.html")
+
+
+def base_currency(request: HttpRequest) -> HttpResponse:
+    """Choose the Base currency, which relabels every amount without converting it.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The form, or a redirect back to it once changed.
+    """
+    form = BaseCurrencyForm(request.POST or None, instance=Setting.load())
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"Amounts are now in {form.instance.base_currency}.")
+        return redirect("base_currency")
+    return render(
+        request,
+        "core/base_currency.html",
+        {"form": form, "sample": Decimal(320000)},
+    )
 
 
 # Browsers fetch the manifest without cookies, so it can't sit behind sign-in.
