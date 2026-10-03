@@ -6,24 +6,15 @@ from django.core.management import call_command
 from django.test import Client
 from django.urls import reverse
 
-from apps.core.testing import EMAIL, PASSWORD
-
-DETAILS = {"name": "Asha Rao", "email": EMAIL, "password": PASSWORD}
-
-
-def printed_code():
-    out = StringIO()
-    call_command("setup_code", stdout=out)
-    return re.search(r"Setup code: (\d{4} \d{4} \d{4})", out.getvalue())[1]
-
-
-def enter_code(client, code=None):
-    return client.post(reverse("claim"), {"code": code or printed_code()})
-
-
-def claim(client, **details):
-    enter_code(client)
-    return client.post(reverse("claim_owner"), {**DETAILS, **details})
+from apps.core.testing import EMAIL
+from apps.signin.testing import (
+    DETAILS,
+    claim,
+    enter_setup_code,
+    printed_code,
+    set_up_authenticator,
+    sign_in,
+)
 
 
 @pytest.mark.django_db
@@ -55,18 +46,17 @@ def test_setup_code_stays_the_same(client):
 def test_claim_makes_the_owner_and_signs_them_in(client, django_user_model):
     response = claim(client)
 
-    assert response["Location"] == reverse("home")
+    assert response["Location"] == reverse("choose_way")
     (owner,) = django_user_model.objects.all()
     assert owner.name == "Asha Rao"
     assert owner.email == EMAIL
-    home = client.get(reverse("home"))
-    assert home.status_code == 200
-    assert "Asha Rao" in home.text
+    assert client.get(reverse("home"))["Location"].startswith(reverse("choose_way"))
 
 
 @pytest.mark.django_db
 def test_the_owner_has_the_admin(client):
     claim(client)
+    set_up_authenticator(client)
 
     assert client.get(reverse("admin:index")).status_code == 200
 
@@ -76,7 +66,7 @@ def test_the_owner_has_the_admin(client):
 def test_setup_code_may_be_typed_with_any_spacing(client, spacing):
     code = printed_code().replace(" ", spacing)
 
-    response = enter_code(client, code)
+    response = enter_setup_code(client, code)
 
     assert response["Location"] == reverse("claim_owner")
 
@@ -86,7 +76,7 @@ def test_wrong_setup_code_is_refused(client, django_user_model):
     right = printed_code()
     code = right[:-1] + str((int(right[-1]) + 1) % 10)
 
-    response = enter_code(client, code)
+    response = enter_setup_code(client, code)
 
     assert response.status_code == 200
     assert "That isn&#x27;t the Setup code." in response.text
@@ -97,7 +87,7 @@ def test_wrong_setup_code_is_refused(client, django_user_model):
 
 @pytest.mark.django_db
 def test_owner_details_need_the_setup_code_in_this_session(django_user_model):
-    enter_code(Client())
+    enter_setup_code(Client())
     other = Client()
 
     response = other.post(reverse("claim_owner"), DETAILS)
@@ -141,16 +131,16 @@ def test_owner_signs_in_later_whatever_the_email_case(client):
     claim(client, email="Owner@Example.COM")
     client.post(reverse("sign_out"))
 
-    client.post(reverse("sign_in"), {"username": EMAIL, "password": PASSWORD})
+    sign_in(client)
 
-    assert client.get(reverse("home")).status_code == 200
+    assert client.get(reverse("home"))["Location"].startswith(reverse("choose_way"))
 
 
 @pytest.mark.django_db
 def test_every_claim_route_is_gone_once_claimed(django_user_model):
     code = printed_code()
     midway = Client()
-    enter_code(midway, code)
+    enter_setup_code(midway, code)
     claim(Client())
 
     for client in (Client(), midway):

@@ -1,17 +1,39 @@
 """Claiming the install, and signing in and out."""
 
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_not_required
 from django.http import Http404, HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, resolve_url
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django_otp import login as otp_login
+from django_otp.plugins.otp_totp.models import default_key
 
+from apps.signin import ways
 from apps.signin.claim import is_claimed
-from apps.signin.forms import OwnerForm, SetupCodeForm
+from apps.signin.forms import (
+    CodeForm,
+    NewAuthenticatorForm,
+    OwnerForm,
+    SetupCodeForm,
+)
+from apps.signin.middleware import part_of_signing_in
 
 # Set once the Setup code is right, so step 2 can't be reached by URL.
 CODE_ACCEPTED = "signin.setup_code_accepted"
+# Kept until the app shows a right code, so reloading doesn't change the QR code.
+AUTHENTICATOR_KEY = "signin.authenticator_key"
+
+
+def _next(request: HttpRequest) -> str:
+    url = request.GET.get("next", "")
+    if url_has_allowed_host_and_scheme(
+        url, {request.get_host()}, require_https=request.is_secure()
+    ):
+        return url
+    return resolve_url(settings.LOGIN_REDIRECT_URL)
 
 
 def _unclaimed_only() -> None:
@@ -53,8 +75,88 @@ def claim_owner(request: HttpRequest) -> HttpResponse:
     form = OwnerForm(request.POST or None)
     if form.is_valid():
         login(request, form.save())
-        return redirect("home")
+        return redirect("choose_way")
     return render(request, "signin/claim_owner.html", {"form": form})
+
+
+@part_of_signing_in
+def choose_way(request: HttpRequest) -> HttpResponse:
+    """Step 3 of Claim: choose a Way to sign in.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The choice, or a redirect home once there is a Way to sign in.
+    """
+    if ways.has_way_to_sign_in(request.user):
+        return redirect("home")
+    return render(request, "signin/choose_way.html")
+
+
+@part_of_signing_in
+def set_up_authenticator(request: HttpRequest) -> HttpResponse:
+    """Set up the Authenticator app as the first Way to sign in.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The QR code and key, a redirect to the Recovery codes once the app
+        shows a right code, or a redirect home once there is a Way to sign in.
+    """
+    # Reachable on the password alone, so it must never replace a Way to sign in.
+    if ways.has_way_to_sign_in(request.user):
+        return redirect("home")
+    key = request.session.setdefault(AUTHENTICATOR_KEY, default_key())
+    device = ways.new_authenticator(request.user, key)
+    form = NewAuthenticatorForm(device, request.POST or None)
+    if form.is_valid():
+        del request.session[AUTHENTICATOR_KEY]
+        otp_login(request, device)
+        return redirect("recovery_codes")
+    return render(
+        request,
+        "signin/set_up_authenticator.html",
+        {"form": form, "qr": ways.qr_code(device), "key": ways.typed_key(device)},
+    )
+
+
+def recovery_codes(request: HttpRequest) -> HttpResponse:
+    """Step 4 of Claim: the Recovery codes, shown this once.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The codes, or a redirect home once they have been issued.
+    """
+    if ways.has_recovery_codes(request.user):
+        return redirect("home")
+    codes = ways.issue_recovery_codes(request.user)
+    return render(request, "signin/recovery_codes.html", {"codes": codes})
+
+
+@part_of_signing_in
+def code_step(request: HttpRequest) -> HttpResponse:
+    """After the password, a code from the Authenticator app or a Recovery code.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The form, or a redirect on to ``next`` once signed in.
+    """
+    owner = request.user
+    if owner.is_verified():
+        return redirect(_next(request))
+    if not ways.has_way_to_sign_in(owner):
+        return redirect("choose_way")
+    form = CodeForm(owner, request.POST or None)
+    if form.is_valid():
+        otp_login(request, form.device)
+        return redirect(_next(request))
+    return render(request, "signin/code_step.html", {"form": form})
 
 
 class SignInView(auth_views.LoginView):

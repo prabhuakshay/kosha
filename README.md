@@ -100,7 +100,7 @@ docker compose -f compose.prod.yaml up -d
 docker compose -f compose.prod.yaml logs django | grep "Setup code"
 ```
 
-- **Claim:** open Kosha and enter the Setup code from the log to become its Owner, its only sign-in. `docker compose -f compose.prod.yaml exec django python manage.py setup_code` prints it again. Once claimed, there is no Setup code. See [ADR 0002](docs/adr/0002-one-owner-per-install.md).
+- **Claim:** open Kosha and enter the Setup code from the log to become its Owner, its only sign-in. `docker compose -f compose.prod.yaml exec django python manage.py setup_code` prints it again. Then set up an Authenticator app and save your ten Recovery codes. Once claimed, there is no Setup code. See [ADR 0002](docs/adr/0002-one-owner-per-install.md).
 - **Migrations** run once in a `migrate` container before the app starts; if they fail, the app does not start.
 - **The app** listens on `127.0.0.1:8000` only (`DOCKER_HOST_PORT`). Point your proxy at it and have the proxy set `X-Forwarded-Proto`.
 - **Database:** a Postgres on the same host is reached as `host.docker.internal`.

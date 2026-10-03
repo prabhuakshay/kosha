@@ -2,16 +2,13 @@ import pytest
 from django.urls import URLResolver, get_resolver, reverse
 
 from apps.core.testing import EMAIL, PASSWORD
+from apps.signin.testing import authenticator_code, enter_code, sign_in
 
 PUBLIC = {"sign_in", "manifest", "service_worker"}
 # Open only while unclaimed; test_claim covers them.
 CLAIM = {"claim", "claim_owner"}
-
-
-def sign_in(client, email=EMAIL, password=PASSWORD, **extra):
-    return client.post(
-        reverse("sign_in"), {"username": email, "password": password, **extra}
-    )
+# Reachable on the password alone; test_code_step covers them.
+SIGNING_IN = {"code_step", "choose_way", "set_up_authenticator"}
 
 
 def kosha_routes(patterns=None):
@@ -36,6 +33,19 @@ def test_every_page_but_the_public_ones_needs_sign_in(client):
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("authenticator")
+def test_every_page_but_signing_in_needs_the_code_step(client):
+    sign_in(client)
+
+    for name in set(kosha_routes()) - PUBLIC - CLAIM - SIGNING_IN - {"sign_out"}:
+        url = reverse(name)
+
+        response = client.get(url)
+
+        assert response["Location"] == f"{reverse('code_step')}?next={url}", name
+
+
+@pytest.mark.django_db
 @pytest.mark.usefixtures("owner")
 def test_public_pages_open_without_sign_in(client):
     for name in PUBLIC:
@@ -43,18 +53,25 @@ def test_public_pages_open_without_sign_in(client):
 
 
 @pytest.mark.django_db
-def test_sign_in_with_email_and_password_lands_home(client, owner):
+def test_sign_in_with_password_and_code_lands_home(client, authenticator):
     response = sign_in(client)
 
+    assert response["Location"] == reverse("home")
+    code_step = client.get(reverse("home"))["Location"]
+    assert code_step.startswith(reverse("code_step"))
+    response = client.post(
+        code_step, {"code": authenticator_code(authenticator.bin_key)}
+    )
     assert response["Location"] == reverse("home")
     assert client.get(reverse("home")).status_code == 200
 
 
 @pytest.mark.django_db
-def test_sign_in_ignores_the_email_case(client, owner):
+@pytest.mark.usefixtures("authenticator")
+def test_sign_in_ignores_the_email_case(client):
     sign_in(client, email="Owner@Example.COM")
 
-    assert client.get(reverse("home")).status_code == 200
+    assert client.get(reverse("home"))["Location"].startswith(reverse("code_step"))
 
 
 @pytest.mark.django_db
@@ -112,8 +129,9 @@ def test_sign_in_ignores_next_outside_kosha(client, owner, next_url):
 
 
 @pytest.mark.django_db
-def test_sign_in_lasts_30_days_from_the_last_visit(client, owner, clock):
+def test_sign_in_lasts_30_days_from_the_last_visit(client, authenticator, clock):
     sign_in(client)
+    enter_code(client, authenticator_code(authenticator.bin_key))
 
     clock.advance(days=29)
     assert client.get(reverse("home")).status_code == 200
@@ -125,7 +143,7 @@ def test_sign_in_lasts_30_days_from_the_last_visit(client, owner, clock):
 
 
 @pytest.mark.django_db
-def test_admin_login_goes_through_kosha_sign_in_and_back(client, owner):
+def test_admin_login_goes_through_kosha_sign_in_and_back(client, authenticator):
     admin = reverse("admin:index")
 
     response = client.get(admin, follow=True)
@@ -133,6 +151,8 @@ def test_admin_login_goes_through_kosha_sign_in_and_back(client, owner):
     sign_in_url = f"{reverse('sign_in')}?next={admin}"
     assert response.redirect_chain[-1][0] == sign_in_url
     assert sign_in(client, next=admin)["Location"] == admin
+    code = authenticator_code(authenticator.bin_key)
+    assert enter_code(client, code, admin)["Location"] == admin
     assert client.get(admin).status_code == 200
 
 

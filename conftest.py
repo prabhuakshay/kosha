@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 from django.utils import timezone
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.core.testing import EMAIL, PASSWORD
+from apps.signin.testing import authenticator_code, enter_code
 
 if TYPE_CHECKING:
     from pytest_django.fixtures import SettingsWrapper
@@ -32,8 +34,10 @@ def owner(django_user_model):
 
 
 @pytest.fixture
-def signed_in(client, owner):
+def signed_in(client, owner, authenticator):
+    """A client signed in as the Owner, past the code step."""
     client.force_login(owner)
+    enter_code(client, authenticator_code(authenticator.bin_key))
     return client
 
 
@@ -54,3 +58,8 @@ def clock(monkeypatch: pytest.MonkeyPatch) -> object:
     c = Clock()
     monkeypatch.setattr(timezone, "now", lambda: c.now)
     return c
+
+
+@pytest.fixture
+def authenticator(owner):
+    return TOTPDevice.objects.create(user=owner, name="Authenticator app")
