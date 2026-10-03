@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.templatetags.static import static
 from django.urls import reverse
 
-from apps.core import history
+from apps.core import appearance, history
 from apps.core.forms import BaseCurrencyForm
 from apps.core.models import Setting
 
@@ -88,6 +88,35 @@ def history_page(request: HttpRequest) -> HttpResponse:
         The History page.
     """
     return render(request, "core/history.html", {"days": history.by_day()})
+
+
+def appearance_page(request: HttpRequest) -> HttpResponse:
+    """Choose a light or dark theme for this browser, or Auto to follow the device.
+
+    Kept in a cookie rather than a Setting, so each device can look its own way.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The choices, or a redirect back to them once one is made.
+    """
+    if request.method != "POST":
+        return render(request, "core/appearance.html", {"themes": appearance.THEMES})
+    response = redirect("appearance")
+    theme = appearance.find(request.POST.get("theme"))
+    if theme == appearance.AUTO:
+        response.delete_cookie(appearance.COOKIE, samesite="Lax")
+    elif theme:
+        response.set_cookie(
+            appearance.COOKIE,
+            theme.value,
+            max_age=appearance.LASTS,
+            secure=request.is_secure(),
+            httponly=True,
+            samesite="Lax",
+        )
+    return response
 
 
 # Browsers fetch the manifest without cookies, so it can't sit behind sign-in.

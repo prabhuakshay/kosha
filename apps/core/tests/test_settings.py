@@ -47,7 +47,14 @@ def test_security_goes_back_to_settings(signed_in, clock, name):
 
 
 SETTINGS, SECURITY = reverse("settings"), reverse("security")
-PAGES = ["base_currency", "history", "security", "sessions", "security_log"]
+PAGES = [
+    "base_currency",
+    "history",
+    "appearance",
+    "security",
+    "sessions",
+    "security_log",
+]
 
 
 @pytest.mark.django_db
@@ -98,6 +105,7 @@ def selected(response):
         ("settings", set()),
         ("base_currency", {reverse("base_currency")}),
         ("history", {reverse("history")}),
+        ("appearance", {reverse("appearance")}),
         ("security", {SECURITY}),
         ("password", {SECURITY}),
         ("sessions", {reverse("sessions")}),
