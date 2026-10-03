@@ -94,6 +94,6 @@ ICONS = {
     Account.Kind.PROPERTY: "house",
     Account.Kind.CREDIT_CARD: "credit-card",
     Account.Kind.LOAN: "banknote-arrow-down",
-    Account.Kind.MORTGAGE: "key-round",
+    Account.Kind.MORTGAGE: "calendar-clock",
     Account.Kind.DEBT: "handshake",
 }
