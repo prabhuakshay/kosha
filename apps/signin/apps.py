@@ -12,5 +12,5 @@ class SigninConfig(AppConfig):
 
     @override
     def ready(self) -> None:
-        """Connect to django-axes' signal that a Pause began."""
-        from apps.signin import pause  # ruff: ignore[unused-import, import-outside-top-level]
+        """Connect to the signals that a Pause began and that a Session signed in."""
+        from apps.signin import pause, sessions  # ruff: ignore[unused-import, import-outside-top-level]

@@ -1,6 +1,15 @@
-"""Writing the Security log."""
+"""Writing and reading the Security log."""
 
+import logging
+from datetime import timedelta
+from itertools import groupby
 from typing import TYPE_CHECKING
+
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.formats import date_format
 
 from apps.signin import client
 from apps.signin.models import SecurityLogEntry
@@ -9,6 +18,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
 Kind = SecurityLogEntry.Kind
+logger = logging.getLogger(__name__)
 
 
 def record(
@@ -33,6 +43,40 @@ def record(
     )
 
 
+def signed_in(request: HttpRequest, how: str) -> None:
+    """Log a finished sign-in, emailing the Owner when it came from somewhere new.
+
+    Somewhere new is an address or device no earlier sign-in used. The first
+    sign-in, at Claim, has nothing to compare with, so it sends nothing.
+
+    Args:
+        request: The request that signed in.
+        how: How, such as ``Passkey``.
+    """
+    entry = record(request, Kind.SIGNED_IN, how)
+    earlier = SecurityLogEntry.objects.filter(kind=Kind.SIGNED_IN).exclude(pk=entry.pk)
+    if earlier.exists() and not (
+        earlier.filter(address=entry.address).exists()
+        and earlier.filter(device=entry.device).exists()
+    ):
+        _email_new_sign_in(request, entry)
+
+
+def _email_new_sign_in(request: HttpRequest, entry: SecurityLogEntry) -> None:
+    body = render_to_string(
+        "signin/new_sign_in_email.txt",
+        {
+            "entry": entry,
+            "sessions_url": request.build_absolute_uri(reverse("sessions")),
+        },
+    )
+    try:
+        send_mail("New sign-in to Kosha", body, None, [request.user.email])
+    except Exception:
+        # No failure to send, of any kind, may stop the Owner signing in.
+        logger.exception("Couldn't email the Owner about a new sign-in")
+
+
 def failed(request: HttpRequest, kind: Kind) -> None:
     """Log a wrong password or code, unless it began a Pause.
 
@@ -44,3 +88,20 @@ def failed(request: HttpRequest, kind: Kind) -> None:
     """
     if not getattr(request, "axes_locked_out", False):
         record(request, kind)
+
+
+def by_day() -> list[tuple[str, list[SecurityLogEntry]]]:
+    """Every entry, newest first, under the day it happened.
+
+    Returns:
+        Each day's name, such as ``Today`` or ``28 Sep 2026``, and its entries.
+    """
+    today = timezone.localdate()
+    names = {today: "Today", today - timedelta(days=1): "Yesterday"}
+    days = groupby(
+        SecurityLogEntry.objects.all(), key=lambda e: timezone.localdate(e.at)
+    )
+    return [
+        (names.get(day) or date_format(day, "j M Y"), list(entries))
+        for day, entries in days
+    ]

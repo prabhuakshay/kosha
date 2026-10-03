@@ -252,7 +252,26 @@ def signed_in_sessions(request: HttpRequest) -> HttpResponse:
     Returns:
         The page.
     """
-    return render(request, "signin/sessions.html")
+    return render(
+        request, "signin/sessions.html", {"sessions": sessions.every_session(request)}
+    )
+
+
+@require_POST
+@confirmation.required
+def sign_out_others(request: HttpRequest) -> HttpResponse:
+    """Sign out every Session but this one.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        A redirect to Sessions.
+    """
+    sessions.sign_out_others(request)
+    security_log.record(request, security_log.Kind.SIGNED_OUT_ELSEWHERE)
+    messages.success(request, "Signed out everywhere else.")
+    return redirect("sessions")
 
 
 @confirmation.required
@@ -265,4 +284,4 @@ def log(request: HttpRequest) -> HttpResponse:
     Returns:
         The page.
     """
-    return render(request, "signin/security_log.html")
+    return render(request, "signin/security_log.html", {"days": security_log.by_day()})

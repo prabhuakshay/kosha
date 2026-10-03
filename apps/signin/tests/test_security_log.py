@@ -1,9 +1,16 @@
+import re
+from datetime import timedelta
+from io import StringIO
+
 import pytest
+from django.core.management import call_command
 from django.urls import reverse
+from django.utils.timezone import localdate
 from django_otp.plugins.otp_static.models import StaticDevice
 
 from apps.signin.models import SecurityLogEntry
 from apps.signin.testing import (
+    CHROME_ON_MAC,
     add_passkey,
     authenticator_code,
     claim,
@@ -14,10 +21,6 @@ from apps.signin.testing import (
 
 Kind = SecurityLogEntry.Kind
 pytestmark = pytest.mark.usefixtures("from_a_mac")
-CHROME_ON_MAC = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
-)
 
 
 @pytest.fixture
@@ -195,3 +198,50 @@ def test_the_admin_shows_the_log_read_only(signed_in):
         changelist, {"action": "delete_selected", "_selected_action": [entry.pk]}
     )
     assert logged() == [(Kind.SIGNED_IN, "Password and authenticator code")]
+
+
+def shown_entries(response):
+    return re.findall(r"data-log-kind>([^<]+)<", response.text)
+
+
+@pytest.mark.django_db
+def test_the_log_screen_lists_entries_newest_first(client, authenticator):
+    sign_in(client, password="not it")
+    sign_in(client)
+    enter_code(client, authenticator_code(authenticator.bin_key))
+
+    response = client.get(reverse("security_log"))
+
+    assert shown_entries(response) == ["Signed in", "Wrong email or password"]
+    assert "Password and authenticator code" in response.text
+    assert "Chrome on macOS · 198.51.100.7" in response.text
+
+
+@pytest.mark.django_db
+def test_the_log_screen_shows_what_happened_on_the_server(client, owner, authenticator):
+    call_command("break_glass", "--password", stdout=StringIO())
+    owner.refresh_from_db()
+    client.force_login(owner)
+    enter_code(client, authenticator_code(authenticator.bin_key))
+
+    response = client.get(reverse("security_log"))
+
+    assert shown_entries(response) == ["Signed in", "Reset on the server"]
+    assert "On the server" in response.text
+
+
+@pytest.mark.django_db
+def test_the_log_screen_groups_entries_by_day(signed_in, clock):
+    for days_ago in (1, 3):
+        SecurityLogEntry.objects.create(
+            kind=Kind.WRONG_PASSWORD, at=clock.now - timedelta(days=days_ago)
+        )
+
+    response = signed_in.get(reverse("security_log"))
+
+    earlier = localdate(clock.now - timedelta(days=3))
+    assert re.findall(r"data-log-day>([^<]+)<", response.text) == [
+        "Today",
+        "Yesterday",
+        f"{earlier:%-d %b %Y}",
+    ]
