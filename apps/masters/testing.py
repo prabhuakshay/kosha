@@ -1,40 +1,50 @@
-"""Helpers for tests that add and edit Asset accounts, as the Owner would."""
+"""Helpers for tests that add and edit Accounts, as the Owner would."""
 
+import re
+from html import unescape
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
 from django.utils.timezone import localdate
 
+from apps.core.testing import tags
+from apps.masters.models import Account
+
 if TYPE_CHECKING:
     from django.http import HttpResponse
     from django.test import Client
 
-    from apps.masters.models import Account
+FILLED_IN = {
+    Account.Type.ASSET: {"name": "HDFC Savings", "kind": "bank"},
+    Account.Type.LIABILITY: {"name": "HDFC Regalia", "kind": "credit_card"},
+}
 
 
-def add(client: Client, **fields: str) -> HttpResponse:
-    """Submit the new Asset account form, filled in except for ``fields``.
+def add(
+    client: Client, type_: Account.Type = Account.Type.ASSET, **fields: str
+) -> HttpResponse:
+    """Submit the new Account form for a type, filled in except for ``fields``.
 
     Args:
         client: A signed-in client.
+        type_: An Asset account or a Liability.
         **fields: Values to submit in place of the defaults.
 
     Returns:
         The response.
     """
     data = {
-        "name": "HDFC Savings",
-        "kind": "bank",
+        **FILLED_IN[type_],
         "opening_balance": "0",
         "opened_on": localdate().isoformat(),
         "notes": "",
         **fields,
     }
-    return client.post(reverse("masters:new_asset"), data)
+    return client.post(reverse(f"masters:new_{type_}"), data)
 
 
 def edit(client: Client, account: Account, **fields: str) -> HttpResponse:
-    """Submit an Asset account's edit form, changing only ``fields``.
+    """Submit an Account's edit form, changing only ``fields``.
 
     Args:
         client: A signed-in client.
@@ -52,4 +62,63 @@ def edit(client: Client, account: Account, **fields: str) -> HttpResponse:
         "notes": account.notes,
         **fields,
     }
-    return client.post(reverse("masters:edit_asset", args=[account.pk]), data)
+    return client.post(reverse(f"masters:edit_{account.type}", args=[account.pk]), data)
+
+
+def errors(response: HttpResponse) -> list[str]:
+    """The errors a form shows under its fields.
+
+    Args:
+        response: The form's page.
+
+    Returns:
+        Each error's text.
+    """
+    found = re.findall(
+        r'<p class="mt-1.5 text-\[13px\] font-medium text-bad">([^<]+)', response.text
+    )
+    return [unescape(e) for e in found]
+
+
+def field_value(response: HttpResponse, name: str) -> str | None:
+    """The value a form's input shows.
+
+    Args:
+        response: The form's page.
+        name: The input's name.
+
+    Returns:
+        Its value.
+    """
+    return tags(response, "input", name=name)[0]["value"]
+
+
+def groups(response: HttpResponse) -> list[tuple[str, str]]:
+    """Each Kind in a list of Accounts, with its subtotal.
+
+    Args:
+        response: The list's page.
+
+    Returns:
+        Each Kind's label and subtotal.
+    """
+    return re.findall(
+        r'data-kind>([^<]+)</span><span class="amount" data-subtotal="\w+">([^<]+)<',
+        response.text,
+    )
+
+
+def rows(response: HttpResponse) -> list[tuple[str, str]]:
+    """Each Account in a list, with its balance.
+
+    Args:
+        response: The list's page.
+
+    Returns:
+        Each row's name and balance.
+    """
+    return re.findall(
+        r'font-semibold">([^<]+)</span>\s*<span class="amount text-\[14px\]" '
+        r"data-balance>([^<]+)<",
+        response.text,
+    )

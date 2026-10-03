@@ -22,6 +22,10 @@ class Account(models.Model):
         INVESTMENT = "investment", "Investment"
         LENT = "lent", "Lent"
         PROPERTY = "property", "Property"
+        CREDIT_CARD = "credit_card", "Credit card"
+        LOAN = "loan", "Loan"
+        MORTGAGE = "mortgage", "Mortgage"
+        DEBT = "debt", "Debt"
 
     # Long enough for the Revaluation type to come.
     type = models.CharField(max_length=16, choices=Type)
@@ -63,6 +67,24 @@ class Account(models.Model):
         return ICONS[self.kind]
 
 
+# In the order each type's list groups them.
+KINDS = {
+    Account.Type.ASSET: [
+        Account.Kind.BANK,
+        Account.Kind.DEPOSIT,
+        Account.Kind.CASH,
+        Account.Kind.INVESTMENT,
+        Account.Kind.LENT,
+        Account.Kind.PROPERTY,
+    ],
+    Account.Type.LIABILITY: [
+        Account.Kind.CREDIT_CARD,
+        Account.Kind.LOAN,
+        Account.Kind.MORTGAGE,
+        Account.Kind.DEBT,
+    ],
+}
+
 ICONS = {
     Account.Kind.BANK: "landmark",
     Account.Kind.DEPOSIT: "piggy-bank",
@@ -70,4 +92,8 @@ ICONS = {
     Account.Kind.INVESTMENT: "chart-line",
     Account.Kind.LENT: "hand-coins",
     Account.Kind.PROPERTY: "house",
+    Account.Kind.CREDIT_CARD: "credit-card",
+    Account.Kind.LOAN: "banknote-arrow-down",
+    Account.Kind.MORTGAGE: "key-round",
+    Account.Kind.DEBT: "handshake",
 }

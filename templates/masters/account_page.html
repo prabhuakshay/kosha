@@ -1,0 +1,4 @@
+{% extends "masters/_page.html" %}
+{% comment %}A page beside a list of Accounts, under a way back to it on phones.{% endcomment %}
+{% block list %}{% include "masters/_accounts.html" %}{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to=listing.list label=listing.title %}{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "masters/account_page.html" %}
+{% block title %}{{ listing.title }} · Kosha{% endblock %}
+{% block open %}{% if not groups %}split-open{% endif %}{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="masters:masters" label="Masters" %}{% endblock %}
+{% block main %}
+    {% if groups %}
+        {% comment %}Phones show only the list here; desktops have room to say so.{% endcomment %}
+        {% include "layouts/_placeholder.html" with icon=listing.icon heading=listing.title text="Choose an account from the list. Its details open here." %}
+    {% else %}
+        {% url listing.new as add %}
+        {% include "layouts/_placeholder.html" with icon=listing.icon heading="No "|add:listing.plural|add:" yet" text=listing.about add=add add_label="New "|add:listing.noun %}
+    {% endif %}
+{% endblock %}

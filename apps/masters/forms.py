@@ -7,14 +7,23 @@ from django import forms
 from django.utils import timezone
 
 from apps.core.money import base_currency, decimal_places
-from apps.masters.models import Account
+from apps.masters.models import KINDS, Account
 
 if TYPE_CHECKING:
     from datetime import date
 
 
-class AssetAccountForm(forms.ModelForm):
-    """An Asset account's name, Kind, Opening balance, opening date and notes."""
+CLASH_NOUN = {
+    Account.Type.ASSET: "an Asset account",
+    Account.Type.LIABILITY: "a Liability",
+}
+
+
+class AccountForm(forms.ModelForm):
+    """An Asset account's or Liability's name, Kind, Opening balance and more.
+
+    Only Kinds of the Account's own type are offered or accepted.
+    """
 
     # Places are checked against the Base currency, not the column's four.
     opening_balance = forms.DecimalField(max_digits=24, initial=Decimal(0))
@@ -25,7 +34,9 @@ class AssetAccountForm(forms.ModelForm):
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
-        self.fields["kind"].choices = Account.Kind.choices
+        self.fields["kind"].choices = [
+            (kind.value, kind.label) for kind in KINDS[self.instance.type]
+        ]
         self.fields["kind"].required = True
         self.fields["opened_on"].required = True
         if self.instance.pk:
@@ -49,7 +60,8 @@ class AssetAccountForm(forms.ModelForm):
             .first()
         )
         if clash:
-            msg = f"There's already an Asset account called “{clash.name}”."
+            noun = CLASH_NOUN[self.instance.type]
+            msg = f"There's already {noun} called “{clash.name}”."
             raise forms.ValidationError(msg)
         return name
 
