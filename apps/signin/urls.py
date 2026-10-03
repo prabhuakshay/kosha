@@ -45,6 +45,26 @@ urlpatterns = [
     ),
     path("confirm/", security.confirm, name="confirm"),
     path("security/", security.security, name="security"),
+    path(
+        "security/passkeys/<int:pk>/remove/",
+        security.remove_passkey,
+        name="remove_passkey",
+    ),
+    path(
+        "security/authenticator/",
+        security.start_authenticator,
+        name="start_authenticator",
+    ),
+    path(
+        "security/authenticator/new/",
+        security.new_authenticator,
+        name="new_authenticator",
+    ),
+    path(
+        "security/authenticator/remove/",
+        security.remove_authenticator,
+        name="remove_authenticator",
+    ),
     path("security/password/", security.password, name="password"),
     path(
         "security/recovery-codes/",

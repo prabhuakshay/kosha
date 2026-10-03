@@ -14,40 +14,41 @@ if TYPE_CHECKING:
     from django_otp_webauthn.models import AbstractWebAuthnCredential
 
 
-class AlreadyHasWay(exceptions.OTPWebAuthnApiError):
-    """Only the first Way to sign in is added outside Security."""
+class ConfirmFirst(exceptions.OTPWebAuthnApiError):
+    """Only the first Way to sign in is added without a Confirmation."""
 
     status_code = 403
-    default_detail = "You already have a way to sign in."
-    default_code = "already_has_way"
+    default_detail = "Confirm it's you before adding a passkey."
+    default_code = "confirm_first"
 
 
-class FirstWayOnly:
-    """Refuse a Passkey once the Owner has any Way to sign in.
+class FirstOrConfirmed:
+    """Add the first Passkey freely, and later ones only once confirmed.
 
     The ceremony is reachable on the password alone, so someone holding only a
     stolen password must not be able to add their own Passkey.
     """
 
     def check_can_register(self) -> None:
-        """Refuse an Owner who already has a Way to sign in.
+        """Refuse an Owner who has a Way to sign in but hasn't confirmed it's them.
 
         Raises:
-            AlreadyHasWay: The Owner already has a Way to sign in.
+            ConfirmFirst: There is no Confirmation.
         """
-        if ways.has_way_to_sign_in(self.request.user):
-            raise AlreadyHasWay
+        request = self.request
+        if ways.has_way_to_sign_in(request.user) and not confirmation.is_open(request):
+            raise ConfirmFirst
 
 
-class BeginRegistration(FirstWayOnly, views.BeginCredentialRegistrationView):
+class BeginRegistration(FirstOrConfirmed, views.BeginCredentialRegistrationView):
     """Start adding a Passkey."""
 
 
-class CompleteRegistration(FirstWayOnly, views.CompleteCredentialRegistrationView):
-    """Save the new Passkey, which also finishes signing in."""
+class CompleteRegistration(FirstOrConfirmed, views.CompleteCredentialRegistrationView):
+    """Save the new Passkey; the first also finishes signing in."""
 
     def post(self, *args: object, **kwargs: object) -> JsonResponse:
-        """Save the Passkey as the library does.
+        """Save the Passkey as the library does, and log it.
 
         A first Passkey finishes signing in, so it opens a Confirmation.
 
@@ -62,6 +63,7 @@ class CompleteRegistration(FirstWayOnly, views.CompleteCredentialRegistrationVie
         response = super().post(*args, **kwargs)
         if signing_in:
             confirmation.start(self.request)
+        security_log.record(self.request, security_log.Kind.PASSKEY_ADDED)
         return response
 
 

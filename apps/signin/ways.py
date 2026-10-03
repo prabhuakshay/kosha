@@ -52,6 +52,18 @@ def has_way_to_sign_in(owner: User) -> bool:
     return authenticator(owner) is not None or has_passkey(owner)
 
 
+def count(owner: User) -> int:
+    """Count the Owner's Ways to sign in.
+
+    Args:
+        owner: Whose Ways to count.
+
+    Returns:
+        How many Passkeys and Authenticator apps there are.
+    """
+    return passkeys(owner).count() + (authenticator(owner) is not None)
+
+
 def has_passkey(owner: User) -> bool:
     """Whether the Owner has a Passkey.
 
@@ -71,9 +83,11 @@ def passkeys(owner: User) -> QuerySet[WebAuthnCredential]:
         owner: Whose Passkeys to list.
 
     Returns:
-        The Passkeys.
+        The Passkeys, newest first.
     """
-    return WebAuthnCredential.objects.filter(user=owner, confirmed=True)
+    return WebAuthnCredential.objects.filter(user=owner, confirmed=True).order_by(
+        "-created_at", "-pk"
+    )
 
 
 def matching_device(owner: User, code: str, *, recovery: bool = True) -> Device | None:

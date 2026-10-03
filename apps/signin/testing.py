@@ -102,19 +102,36 @@ def shown_codes(response: HttpResponse) -> list[str]:
     return re.findall(r"data-recovery-code>([a-z2-7]{4} [a-z2-7]{4})<", response.text)
 
 
-def set_up_authenticator(client: Client, code: str | None = None) -> HttpResponse:
+def set_up_authenticator(
+    client: Client, code: str | None = None, route: str = "set_up_authenticator"
+) -> HttpResponse:
     """Scan the setup's key into an Authenticator app and type its code.
 
     Args:
         client: The test client.
         code: What to type; the app's code if omitted.
+        route: The setup's route name.
 
     Returns:
         The response to the code.
     """
-    key = shown_key(client.get(reverse("set_up_authenticator")))
+    key = shown_key(client.get(reverse(route)))
     code = code or authenticator_code(b32decode(key.replace(" ", "")))
-    return client.post(reverse("set_up_authenticator"), {"code": code})
+    return client.post(reverse(route), {"code": code})
+
+
+def replace_authenticator(client: Client, code: str | None = None) -> HttpResponse:
+    """Set up an Authenticator app from Security, replacing any there is.
+
+    Args:
+        client: The test client, confirmed.
+        code: What to type; the new app's code if omitted.
+
+    Returns:
+        The response to the code.
+    """
+    client.post(reverse("start_authenticator"))
+    return set_up_authenticator(client, code, "new_authenticator")
 
 
 def sign_in(
