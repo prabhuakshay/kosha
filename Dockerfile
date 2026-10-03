@@ -139,6 +139,7 @@ RUN SECRET_KEY=collectstatic \
     S3_ENDPOINT_URL=https://collectstatic.invalid \
     S3_ACCESS_KEY_ID=collectstatic \
     S3_SECRET_ACCESS_KEY=collectstatic \
+    WEBAUTHN_ORIGINS=https://collectstatic.invalid \
     python manage.py collectstatic --noinput \
     && python -m compileall -q config apps manage.py
 

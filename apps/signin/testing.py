@@ -1,6 +1,7 @@
 """Helpers for tests that Claim Kosha and sign in, as the Owner would."""
 
 import re
+import secrets
 from base64 import b32decode
 from io import StringIO
 from typing import TYPE_CHECKING
@@ -8,12 +9,15 @@ from typing import TYPE_CHECKING
 from django.core.management import call_command
 from django.urls import reverse
 from django_otp.oath import TOTP
+from django_otp_webauthn.models import WebAuthnCredential
 
 from apps.core.testing import EMAIL, PASSWORD
 
 if TYPE_CHECKING:
     from django.http import HttpResponse
     from django.test import Client
+
+    from apps.users.models import User
 
 DETAILS = {"name": "Asha Rao", "email": EMAIL, "password": PASSWORD}
 
@@ -139,3 +143,59 @@ def enter_code(client: Client, code: str, next_url: str | None = None) -> HttpRe
     """
     url = reverse("code_step") + (f"?next={next_url}" if next_url else "")
     return client.post(url, {"code": code})
+
+
+def add_passkey(owner: User) -> WebAuthnCredential:
+    """Save a Passkey as if the browser had just registered it.
+
+    Args:
+        owner: Whose it is.
+
+    Returns:
+        The Passkey.
+    """
+    return WebAuthnCredential.objects.create(
+        user=owner, name="Passkey", credential_id=secrets.token_bytes(16)
+    )
+
+
+def post_json(client: Client, name: str, query: str = "") -> HttpResponse:
+    """POST to a Passkey ceremony as ``passkey.js`` does.
+
+    Args:
+        client: The test client.
+        name: The route's name.
+        query: A query string to add, such as ``?next=/``.
+
+    Returns:
+        The response.
+    """
+    return client.post(reverse(name) + query, "{}", content_type="application/json")
+
+
+def register_passkey(client: Client) -> HttpResponse:
+    """Run the ceremony that adds a Passkey, its browser part stubbed.
+
+    Args:
+        client: The test client.
+
+    Returns:
+        The response to completing it.
+    """
+    post_json(client, "passkey_register_begin")
+    return post_json(client, "passkey_register_complete")
+
+
+def sign_in_with_passkey(client: Client, next_url: str | None = None) -> HttpResponse:
+    """Run the ceremony that signs in with a Passkey, its browser part stubbed.
+
+    Args:
+        client: The test client.
+        next_url: Where signing in should go on to.
+
+    Returns:
+        The response to completing it, whose JSON says where to go.
+    """
+    post_json(client, "passkey_sign_in_begin")
+    query = f"?next={next_url}" if next_url else ""
+    return post_json(client, "passkey_sign_in_complete", query)

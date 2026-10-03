@@ -21,6 +21,8 @@ from apps.signin.forms import (
 )
 from apps.signin.middleware import part_of_signing_in
 
+# Passkeys add a backend, so signing in by password must name its own.
+PASSWORD_BACKEND = "django.contrib.auth.backends.ModelBackend"  # ruff: ignore[hardcoded-password-string]
 # Set once the Setup code is right, so step 2 can't be reached by URL.
 CODE_ACCEPTED = "signin.setup_code_accepted"
 # Kept until the app shows a right code, so reloading doesn't change the QR code.
@@ -74,7 +76,7 @@ def claim_owner(request: HttpRequest) -> HttpResponse:
         return redirect("claim")
     form = OwnerForm(request.POST or None)
     if form.is_valid():
-        login(request, form.save())
+        login(request, form.save(), backend=PASSWORD_BACKEND)
         return redirect("choose_way")
     return render(request, "signin/claim_owner.html", {"form": form})
 
@@ -139,7 +141,9 @@ def recovery_codes(request: HttpRequest) -> HttpResponse:
 
 @part_of_signing_in
 def code_step(request: HttpRequest) -> HttpResponse:
-    """After the password, a code from the Authenticator app or a Recovery code.
+    """After the password, a Passkey or a code from the Authenticator app.
+
+    A Recovery code stands in for the code.
 
     Args:
         request: The incoming request.
@@ -156,7 +160,15 @@ def code_step(request: HttpRequest) -> HttpResponse:
     if form.is_valid():
         otp_login(request, form.device)
         return redirect(_next(request))
-    return render(request, "signin/code_step.html", {"form": form})
+    return render(
+        request,
+        "signin/code_step.html",
+        {
+            "form": form,
+            "has_passkey": ways.has_passkey(owner),
+            "has_authenticator": ways.authenticator(owner) is not None,
+        },
+    )
 
 
 class SignInView(auth_views.LoginView):

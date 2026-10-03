@@ -36,6 +36,7 @@ prod_env=(
   -e S3_ENDPOINT_URL=https://smoke.r2.cloudflarestorage.com
   -e S3_ACCESS_KEY_ID=smoke
   -e S3_SECRET_ACCESS_KEY=smoke
+  -e WEBAUTHN_ORIGINS=https://kosha.example.com
 )
 
 in_image() {
@@ -86,6 +87,7 @@ pass "compiled, vendored and committed assets collected"
 status=0
 output=$(timeout 60 docker run --rm \
   -e SECRET_KEY=smoke -e ALLOWED_HOSTS=kosha.example.com \
+  -e WEBAUTHN_ORIGINS=https://kosha.example.com \
   -e DATABASE_URL=postgres://kosha:kosha@$db:5432/kosha \
   "$image" 2>&1) || status=$?
 [ "$status" -ne 0 ] && [ "$status" -ne 124 ] || fail "started without S3_* (exit $status)"

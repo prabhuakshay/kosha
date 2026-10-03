@@ -1,0 +1,6 @@
+{% comment %}
+    Attributes that make a button run a Passkey ceremony (signin/passkey.js).
+    `action` is "register", going on to `next`, or "sign-in", going on to the
+    page's own `next`. Pair with signin/_passkey_status.html.
+{% endcomment %}
+data-passkey="{{ action }}" data-csrf-token="{{ csrf_token }}" aria-describedby="passkey-status" {% if action == "register" %}data-begin="{% url 'passkey_register_begin' %}" data-complete="{% url 'passkey_register_complete' %}" data-next="{{ next }}"{% else %}data-begin="{% url 'passkey_sign_in_begin' %}" data-complete="{% url 'passkey_sign_in_complete' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"{% endif %}

@@ -2,7 +2,9 @@
 {% block title %}Sign in · Kosha{% endblock %}
 {% block main %}
     <h1 class="display mt-10 text-[42px] leading-none lg:text-[48px]">Sign in</h1>
-    <form method="post" class="mt-8">
+    <div class="mt-8">{% include "signin/_passkey_button.html" with label="Sign in with a passkey" %}</div>
+    {% include "signin/_or.html" %}
+    <form method="post">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next }}">
         <div class="grid gap-4">
