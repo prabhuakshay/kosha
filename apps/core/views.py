@@ -4,11 +4,13 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_not_required
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.templatetags.static import static
 from django.urls import reverse
 
+from apps.core import history
 from apps.core.forms import BaseCurrencyForm
 from apps.core.models import Setting
 
@@ -49,9 +51,24 @@ def base_currency(request: HttpRequest) -> HttpResponse:
     Returns:
         The form, or a redirect back to it once changed.
     """
-    form = BaseCurrencyForm(request.POST or None, instance=Setting.load())
+    setting = Setting.load()
+    # Taken before the form, which writes what's posted into the Setting.
+    before = setting.base_currency
+    form = BaseCurrencyForm(request.POST or None, instance=setting)
     if form.is_valid():
-        form.save()
+        with transaction.atomic():
+            form.save()
+            changed = history.changes(
+                {"Base currency": before}, {"Base currency": setting.base_currency}
+            )
+            if changed:
+                history.record(
+                    setting,
+                    history.Action.BASE_CURRENCY_CHANGED,
+                    type_="Setting",
+                    name="Base currency",
+                    changes=changed,
+                )
         messages.success(request, f"Amounts are now in {form.instance.base_currency}.")
         return redirect("base_currency")
     return render(
@@ -59,6 +76,18 @@ def base_currency(request: HttpRequest) -> HttpResponse:
         "core/base_currency.html",
         {"form": form, "sample": Decimal(320000)},
     )
+
+
+def history_page(request: HttpRequest) -> HttpResponse:
+    """Every change to Masters and Settings, by day.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The History page.
+    """
+    return render(request, "core/history.html", {"days": history.by_day()})
 
 
 # Browsers fetch the manifest without cookies, so it can't sit behind sign-in.

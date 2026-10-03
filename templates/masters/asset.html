@@ -17,4 +17,12 @@
     <div class="actions">
         <a href="{% url 'masters:edit_asset' account.pk %}" class="btn btn-quiet"><i data-lucide="pencil"></i>Edit</a>
     </div>
+    <section class="section">
+        <h2 class="section-title">History</h2>
+        <ul class="items">
+            {% for entry in history %}
+                {% include "core/_history_entry.html" %}
+            {% endfor %}
+        </ul>
+    </section>
 {% endblock %}

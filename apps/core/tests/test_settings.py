@@ -48,8 +48,9 @@ def test_security_goes_back_to_settings(signed_in, clock, name):
 
 
 @pytest.mark.django_db
-def test_the_sidebar_leads_to_settings(signed_in):
-    response = signed_in.get(reverse("settings"))
+@pytest.mark.parametrize("name", ["settings", "base_currency", "history"])
+def test_the_sidebar_leads_to_settings(signed_in, name):
+    response = signed_in.get(reverse(name))
 
     assert tags(response, "a", href=reverse("settings"), **{"aria-current": "page"})
 
@@ -69,6 +70,7 @@ SETTINGS, SECURITY = reverse("settings"), reverse("security")
         ("home", []),
         ("settings", []),
         ("base_currency", [reverse("base_currency")]),
+        ("history", [reverse("history")]),
         ("security", [SECURITY]),
         ("password", [SECURITY]),
         ("sessions", [reverse("sessions")]),
@@ -81,6 +83,7 @@ def test_pages_inside_settings_sit_beside_its_list(signed_in, name, rows):
     assert selected(response) == rows
     if name != "home":
         assert links(response, "base_currency")
+        assert links(response, "history")
         assert links(response, "security_log")
 
 
