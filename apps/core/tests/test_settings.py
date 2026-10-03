@@ -68,6 +68,7 @@ SETTINGS, SECURITY = reverse("settings"), reverse("security")
     [
         ("home", []),
         ("settings", []),
+        ("base_currency", [reverse("base_currency")]),
         ("security", [SECURITY]),
         ("password", [SECURITY]),
         ("sessions", [reverse("sessions")]),
@@ -79,6 +80,7 @@ def test_pages_inside_settings_sit_beside_its_list(signed_in, name, rows):
 
     assert selected(response) == rows
     if name != "home":
+        assert links(response, "base_currency")
         assert links(response, "security_log")
 
 
