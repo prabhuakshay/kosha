@@ -4,11 +4,13 @@ Every deployment-specific value is read from the environment, falling back to a
 ``.env`` file in the project root. See ``.env.example`` for the full list.
 
 Defaults are secure: with only ``SECRET_KEY``, ``ALLOWED_HOSTS``,
-``DATABASE_URL`` and the R2 ``S3_*`` values set, the app runs in production
-mode. Set ``DEBUG=true`` for local development.
+``DATABASE_URL``, ``WEBAUTHN_ORIGINS`` (or an HTTPS ``CSRF_TRUSTED_ORIGINS``)
+and the R2 ``S3_*`` values set, the app runs in production mode. Set
+``DEBUG=true`` for local development.
 """
 
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import environ
 from django.utils.csp import CSP
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     "django_otp",
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
+    "django_otp_webauthn",
     "apps.core",
     "apps.signin",
     "apps.users",
@@ -109,6 +112,10 @@ CACHES = {"default": env.cache("CACHE_URL", default="locmemcache://")}
 # -----------------------------------------------------------------------------
 
 AUTH_USER_MODEL = "users.User"
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "django_otp_webauthn.backends.WebAuthnBackend",
+]
 LOGIN_URL = "sign_in"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "sign_in"
@@ -119,6 +126,24 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_SAVE_EVERY_REQUEST = True
 
 OTP_TOTP_ISSUER = "Kosha"
+
+# Passkeys work only from these origins, over HTTPS except on localhost. They
+# default to the public URL CSRF already trusts, so it needn't be set twice;
+# wildcards can't be Passkey origins.
+webauthn_origins = [
+    o for o in CSRF_TRUSTED_ORIGINS if o.startswith("https://") and "*" not in o
+] or (["http://localhost:8000"] if DEBUG else [])
+OTP_WEBAUTHN_ALLOWED_ORIGINS = (
+    env.list("WEBAUTHN_ORIGINS", default=webauthn_origins)
+    if webauthn_origins
+    else env.list("WEBAUTHN_ORIGINS")
+)
+# Passkeys are bound to this domain; changing it orphans every one registered.
+OTP_WEBAUTHN_RP_ID = (
+    env.str("WEBAUTHN_RP_ID", default="")
+    or urlsplit(OTP_WEBAUTHN_ALLOWED_ORIGINS[0]).hostname
+)
+OTP_WEBAUTHN_RP_NAME = "Kosha"
 
 validators = "django.contrib.auth.password_validation"
 AUTH_PASSWORD_VALIDATORS = [

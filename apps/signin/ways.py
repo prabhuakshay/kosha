@@ -1,7 +1,7 @@
 """Ways to sign in, and the Recovery codes that stand in for one.
 
-The Owner signs in with their password and a code from the Authenticator app,
-or a Recovery code when the app is lost.
+The Owner signs in with a Passkey alone, or with their password and a code from
+the Authenticator app, or a Recovery code when the app is lost.
 """
 
 import time
@@ -13,6 +13,7 @@ from django.utils.safestring import SafeString, mark_safe
 from django_otp.oath import TOTP
 from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp_webauthn.models import WebAuthnCredential
 from qrcode.image.svg import SvgPathImage
 
 if TYPE_CHECKING:
@@ -47,7 +48,19 @@ def has_way_to_sign_in(owner: User) -> bool:
     Returns:
         True once one is set up.
     """
-    return authenticator(owner) is not None
+    return authenticator(owner) is not None or has_passkey(owner)
+
+
+def has_passkey(owner: User) -> bool:
+    """Whether the Owner has a Passkey.
+
+    Args:
+        owner: Whose Passkeys to look for.
+
+    Returns:
+        True once one is added.
+    """
+    return WebAuthnCredential.objects.filter(user=owner, confirmed=True).exists()
 
 
 def matching_device(owner: User, code: str) -> Device | None:

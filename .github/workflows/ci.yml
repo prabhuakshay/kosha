@@ -52,6 +52,7 @@ jobs:
       S3_ENDPOINT_URL: https://ci.r2.cloudflarestorage.com
       S3_ACCESS_KEY_ID: ci
       S3_SECRET_ACCESS_KEY: ci
+      WEBAUTHN_ORIGINS: https://kosha.example.com
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0

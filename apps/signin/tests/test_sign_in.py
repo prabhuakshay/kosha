@@ -7,8 +7,16 @@ from apps.signin.testing import authenticator_code, enter_code, sign_in
 PUBLIC = {"sign_in", "manifest", "service_worker"}
 # Open only while unclaimed; test_claim covers them.
 CLAIM = {"claim", "claim_owner"}
-# Reachable on the password alone; test_code_step covers them.
-SIGNING_IN = {"code_step", "choose_way", "set_up_authenticator"}
+# Reachable on the password alone; test_code_step and test_passkeys cover them.
+SIGNING_IN = {
+    "code_step",
+    "choose_way",
+    "set_up_authenticator",
+    "passkey_register_begin",
+    "passkey_register_complete",
+}
+# Public, but they take only a POST; test_passkeys covers them.
+PASSKEY_SIGN_IN = {"passkey_sign_in_begin", "passkey_sign_in_complete"}
 
 
 def kosha_routes(patterns=None):
@@ -23,7 +31,7 @@ def kosha_routes(patterns=None):
 
 @pytest.mark.django_db
 def test_every_page_but_the_public_ones_needs_sign_in(client):
-    for name in set(kosha_routes()) - PUBLIC - CLAIM - {"sign_out"}:
+    for name in set(kosha_routes()) - PUBLIC - CLAIM - PASSKEY_SIGN_IN - {"sign_out"}:
         url = reverse(name)
 
         response = client.get(url)
@@ -37,7 +45,14 @@ def test_every_page_but_the_public_ones_needs_sign_in(client):
 def test_every_page_but_signing_in_needs_the_code_step(client):
     sign_in(client)
 
-    for name in set(kosha_routes()) - PUBLIC - CLAIM - SIGNING_IN - {"sign_out"}:
+    for name in (
+        set(kosha_routes())
+        - PUBLIC
+        - CLAIM
+        - SIGNING_IN
+        - PASSKEY_SIGN_IN
+        - {"sign_out"}
+    ):
         url = reverse(name)
 
         response = client.get(url)
