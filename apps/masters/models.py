@@ -17,7 +17,7 @@ class Account(models.Model):
 
     class Kind(models.TextChoices):
         BANK = "bank", "Bank"
-        SAVINGS = "savings", "Savings"
+        DEPOSIT = "deposit", "Deposit"
         CASH = "cash", "Cash"
         INVESTMENT = "investment", "Investment"
         LENT = "lent", "Lent"
@@ -65,7 +65,7 @@ class Account(models.Model):
 
 ICONS = {
     Account.Kind.BANK: "landmark",
-    Account.Kind.SAVINGS: "piggy-bank",
+    Account.Kind.DEPOSIT: "piggy-bank",
     Account.Kind.CASH: "banknote",
     Account.Kind.INVESTMENT: "chart-line",
     Account.Kind.LENT: "hand-coins",

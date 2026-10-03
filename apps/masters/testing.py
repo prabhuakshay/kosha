@@ -24,7 +24,7 @@ def add(client: Client, **fields: str) -> HttpResponse:
     """
     data = {
         "name": "HDFC Savings",
-        "kind": "savings",
+        "kind": "bank",
         "opening_balance": "0",
         "opened_on": localdate().isoformat(),
         "notes": "",
