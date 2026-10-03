@@ -162,9 +162,10 @@ USE_TZ = True
 # -----------------------------------------------------------------------------
 
 STATIC_URL = "static/"
-STATIC_ROOT = env.path("STATIC_ROOT", default=BASE_DIR / "staticfiles")
+# Relative paths resolve against the project root; absolute paths are kept.
+STATIC_ROOT = BASE_DIR / env.str("STATIC_ROOT", default="staticfiles")
 MEDIA_URL = "media/"
-MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
+MEDIA_ROOT = BASE_DIR / env.str("MEDIA_ROOT", default="media")
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
