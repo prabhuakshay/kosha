@@ -14,7 +14,7 @@ from django_otp import login as otp_login
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import default_key
 
-from apps.signin import pause, security_log, ways
+from apps.signin import confirmation, pause, security_log, ways
 from apps.signin.claim import is_claimed
 from apps.signin.forms import (
     CodeForm,
@@ -35,7 +35,15 @@ CODE_ACCEPTED = "signin.setup_code_accepted"
 AUTHENTICATOR_KEY = "signin.authenticator_key"
 
 
-def _next(request: HttpRequest) -> str:
+def next_url(request: HttpRequest) -> str:
+    """Where to go on to: ``next``, unless it leads outside Kosha.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        ``next``, or home.
+    """
     url = request.GET.get("next", "")
     if url_has_allowed_host_and_scheme(
         url, {request.get_host()}, require_https=request.is_secure()
@@ -123,6 +131,7 @@ def set_up_authenticator(request: HttpRequest) -> HttpResponse:
     if form.is_valid():
         del request.session[AUTHENTICATOR_KEY]
         otp_login(request, device)
+        confirmation.start(request)
         return redirect("recovery_codes")
     return render(
         request,
@@ -161,17 +170,18 @@ def code_step(request: HttpRequest) -> HttpResponse:
     """
     owner = request.user
     if owner.is_verified():
-        return redirect(_next(request))
+        return redirect(next_url(request))
     if not ways.has_way_to_sign_in(owner):
         return redirect("choose_way")
     form = CodeForm(owner, request.POST or None)
     if form.is_valid():
         otp_login(request, form.device)
+        confirmation.start(request)
         code = "recovery" if isinstance(form.device, StaticDevice) else "authenticator"
         security_log.record(
             request, security_log.Kind.SIGNED_IN, f"Password and {code} code"
         )
-        return redirect(_next(request))
+        return redirect(next_url(request))
     if form.is_bound:
         pause.wrong_code(request, owner)
     return render(

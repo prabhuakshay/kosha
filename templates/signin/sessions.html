@@ -1,0 +1,8 @@
+{% extends "layouts/settings_page.html" %}
+{% block title %}Sessions · Kosha{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="security" label="Security" %}{% endblock %}
+{% block trail %}{% include "layouts/_crumb.html" with to="security" label="Security" %}{% endblock %}
+{% block main %}
+    <h1 class="display mt-2 text-[32px] leading-none lg:text-[40px]">Sessions</h1>
+    <p class="mt-2 text-[15px] leading-6 text-ink-2">Every device signed in to Kosha. Each stays signed in for 30 days after its last visit.</p>
+{% endblock %}

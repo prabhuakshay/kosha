@@ -1,0 +1,9 @@
+{% extends "layouts/signed_in.html" %}
+{% block title %}Settings · Kosha{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="home" label="Home" %}{% endblock %}
+{% block main %}
+    <h1 class="display mt-2 text-[32px] leading-none lg:text-[40px]">Settings</h1>
+    <ul class="mt-6 divide-y rounded-xl border bg-surface">
+        {% include "layouts/_row.html" with to="security" icon="shield-check" title="Security" sub="Passkeys, password, sessions and the log" %}
+    </ul>
+{% endblock %}

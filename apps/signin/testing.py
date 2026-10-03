@@ -2,6 +2,7 @@
 
 import re
 import secrets
+import time
 from base64 import b32decode
 from io import StringIO
 from typing import TYPE_CHECKING
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING
 from django.core.management import call_command
 from django.urls import reverse
 from django_otp.oath import TOTP
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp_webauthn.models import WebAuthnCredential
 
 from apps.core.testing import EMAIL, PASSWORD
@@ -60,16 +62,20 @@ def claim(client: Client, **details: str) -> HttpResponse:
     return client.post(reverse("claim_owner"), {**DETAILS, **details})
 
 
-def authenticator_code(key: bytes) -> str:
-    """Read the code an Authenticator app holding this key shows now.
+def authenticator_code(key: bytes, steps_ahead: int = 0) -> str:
+    """Read the code an Authenticator app holding this key shows.
 
     Args:
         key: The Authenticator app's key.
+        steps_ahead: How many 30-second steps from now; a code is used once, so
+            a second check soon after needs the next.
 
     Returns:
         The 6-digit code.
     """
-    return f"{TOTP(key).token():06d}"
+    totp = TOTP(key)
+    totp.time = time.time() + steps_ahead * totp.step
+    return f"{totp.token():06d}"
 
 
 def shown_key(response: HttpResponse) -> str:
@@ -145,17 +151,32 @@ def enter_code(client: Client, code: str, next_url: str | None = None) -> HttpRe
     return client.post(url, {"code": code})
 
 
-def add_passkey(owner: User) -> WebAuthnCredential:
+def add_recovery_code(owner: User, code: str = "k7m2x9qa") -> str:
+    """Give the Owner a Recovery code.
+
+    Args:
+        owner: Whose it is.
+        code: The code.
+
+    Returns:
+        The code.
+    """
+    StaticDevice.objects.get_or_create(user=owner)[0].token_set.create(token=code)
+    return code
+
+
+def add_passkey(owner: User, name: str = "Passkey") -> WebAuthnCredential:
     """Save a Passkey as if the browser had just registered it.
 
     Args:
         owner: Whose it is.
+        name: What it's called.
 
     Returns:
         The Passkey.
     """
     return WebAuthnCredential.objects.create(
-        user=owner, name="Passkey", credential_id=secrets.token_bytes(16)
+        user=owner, name=name, credential_id=secrets.token_bytes(16)
     )
 
 

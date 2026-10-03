@@ -108,13 +108,17 @@ class CodeForm(forms.Form):
 
     Args:
         owner: Whose codes to check.
+        recovery: Whether a Recovery code may stand in for the app's code.
     """
 
     code = forms.CharField(max_length=32)
 
-    def __init__(self, owner: User, *args: object, **kwargs: object) -> None:
+    def __init__(
+        self, owner: User, *args: object, recovery: bool = True, **kwargs: object
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.owner = owner
+        self.recovery = recovery
         self.device: Device | None = None
 
     def clean_code(self) -> str:
@@ -127,7 +131,7 @@ class CodeForm(forms.Form):
             ValidationError: It matches nothing.
         """
         code = self.cleaned_data["code"]
-        self.device = ways.matching_device(self.owner, code)
+        self.device = ways.matching_device(self.owner, code, recovery=self.recovery)
         if self.device is None:
             raise forms.ValidationError(WRONG_CODE)
         return code

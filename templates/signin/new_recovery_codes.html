@@ -1,0 +1,10 @@
+{% extends "layouts/settings_page.html" %}
+{% block title %}New recovery codes · Kosha{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="security" label="Security" %}{% endblock %}
+{% block trail %}{% include "layouts/_crumb.html" with to="security" label="Security" %}{% endblock %}
+{% block main %}
+    <h1 class="display mt-2 text-[32px] leading-none lg:text-[40px]">New recovery codes</h1>
+    <p class="mt-2 text-[15px] leading-6 text-ink-2">Your old codes no longer work. Each of these signs you in once, and you'll only see them now.</p>
+    {% include "signin/_codes.html" %}
+    <a href="{% url 'security' %}" class="btn mt-8">I've saved them</a>
+{% endblock %}

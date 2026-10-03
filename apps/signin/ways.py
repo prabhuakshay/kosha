@@ -17,6 +17,7 @@ from django_otp_webauthn.models import WebAuthnCredential
 from qrcode.image.svg import SvgPathImage
 
 if TYPE_CHECKING:
+    from django.db.models import QuerySet
     from django_otp.models import Device
 
     from apps.users.models import User
@@ -60,10 +61,22 @@ def has_passkey(owner: User) -> bool:
     Returns:
         True once one is added.
     """
-    return WebAuthnCredential.objects.filter(user=owner, confirmed=True).exists()
+    return passkeys(owner).exists()
 
 
-def matching_device(owner: User, code: str) -> Device | None:
+def passkeys(owner: User) -> QuerySet[WebAuthnCredential]:
+    """The Owner's Passkeys.
+
+    Args:
+        owner: Whose Passkeys to list.
+
+    Returns:
+        The Passkeys.
+    """
+    return WebAuthnCredential.objects.filter(user=owner, confirmed=True)
+
+
+def matching_device(owner: User, code: str, *, recovery: bool = True) -> Device | None:
     """Check a typed code against the Authenticator app and the Recovery codes.
 
     A Recovery code is used up by matching.
@@ -71,6 +84,7 @@ def matching_device(owner: User, code: str) -> Device | None:
     Args:
         owner: Whose devices to check.
         code: What was typed; case, spaces and dashes are ignored.
+        recovery: Whether a Recovery code may match.
 
     Returns:
         The device the code matched, or None.
@@ -78,8 +92,10 @@ def matching_device(owner: User, code: str) -> Device | None:
     code = "".join(c for c in code.lower() if c.isalnum())
     if code.isdigit() and len(code) == AUTHENTICATOR_DIGITS:
         device = authenticator(owner)
-    else:
+    elif recovery:
         device = StaticDevice.objects.filter(user=owner).first()
+    else:
+        device = None
     return device if device and device.verify_token(code) else None
 
 
@@ -158,6 +174,18 @@ def has_recovery_codes(owner: User) -> bool:
         True once they have been.
     """
     return StaticDevice.objects.filter(user=owner).exists()
+
+
+def recovery_codes_left(owner: User) -> int:
+    """Count the Recovery codes not yet used.
+
+    Args:
+        owner: Whose codes to count.
+
+    Returns:
+        How many are left.
+    """
+    return StaticToken.objects.filter(device__user=owner).count()
 
 
 def issue_recovery_codes(owner: User) -> list[str]:
