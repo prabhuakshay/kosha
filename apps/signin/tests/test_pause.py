@@ -1,10 +1,12 @@
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 from axes.models import AccessAttempt
 from django.db.models import F
 from django.test import Client
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.core.testing import EMAIL
 from apps.signin.models import SecurityLogEntry
@@ -62,13 +64,15 @@ def test_the_paused_page_shows_instead_of_sign_in(client):
 def test_the_paused_page_says_when_to_try_again(client, settings):
     settings.TIME_ZONE = "Asia/Kolkata"
     fail_password(client, 5)
-    AccessAttempt.objects.update(
-        attempt_time="2026-10-03T16:11:00Z"  # 9:41 pm in Kolkata
-    )
+    # Axes reads the real clock, so the attempt is set just before it.
+    attempt = timezone.now().replace(second=0, microsecond=0) - timedelta(minutes=1)
+    AccessAttempt.objects.update(attempt_time=attempt)
+    again = timezone.localtime(attempt + timedelta(hours=1), ZoneInfo("Asia/Kolkata"))
 
     response = client.get(reverse("sign_in"))
 
-    assert "Try again after 10:41 pm" in response.text
+    half = "am" if again.hour < 12 else "pm"
+    assert f"Try again after {again:%-I:%M} {half}" in response.text
 
 
 @pytest.mark.django_db
