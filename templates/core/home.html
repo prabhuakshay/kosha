@@ -1,5 +1,18 @@
 {% extends "layouts/signed_in.html" %}
+{% load money %}
 {% block main %}
     <h1 class="display page-title">Home</h1>
-    <p class="lede">Your accounts, spending and budgets will gather here.</p>
+    <section class="worth" aria-labelledby="net-worth">
+        <p class="label" id="net-worth">Net worth</p>
+        <p class="big mt-2 text-[40px]" data-net-worth>{{ worth.net|money }}</p>
+        <div class="worth-parts">
+            <p class="worth-part"><span class="flex-1">Liquid net worth</span><span class="amount" data-liquid>{{ worth.liquid|money }}</span></p>
+            <a href="{% url 'masters:assets' %}" class="worth-part"><span class="flex-1">Assets</span><span class="amount" data-assets>{{ worth.assets|money }}</span><i data-lucide="chevron-right" class="row-chevron"></i></a>
+            <a href="{% url 'masters:liabilities' %}" class="worth-part"><span class="flex-1">Liabilities</span><span class="amount" data-liabilities>{{ worth.liabilities|money }}</span><i data-lucide="chevron-right" class="row-chevron"></i></a>
+        </div>
+        {% if worth.no_accounts %}
+            <p class="note">Add the accounts your money is in to see what you're worth.</p>
+            <div class="actions"><a href="{% url 'masters:new_asset' %}" class="btn"><i data-lucide="plus"></i>Add an asset account</a></div>
+        {% endif %}
+    </section>
 {% endblock %}

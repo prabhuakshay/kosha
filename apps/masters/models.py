@@ -96,6 +96,14 @@ KINDS = {
     ],
 }
 
+# What the Owner could actually use, before Credit cards are taken off it.
+LIQUID = {
+    Account.Kind.BANK,
+    Account.Kind.DEPOSIT,
+    Account.Kind.CASH,
+    Account.Kind.INVESTMENT,
+}
+
 ICONS = {
     Account.Type.EXPENSE: "arrow-up-right",
     Account.Type.INCOME: "arrow-down-left",

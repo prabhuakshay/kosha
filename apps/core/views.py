@@ -13,13 +13,14 @@ from django.urls import reverse
 from apps.core import appearance, history
 from apps.core.forms import BaseCurrencyForm
 from apps.core.models import Setting
+from apps.masters.worth import worth
 
 # Matches the light theme's page colour, so the splash screen doesn't flash.
 THEME_COLOR = "#fafaf8"
 
 
 def home(request: HttpRequest) -> HttpResponse:
-    """Show the home page, where signing in lands.
+    """Show the home page, where signing in lands, with the Owner's Net worth.
 
     Args:
         request: The incoming request.
@@ -27,7 +28,7 @@ def home(request: HttpRequest) -> HttpResponse:
     Returns:
         The home page.
     """
-    return render(request, "core/home.html")
+    return render(request, "core/home.html", {"worth": worth()})
 
 
 def settings(request: HttpRequest) -> HttpResponse:
