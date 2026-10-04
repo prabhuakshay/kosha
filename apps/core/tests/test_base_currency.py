@@ -20,7 +20,13 @@ def test_a_fresh_install_is_in_inr(signed_in):
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     ("currency", "written"),
-    [("INR", "₹3,20,000.00"), ("USD", "$320,000.00"), ("JPY", "¥320,000")],
+    [
+        ("INR", "₹3,20,000.00"),
+        ("USD", "$320,000.00"),
+        ("JPY", "¥320,000"),
+        ("CHF", "CHF\xa0320\u2019000.00"),
+        ("SEK", "320\xa0000,00\xa0kr"),
+    ],
 )
 def test_the_owner_changes_it_and_sees_amounts_written_its_way(
     signed_in, currency, written

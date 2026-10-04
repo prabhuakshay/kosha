@@ -1048,6 +1048,15 @@
     background: var(--category);
   }
 
+  .category-tile > * + .category-dot {
+    position: absolute;
+    right: -0.1875rem;
+    bottom: -0.1875rem;
+    width: 0.625rem;
+    height: 0.625rem;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+
   .row[aria-current] .category-dot {
     box-shadow: 0 0 0 2px var(--on-selected);
   }

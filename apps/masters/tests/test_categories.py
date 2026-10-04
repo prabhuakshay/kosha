@@ -222,7 +222,7 @@ def test_they_are_listed_alphabetically_with_their_color_and_icon(signed_in):
 
     rows = re.findall(
         r'class="row"[^>]*>\s*<span class="tile category-tile color-(\w+)">'
-        r'(?:<i data-lucide="([\w-]+)"></i>|<span class="category-dot"></span>)'
+        r'(?:<i data-lucide="([\w-]+)"></i>)?<span class="category-dot"></span>'
         r"</span>\s*"
         r'<span class="min-w-0 flex-1 truncate text-\[15px\] font-semibold">([^<]+)<',
         response.text,
