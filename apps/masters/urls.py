@@ -2,7 +2,7 @@
 
 from django.urls import URLPattern, path
 
-from apps.masters import categories, listings, views
+from apps.masters import categories, listings, tags, views
 
 
 def account_routes(listing: listings.Listing) -> list[URLPattern]:
@@ -56,8 +56,9 @@ urlpatterns = [
             ("delete", categories.delete_category),
         ]
     ),
-    *(
-        path(f"{name}/", views.coming, {"name": name}, name=name)
-        for name in views.COMING
-    ),
+    path("tags/", tags.tag_list, name="tags"),
+    path("tags/new/", tags.new_tag, name="new_tag"),
+    path("tags/<int:pk>/", tags.tag_detail, name="tag"),
+    path("tags/<int:pk>/edit/", tags.edit_tag, name="edit_tag"),
+    path("tags/<int:pk>/delete/", tags.delete_tag, name="delete_tag"),
 ]

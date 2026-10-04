@@ -11,21 +11,12 @@ from django.views.decorators.http import require_POST
 
 from apps.core import history
 from apps.core.money import write
-from apps.masters.models import KINDS, Account, Category
+from apps.masters.models import KINDS, Account, Category, Tag
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
 
     from apps.masters.listings import Listing
-
-# Lists still to come: what belongs in each, for their empty states.
-COMING = {
-    "tags": (
-        "Tags",
-        "tag",
-        "The context money moves in, such as a trip or “reimbursable”.",
-    ),
-}
 
 
 def masters(request: HttpRequest) -> HttpResponse:
@@ -51,6 +42,7 @@ def masters(request: HttpRequest) -> HttpResponse:
             "income": summary(of(Account.Type.INCOME)),
             "expenses": summary(of(Account.Type.EXPENSE)),
             "categories": summary(list(Category.objects.all())),
+            "tags": str(Tag.objects.count() or "None yet"),
         },
     )
 
@@ -73,29 +65,6 @@ def summary(items: list[Account] | list[Category], *, total: bool = False) -> st
     if total:
         return f"{len(items)} · {write(sum(i.balance for i in items))}"
     return str(len(items))
-
-
-def coming(request: HttpRequest, name: str) -> HttpResponse:
-    """Say what belongs in a list that can't be filled yet.
-
-    Args:
-        request: The incoming request.
-        name: Which list.
-
-    Returns:
-        The list's empty state.
-    """
-    title, icon, text = COMING[name]
-    return render(
-        request,
-        "masters/coming.html",
-        {
-            "title": title,
-            "icon": icon,
-            "heading": f"No {title.lower()} yet",
-            "text": f"{text} Adding them comes soon.",
-        },
-    )
 
 
 def account_list(request: HttpRequest, listing: Listing) -> HttpResponse:

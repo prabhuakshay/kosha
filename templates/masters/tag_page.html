@@ -1,0 +1,4 @@
+{% extends "masters/_page.html" %}
+{% comment %}A page beside the list of Tags, under a way back to it on phones.{% endcomment %}
+{% block list %}{% include "masters/_tags.html" %}{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="masters:tags" label="Tags" %}{% endblock %}

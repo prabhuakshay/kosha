@@ -1,4 +1,4 @@
-"""Helpers for tests that add and edit Accounts and Categories, as the Owner would."""
+"""Helpers for tests that add and edit Masters, as the Owner would."""
 
 import re
 from html import unescape
@@ -9,7 +9,7 @@ from django.utils.timezone import localdate
 
 from apps.core.testing import tags
 from apps.masters.listings import LISTINGS
-from apps.masters.models import KINDS, Account, Category
+from apps.masters.models import KINDS, Account, Category, Tag
 
 if TYPE_CHECKING:
     from django.http import HttpResponse
@@ -242,6 +242,31 @@ def category_url(action: str, category: Category) -> str:
         The address.
     """
     return reverse(f"masters:{action}category", args=[category.pk])
+
+
+def tag(name: str = "Goa trip 2026") -> Tag:
+    """Make a Tag straight in the database.
+
+    Args:
+        name: Its name.
+
+    Returns:
+        The Tag.
+    """
+    return Tag.objects.create(name=name)
+
+
+def tag_url(action: str, tag: Tag) -> str:
+    """The address of a Tag's detail, or of an action on it.
+
+    Args:
+        action: A route prefix such as ``delete_``, or nothing for the detail.
+        tag: The Tag.
+
+    Returns:
+        The address.
+    """
+    return reverse(f"masters:{action}tag", args=[tag.pk])
 
 
 def notices(response: HttpResponse) -> list[str]:

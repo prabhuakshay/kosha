@@ -1,4 +1,4 @@
-"""Accounts and Categories: where money is, who it moves between, and why."""
+"""Accounts, Categories and Tags: where money is, who it moves between, and why."""
 
 from collections import Counter
 from decimal import Decimal
@@ -210,3 +210,24 @@ class Category(models.Model):
         """
         used = Counter(cls.objects.values_list("color", flat=True))
         return min(cls.Color, key=lambda color: used[color])
+
+
+class Tag(models.Model):
+    """The context money moved in, such as a trip or “reimbursable”."""
+
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(Lower("name"), name="tag_name_unique")]
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def in_use(self) -> bool:
+        """Whether anything refers to the Tag, so it can't be deleted.
+
+        Returns:
+            False, until transactions carry Tags.
+        """
+        return False
