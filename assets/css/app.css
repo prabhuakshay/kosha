@@ -822,6 +822,36 @@
     color: var(--ink-3);
   }
 
+  .worth {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  .worth-parts {
+    margin-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .worth-part {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+  }
+
+  .worth-part:last-child {
+    border-bottom: 0;
+  }
+
+  a.worth-part:hover {
+    color: var(--accent);
+  }
+
   .big {
     font-family: var(--font-display);
     font-weight: 700;
