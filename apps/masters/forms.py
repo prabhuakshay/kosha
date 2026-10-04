@@ -7,7 +7,7 @@ from django import forms
 from django.utils import timezone
 
 from apps.core.money import base_currency, decimal_places
-from apps.masters.models import KINDS, Account, Category
+from apps.masters.models import KINDS, Account, Category, Tag
 
 if TYPE_CHECKING:
     from datetime import date
@@ -164,6 +164,32 @@ class CategoryForm(forms.ModelForm):
             or self.instance.color
             or Category.least_used_color()
         )
+
+
+class TagForm(forms.ModelForm):
+    """A Tag's name, all a Tag has."""
+
+    class Meta:
+        model = Tag
+        fields = ["name"]
+
+    def clean_name(self) -> str:
+        """Refuse a name another Tag has, ignoring case.
+
+        Returns:
+            The name.
+
+        Raises:
+            ValidationError: Another Tag has it.
+        """
+        name = self.cleaned_data["name"]
+        clash = (
+            Tag.objects.filter(name__iexact=name).exclude(pk=self.instance.pk).first()
+        )
+        if clash:
+            msg = f"There's already a Tag called “{clash.name}”."
+            raise forms.ValidationError(msg)
+        return name
 
 
 def in_places(amount: Decimal) -> Decimal:

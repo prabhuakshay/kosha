@@ -1,0 +1,24 @@
+{% extends "masters/tag_page.html" %}
+{% block title %}{{ tag.name }} · Kosha{% endblock %}
+{% block main %}
+    <div class="mb-4"><span class="tile"><i data-lucide="tag"></i></span></div>
+    <h1 class="display page-title">{{ tag.name }}</h1>
+    <p class="mt-3 text-[15px] text-ink-2">Tag</p>
+    {% include "signin/_messages.html" %}
+    <div class="actions">
+        <a href="{% url 'masters:edit_tag' tag.pk %}" class="btn btn-quiet"><i data-lucide="pencil"></i>Rename</a>
+        {% if not tag.in_use %}
+            <button type="button" popovertarget="delete-tag" class="btn btn-danger"><i data-lucide="trash-2"></i>Delete</button>
+            {% url "masters:delete_tag" tag.pk as delete %}
+            {% include "layouts/_sheet.html" with id="delete-tag" title="Delete "|add:tag.name|add:"?" body="layouts/_confirm.html" text="It's gone for good, though History keeps that it existed." action=delete icon="trash-2" button="Delete tag" %}
+        {% endif %}
+    </div>
+    <section class="section">
+        <h2 class="section-title">History</h2>
+        <ul class="items">
+            {% for entry in history %}
+                {% include "core/_history_entry.html" %}
+            {% endfor %}
+        </ul>
+    </section>
+{% endblock %}

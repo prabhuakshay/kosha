@@ -1,0 +1,32 @@
+{% extends "masters/tag_page.html" %}
+{% block title %}{% if tag %}Rename {{ tag.name }}{% else %}New tag{% endif %} · Kosha{% endblock %}
+{% block back %}
+    {% if tag %}
+        {% url "masters:tag" tag.pk as href %}
+        {% include "layouts/_back.html" with href=href label=tag.name %}
+    {% else %}
+        {{ block.super }}
+    {% endif %}
+{% endblock %}
+{% block crumbs %}
+    {% if tag %}
+        {% url "masters:tag" tag.pk as href %}
+        {% include "layouts/_crumbs.html" with top="masters:tags" top_label="Tags" href=href label=tag.name here="Rename" %}
+    {% endif %}
+{% endblock %}
+{% block main %}
+    <h1 class="display page-title">{% if tag %}Rename {{ tag.name }}{% else %}New tag{% endif %}</h1>
+    <p class="lede">The context money moves in, such as a trip or “reimbursable”.</p>
+    <form method="post" class="section max-w-sm">
+        {% csrf_token %}
+        <label class="block">
+            <span class="label">Name</span>
+            <input class="field mt-1.5" name="name" value="{{ form.name.value|default:'' }}" maxlength="100" required autofocus>
+            {% include "signin/_errors.html" with field=form.name %}
+        </label>
+        <div class="actions">
+            <button class="btn">{% if tag %}Save name{% else %}Add tag{% endif %}</button>
+            <a href="{% if tag %}{% url 'masters:tag' tag.pk %}{% else %}{% url 'masters:tags' %}{% endif %}" class="btn btn-quiet">Cancel</a>
+        </div>
+    </form>
+{% endblock %}
