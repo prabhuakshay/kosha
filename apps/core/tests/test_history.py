@@ -111,3 +111,10 @@ def test_the_base_currency_isnt_changed_unless_its_history_is(signed_in, monkeyp
         signed_in.post(reverse("base_currency"), {"base_currency": "USD"})
 
     assert Setting.load().base_currency == "INR"
+
+
+@pytest.mark.django_db
+def test_it_needs_signing_in(client):
+    response = client.get(HISTORY)
+
+    assert response["Location"].startswith(reverse("sign_in"))

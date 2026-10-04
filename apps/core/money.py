@@ -5,6 +5,7 @@ from operator import itemgetter
 from typing import TYPE_CHECKING
 
 from babel import Locale
+from babel.localedata import locale_identifiers
 from babel.numbers import (
     format_currency,
     get_currency_precision,
@@ -58,6 +59,23 @@ def write(amount: Decimal) -> str:
         The amount with its symbol, grouping and decimal places, INR in lakhs.
     """
     currency = base_currency()
-    return format_currency(
-        amount, currency, locale="en_IN" if currency == "INR" else "en_US"
-    )
+    return format_currency(amount, currency, locale=writing_locale(currency))
+
+
+@cache
+def writing_locale(currency: str) -> str:
+    """The locale that writes a currency's amounts the way its country does.
+
+    A currency code starts with its country's code, so English as spoken
+    there gives that country's grouping while keeping symbols in English.
+    Currencies with no such locale, such as EUR or JPY, are written in
+    plain English.
+
+    Args:
+        currency: Its code, such as ``CHF``.
+
+    Returns:
+        A locale, such as ``en_CH``.
+    """
+    country = f"en_{currency[:2]}"
+    return country if country in locale_identifiers() else "en"

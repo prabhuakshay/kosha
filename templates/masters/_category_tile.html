@@ -1,2 +1,2 @@
-{% comment %}A Category's icon in its color, or a dot of its color if it has no icon.{% endcomment %}
-<span class="tile category-tile color-{{ category.color }}">{% if category.icon %}<i data-lucide="{{ category.icon }}"></i>{% else %}<span class="category-dot"></span>{% endif %}</span>
+{% comment %}A Category's icon in its color, and a dot of its color: in the corner when there's an icon, in the middle when there isn't.{% endcomment %}
+<span class="tile category-tile color-{{ category.color }}">{% if category.icon %}<i data-lucide="{{ category.icon }}"></i>{% endif %}<span class="category-dot"></span></span>
