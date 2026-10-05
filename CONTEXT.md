@@ -43,13 +43,16 @@ An hour in which an address can't sign in, after 5 wrong passwords or codes from
 _Avoid_: lockout, ban
 
 **Security log**:
-The permanent record of everything that happened to how Kosha is signed in to: sign-ins, wrong passwords and codes, Pauses, and every change to a Way to sign in, the password or the Recovery codes. The Owner can read it but never edit or clear it. A sign-in from an address or device no earlier sign-in used also emails the Owner.
+The permanent record of everything that happened to how Kosha is signed in to: sign-ins, wrong passwords and codes, Pauses, every change to a Way to sign in, the password or the Recovery codes, and every device that turns reminders on or off. The Owner can read it but never edit or clear it. A sign-in from an address or device no earlier sign-in used also emails the Owner.
 
 ### Money
 
 **Base currency**:
 The one currency every amount in Kosha is in, set in Settings. INR unless the Owner changes it.
 _Avoid_: default currency, home currency
+
+**Time zone**:
+The Owner's time zone, set in Settings, which decides what today is: the latest a Transaction can be dated, when a Due comes round and when reminders go out.
 
 **Account**:
 Any Asset account, Liability, Expense account, Income account, or Revaluation. Its name is unique among Accounts of the same type, ignoring case. Never created from typed text, only on purpose.
@@ -74,7 +77,7 @@ Someone who pays the Owner: an employer, a client, a tenant.
 _Avoid_: revenue account, payer, source
 
 **Revaluation**:
-The one Account Kosha keeps for itself, on the other side of every change in what a Property account is worth. The Owner can't create, edit or delete it, and it counts as neither spending nor income.
+The one Account Kosha keeps for itself, on the other side of every change in what a Property or Investment account is worth. The Owner can't create, edit or delete it, and it counts as neither spending nor income.
 _Avoid_: depreciation, adjustment, unrealised gains
 
 **Net worth**:
@@ -84,7 +87,7 @@ Everything in Asset accounts minus everything in Liabilities.
 Net worth counting only Bank, Deposit, Cash and Investment accounts, less Credit cards: what the Owner could actually use.
 
 **Opening balance**:
-What an Asset account or Liability held on the day the Owner started tracking it in Kosha.
+What an Asset account or Liability held at the start of the day the Owner started tracking it in Kosha. Nothing can be dated before that day.
 _Avoid_: initial balance, starting balance
 
 **Closed**:
@@ -92,7 +95,7 @@ An Account the Owner no longer uses, hidden from everyday lists but kept with it
 _Avoid_: archived, inactive
 
 **Category**:
-What money was spent or received for, such as Groceries or Salary. One flat list, usable on money going out or coming in. Can be Closed like an Account.
+What money was spent or received for, such as Groceries or Salary. One flat list, usable on money going out or coming in, so a refund under a Category takes it off that Category's spending. Can be Closed like an Account.
 _Avoid_: expense type, head
 
 **Tag**:
@@ -100,5 +103,55 @@ A label for the context money moved in, such as a trip or "reimbursable". Any nu
 _Avoid_: label, project
 
 **History**:
-The permanent record of every change to an Account, Category, Tag or Setting: what changed, from what to what, and when, including deletions. The Owner can read it but never edit or clear it. Separate from the Security log.
+The permanent record of every change to an Account, Category, Tag, Rule, Recurring Transaction or Setting, every edit or deletion of a Transaction, and every Reconciliation undone: what changed, from what to what, and when, including deletions. The Owner can read it but never edit or clear it. Separate from the Security log.
 _Avoid_: audit log, change log, activity
+
+### Transactions
+
+**Transaction**:
+An amount moving from one Account to another on one day. Spending, Income, Transfer or a Value update, decided by its two Accounts. Never split into parts: a bill paid for two reasons is two Transactions.
+_Avoid_: entry, journal, movement, split
+
+**Spending**:
+A Transaction from an Asset account or Liability to an Expense account.
+_Avoid_: withdrawal, expense, debit
+
+**Income**:
+A Transaction from an Income account to an Asset account or Liability.
+_Avoid_: deposit, credit, revenue
+
+**Transfer**:
+A Transaction between two Asset accounts or Liabilities, such as paying a Credit card, lending to a friend or buying a house. Neither Spending nor Income.
+_Avoid_: move
+
+**Value update**:
+A Transaction between a Property or Investment account and Revaluation, entered as what the Account is now worth. Neither Spending nor Income.
+_Avoid_: revaluation (that is the Account), mark to market, adjustment
+
+**Recurring Transaction**:
+A Transaction that repeats on a schedule, such as an EMI or a credit card payment. It never posts itself: each time it comes round it makes a Due.
+_Avoid_: bill, subscription, standing instruction, scheduled transaction
+
+**Due**:
+One coming round of a Recurring Transaction, waiting for the Owner to confirm it, perhaps with a different amount, or skip it. Nothing moves until it is confirmed.
+_Avoid_: reminder, upcoming, pending
+
+**Import**:
+A statement file for one Asset account or Liability, whose lines the Owner reviews before any becomes a Transaction. The file is kept with it.
+_Avoid_: upload, sync
+
+**Rule**:
+An instruction for sorting Import lines, such as "a line containing SWIGGY is Spending at Swiggy under Food". Made on purpose by the Owner, never guessed.
+_Avoid_: filter, mapping, automation
+
+**Activity**:
+The list of every Transaction.
+_Avoid_: ledger, register, feed
+
+**Reconciliation**:
+Checking an Asset account or Liability against a statement: the Owner enters the statement's closing balance and date, and Kosha shows its own balance on that date beside it. When they agree, every Transaction in the Account up to that date becomes Reconciled. Only the latest can be undone.
+_Avoid_: clearing, matching
+
+**Reconciled**:
+A Transaction a Reconciliation has vouched for. Changing or deleting one asks first.
+_Avoid_: cleared, locked

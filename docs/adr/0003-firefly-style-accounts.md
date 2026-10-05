@@ -24,6 +24,9 @@ an expense would leave every mortgaged homeowner with a large negative net
 worth. A Property's value is updated by hand against the system-owned
 Revaluation account, never depreciated automatically, because straight-line
 and written-down-value schedules are tax conventions, not resale value.
+Investment accounts are updated the same way, as a value the Owner reads off
+their statement, so that a mutual fund shows what it is worth rather than
+what was paid into it; Kosha tracks no units, holdings or prices.
 Phones, laptops and furniture stay expenses: they have no real resale market
 and nobody's net worth hinges on them.
 
