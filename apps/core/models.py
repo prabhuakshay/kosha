@@ -11,6 +11,8 @@ class Setting(models.Model):
     """The install's one row of Settings."""
 
     base_currency = models.CharField(max_length=3, default="INR")
+    # Blank until guessed from the Owner's browser; the server's is used till then.
+    time_zone = models.CharField(max_length=64, blank=True)
 
     class Meta:
         constraints = [
@@ -44,6 +46,7 @@ class HistoryEntry(models.Model):
         REOPENED = "reopened", "Reopened"
         DELETED = "deleted", "Deleted"
         BASE_CURRENCY_CHANGED = "base_currency_changed", "Base currency changed"
+        TIME_ZONE_CHANGED = "time_zone_changed", "Time zone changed"
 
     at = models.DateTimeField(default=timezone.now, db_index=True)
     action = models.CharField(max_length=32, choices=Action)

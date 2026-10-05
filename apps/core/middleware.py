@@ -5,7 +5,10 @@ from typing import TYPE_CHECKING
 
 from django.db import DatabaseError, connection
 from django.http import HttpRequest, HttpResponse
+from django.utils import timezone
 from django.utils.cache import add_never_cache_headers
+
+from apps.core import time_zone
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -69,3 +72,30 @@ class NoStoreMiddleware:
         if not response.has_header("Cache-Control"):
             add_never_cache_headers(response)
         return response
+
+
+class TimeZoneMiddleware:
+    """Show every date and time in the Owner's Time zone.
+
+    The first time the Owner is fully signed in without one, it's guessed from
+    the browser. A password alone may be a stranger's, so it can't set it. Runs
+    after django-otp's ``OTPMiddleware``.
+    """
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        """Answer the request in the Time zone.
+
+        Args:
+            request: The incoming request.
+
+        Returns:
+            The downstream response.
+        """
+        owner = request.user
+        if owner.is_authenticated and owner.is_verified():
+            time_zone.guess(request)
+        with timezone.override(time_zone.current()):
+            return self.get_response(request)

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 SETTINGS_PAGES = {
     "settings",
     "base_currency",
+    "time_zone",
     "history",
     "appearance",
     "security",

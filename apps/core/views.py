@@ -10,8 +10,8 @@ from django.shortcuts import redirect, render
 from django.templatetags.static import static
 from django.urls import reverse
 
-from apps.core import appearance, history
-from apps.core.forms import BaseCurrencyForm
+from apps.core import appearance, history, time_zone
+from apps.core.forms import BaseCurrencyForm, TimeZoneForm
 from apps.core.models import Setting
 from apps.masters.worth import worth
 
@@ -77,6 +77,39 @@ def base_currency(request: HttpRequest) -> HttpResponse:
         "core/base_currency.html",
         {"form": form, "sample": Decimal(320000)},
     )
+
+
+def time_zone_page(request: HttpRequest) -> HttpResponse:
+    """Choose the Time zone, which decides what today is and how times read.
+
+    Args:
+        request: The incoming request.
+
+    Returns:
+        The form, or a redirect back to it once changed.
+    """
+    setting = Setting.load()
+    before = time_zone.name()
+    form = TimeZoneForm(
+        request.POST or None, instance=setting, initial={"time_zone": before}
+    )
+    if form.is_valid():
+        with transaction.atomic():
+            form.save()
+            changed = history.changes(
+                {"Time zone": before}, {"Time zone": setting.time_zone}
+            )
+            if changed:
+                history.record(
+                    setting,
+                    history.Action.TIME_ZONE_CHANGED,
+                    type_="Setting",
+                    name="Time zone",
+                    changes=changed,
+                )
+        messages.success(request, f"Today is now worked out in {setting.time_zone}.")
+        return redirect("time_zone")
+    return render(request, "core/time_zone.html", {"form": form})
 
 
 def history_page(request: HttpRequest) -> HttpResponse:

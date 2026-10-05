@@ -1,5 +1,7 @@
 """Helpers shared by every app's tests."""
 
+import re
+from html import unescape
 from html.parser import HTMLParser
 from typing import TYPE_CHECKING
 
@@ -39,3 +41,29 @@ def tags(
         for t, a in parser.tags
         if t == tag and all(a.get(k) == v for k, v in attrs.items())
     ]
+
+
+def chosen(response: HttpResponse) -> list[str]:
+    """The options a page's selects have chosen.
+
+    Args:
+        response: The page.
+
+    Returns:
+        Each chosen option's value.
+    """
+    return [o["value"] for o in tags(response, "option") if "selected" in o]
+
+
+def shown_history(response: HttpResponse) -> list[str]:
+    """Each History entry's text, without the time it happened.
+
+    Args:
+        response: The History page.
+
+    Returns:
+        Each entry's text, newest first.
+    """
+    entries = re.findall(r"data-history-entry>(.*?)</li>", response.text, re.DOTALL)
+    texts = (" ".join(re.sub(r"<[^>]+>", " ", e).split()) for e in entries)
+    return [unescape(re.sub(r" \d+:\d\d [ap]m$", "", t)) for t in texts]

@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 from django.utils import timezone
 from django.utils.formats import date_format
 
+from apps.core import time_zone
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
     from datetime import datetime
@@ -24,7 +26,7 @@ def by_day[T](
     Returns:
         Each day's name, such as ``Today`` or ``28 Sep 2026``, and its entries.
     """
-    today = timezone.localdate()
+    today = time_zone.today()
     names = {today: "Today", today - timedelta(days=1): "Yesterday"}
     days = groupby(entries, key=lambda e: timezone.localdate(at(e)))
     return [

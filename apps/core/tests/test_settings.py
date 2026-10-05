@@ -49,6 +49,7 @@ def test_security_goes_back_to_settings(signed_in, clock, name):
 SETTINGS, SECURITY = reverse("settings"), reverse("security")
 PAGES = [
     "base_currency",
+    "time_zone",
     "history",
     "appearance",
     "security",
@@ -87,6 +88,7 @@ def selected(response):
         ("home", set()),
         ("settings", set()),
         ("base_currency", {reverse("base_currency")}),
+        ("time_zone", {reverse("time_zone")}),
         ("history", {reverse("history")}),
         ("appearance", {reverse("appearance")}),
         ("security", {SECURITY}),
@@ -112,7 +114,7 @@ def rows(response):
 
 @pytest.mark.django_db
 def test_the_settings_index_lists_every_page(signed_in):
-    assert rows(signed_in.get(SETTINGS))[:9] == LISTS + [reverse(n) for n in PAGES]
+    assert rows(signed_in.get(SETTINGS))[:10] == LISTS + [reverse(n) for n in PAGES]
 
 
 @pytest.mark.django_db
@@ -120,7 +122,7 @@ def test_the_settings_index_lists_every_page(signed_in):
 def test_a_settings_page_sits_beside_the_settings_list(signed_in, name):
     response = signed_in.get(reverse(name))
 
-    assert rows(response)[:9] == LISTS + [reverse(n) for n in PAGES]
+    assert rows(response)[:10] == LISTS + [reverse(n) for n in PAGES]
     assert 'class="split split-open"' in response.text
 
 

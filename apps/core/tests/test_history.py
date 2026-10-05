@@ -1,6 +1,5 @@
 import re
 from datetime import timedelta
-from html import unescape
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
@@ -9,16 +8,10 @@ from django.urls import reverse
 from django.utils.timezone import localdate
 
 from apps.core.models import HistoryEntry, Setting
+from apps.core.testing import shown_history as shown
 from apps.masters.models import Account
 
 HISTORY = reverse("history")
-
-
-def shown(response):
-    """Each entry's text, without the time it happened."""
-    entries = re.findall(r"data-history-entry>(.*?)</li>", response.text, re.DOTALL)
-    texts = (" ".join(re.sub(r"<[^>]+>", " ", e).split()) for e in entries)
-    return [unescape(re.sub(r" \d+:\d\d [ap]m$", "", t)) for t in texts]
 
 
 @pytest.mark.django_db

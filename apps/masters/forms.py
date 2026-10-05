@@ -4,8 +4,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django import forms
-from django.utils import timezone
 
+from apps.core import time_zone
 from apps.core.money import base_currency, decimal_places
 from apps.masters.models import KINDS, Account, Category, Tag
 
@@ -73,7 +73,7 @@ class BalanceAccountForm(AccountForm):
         if self.instance.pk:
             self.initial["opening_balance"] = in_places(self.instance.opening_balance)
         else:
-            self.initial["opened_on"] = timezone.localdate()
+            self.initial["opened_on"] = time_zone.today()
 
     def clean_opening_balance(self) -> Decimal:
         """Hold the Opening balance to the currency's places, and a Closed one at 0.
@@ -110,7 +110,7 @@ class BalanceAccountForm(AccountForm):
             ValidationError: It's after today.
         """
         opened_on = self.cleaned_data["opened_on"]
-        if opened_on > timezone.localdate():
+        if opened_on > time_zone.today():
             msg = "The opening date can't be in the future."
             raise forms.ValidationError(msg)
         return opened_on

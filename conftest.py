@@ -31,6 +31,12 @@ def test_settings(settings: SettingsWrapper) -> None:
 
 
 @pytest.fixture
+def server_in_utc(settings: SettingsWrapper) -> None:
+    """Put the server in UTC, whatever .env says, so the Owner's zone differs."""
+    settings.TIME_ZONE = "UTC"
+
+
+@pytest.fixture
 def owner(django_user_model):
     return django_user_model.objects.create_superuser(EMAIL, PASSWORD, name="Asha Rao")
 

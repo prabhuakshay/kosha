@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -46,6 +46,35 @@ def test_the_opening_date_cant_be_in_the_future(signed_in):
     tomorrow = localdate() + timedelta(days=1)
 
     response = add(signed_in, opened_on=tomorrow.isoformat())
+
+    assert errors(response) == ["The opening date can't be in the future."]
+    assert not Account.objects.exists()
+
+
+@pytest.mark.django_db
+def test_the_opening_date_can_be_today_where_the_owner_is_before_the_server(
+    server_in_utc, time_machine, signed_in
+):
+    signed_in.post(reverse("time_zone"), {"time_zone": "Asia/Kolkata"})
+    # 1:30 am on the 13th in Kolkata, still the 12th on the server.
+    time_machine.move_to(datetime(2026, 10, 12, 20, 0, tzinfo=UTC), tick=False)
+
+    assert field_value(signed_in.get(NEW), "opened_on") == "2026-10-13"
+    response = add(signed_in, opened_on="2026-10-13")
+
+    assert errors(response) == []
+    assert Account.objects.get().opened_on.isoformat() == "2026-10-13"
+
+
+@pytest.mark.django_db
+def test_the_opening_date_cant_be_today_on_the_server_if_its_tomorrow_for_the_owner(
+    server_in_utc, time_machine, signed_in
+):
+    signed_in.post(reverse("time_zone"), {"time_zone": "America/Los_Angeles"})
+    # 8 pm on the 12th in Los Angeles, already the 13th on the server.
+    time_machine.move_to(datetime(2026, 10, 13, 3, 0, tzinfo=UTC), tick=False)
+
+    response = add(signed_in, opened_on="2026-10-13")
 
     assert errors(response) == ["The opening date can't be in the future."]
     assert not Account.objects.exists()

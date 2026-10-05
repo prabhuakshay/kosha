@@ -16,6 +16,7 @@ from django_otp import login as otp_login
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import default_key
 
+from apps.core import time_zone
 from apps.signin import confirmation, pause, security_log, ways
 from apps.signin.claim import is_claimed
 from apps.signin.forms import (
@@ -91,6 +92,8 @@ def claim_owner(request: HttpRequest) -> HttpResponse:
     form = OwnerForm(request.POST or None)
     if form.is_valid():
         login(request, form.save(), backend=PASSWORD_BACKEND)
+        # The Setup code, not the password, proves who this is.
+        time_zone.guess(request)
         security_log.signed_in(request, "Password")
         return redirect("choose_way")
     return render(request, "signin/claim_owner.html", {"form": form})
