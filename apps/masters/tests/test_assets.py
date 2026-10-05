@@ -9,7 +9,7 @@ from apps.core.testing import tags
 from apps.masters.models import Account
 from apps.masters.testing import add, edit, errors, field_value
 
-ASSETS, NEW = reverse("masters:assets"), reverse("masters:new_asset")
+ACCOUNTS, NEW = reverse("masters:accounts"), reverse("masters:new_asset")
 
 
 @pytest.mark.django_db
@@ -26,7 +26,7 @@ def test_the_owner_adds_an_asset_account_and_sees_it(signed_in):
     account = Account.objects.get()
     assert response["Location"] == reverse("masters:asset", args=[account.pk])
     page = signed_in.get(response["Location"])
-    assert '<h1 class="display page-title">HDFC FD</h1>' in page.text
+    assert "<h1>HDFC FD</h1>" in page.text
     assert "data-kind>Deposit<" in page.text
     assert "data-balance>₹3,20,000.50<" in page.text
     assert "1 Apr 2026" in page.text

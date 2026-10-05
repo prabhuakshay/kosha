@@ -74,9 +74,7 @@ def errors(response: HttpResponse) -> list[str]:
     Returns:
         Each error's text.
     """
-    found = re.findall(
-        r'<p class="mt-1.5 text-\[13px\] font-medium text-bad">([^<]+)', response.text
-    )
+    found = re.findall(r'<span class="field-error block">([^<]+)', response.text)
     return [unescape(e) for e in found]
 
 
@@ -103,7 +101,7 @@ def groups(response: HttpResponse) -> list[tuple[str, str]]:
         Each Kind's label and subtotal.
     """
     return re.findall(
-        r'data-kind>([^<]+)</span><span class="amount" data-subtotal="\w+">([^<]+)<',
+        r'data-kind>([^<]+)</span><span [^>]*data-subtotal="\w+">([^<]+)<',
         response.text,
     )
 
@@ -118,7 +116,7 @@ def rows(response: HttpResponse) -> list[tuple[str, str]]:
         Each row's name and balance.
     """
     return re.findall(
-        r'font-semibold">([^<]+)</span>\s*<span class="amount text-\[14px\]" '
+        r'data-name>([^<]+)</span></span>\s*<span class="row-value amount" '
         r"data-balance>([^<]+)<",
         response.text,
     )
@@ -187,7 +185,11 @@ def listed(client: Client, type_: Account.Type) -> tuple[list[str], list[str]]:
     Returns:
         The open Accounts' names, then those in the Closed section.
     """
-    return listed_at(client, reverse(LISTINGS[type_].list))
+    text = client.get(reverse("masters:accounts")).text
+    open_part, _, closed_part = text.partition("data-closed")
+    start = open_part.index(f'id="{LISTINGS[type_].plural}"')
+    end = open_part.find('class="sec sec-lead" id=', start)
+    return names(open_part[start : end if end != -1 else None]), names(closed_part)
 
 
 def listed_at(client: Client, address: str) -> tuple[list[str], list[str]]:
@@ -202,12 +204,19 @@ def listed_at(client: Client, address: str) -> tuple[list[str], list[str]]:
     """
     text = client.get(address).text
     open_part, _, closed_part = text.partition("data-closed")
-
-    def names(part: str) -> list[str]:
-        found = re.findall(r'truncate text-\[15px\] font-semibold">([^<]+)<', part)
-        return [unescape(n) for n in found]
-
     return names(open_part), names(closed_part)
+
+
+def names(part: str) -> list[str]:
+    """The names of the things listed in part of a page.
+
+    Args:
+        part: Some of the page's HTML.
+
+    Returns:
+        Each name, in order.
+    """
+    return [unescape(n) for n in re.findall(r"data-name>([^<]+)<", part)]
 
 
 def category(

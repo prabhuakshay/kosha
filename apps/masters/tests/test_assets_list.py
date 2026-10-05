@@ -7,7 +7,7 @@ from apps.core.testing import tags
 from apps.masters.models import Account
 from apps.masters.testing import groups, rows
 
-ASSETS = reverse("masters:assets")
+ACCOUNTS = reverse("masters:accounts")
 
 
 def asset(name, kind, balance):
@@ -24,7 +24,7 @@ def test_assets_are_grouped_by_kind_with_subtotals_and_a_total(signed_in):
     asset("Ravi", "lent", "5000")
     asset("Wallet", "cash", "-250")
 
-    response = signed_in.get(ASSETS)
+    response = signed_in.get(ACCOUNTS)
 
     assert groups(response) == [
         ("Bank", "₹3,20,000.00"),
@@ -39,7 +39,7 @@ def test_assets_are_grouped_by_kind_with_subtotals_and_a_total(signed_in):
         ("Ravi", "₹5,000.00"),
         ("Gold", "₹5,00,000.00"),
     ]
-    assert "data-total>₹8,24,750.00<" in response.text
+    assert 'data-total="assets">₹8,24,750.00<' in response.text
 
 
 @pytest.mark.django_db
@@ -47,7 +47,7 @@ def test_amounts_are_written_in_the_base_currency(signed_in):
     asset("Chase", "bank", "320000")
     signed_in.post(reverse("base_currency"), {"base_currency": "USD"})
 
-    response = signed_in.get(ASSETS)
+    response = signed_in.get(ACCOUNTS)
 
     assert groups(response) == [("Bank", "$320,000.00")]
 
@@ -56,11 +56,11 @@ def test_amounts_are_written_in_the_base_currency(signed_in):
 def test_each_row_shows_its_kinds_icon(signed_in):
     account = asset("Gold", "property", "1")
 
-    response = signed_in.get(ASSETS)
+    response = signed_in.get(ACCOUNTS)
 
     assert re.search(
         rf'href="{reverse("masters:asset", args=[account.pk])}" class="row" >\s*'
-        r'<span class="tile"><i data-lucide="house">',
+        r'<span class="glyph"><i data-lucide="house">',
         response.text,
     )
 
@@ -82,17 +82,17 @@ def test_the_account_open_is_marked_current_in_the_list(signed_in, name):
 
     assert selected_rows(response) == [reverse("masters:asset", args=[hdfc.pk])]
     assert tags(response, "a", href=reverse("masters:asset", args=[other.pk]))
-    current = tags(response, "a", **{"class": "sub-link", "aria-current": "page"})
-    assert {c["href"] for c in current} == {ASSETS}
+    current = tags(response, "a", **{"class": "side-link", "aria-current": "true"})
+    assert {c["href"] for c in current} == {ACCOUNTS}
 
 
 @pytest.mark.django_db
-def test_an_account_goes_back_to_the_assets_list(signed_in):
+def test_an_account_goes_back_to_the_accounts_list(signed_in):
     hdfc = asset("HDFC", "bank", "1")
 
     response = signed_in.get(reverse("masters:asset", args=[hdfc.pk]))
 
-    assert tags(response, "a", href=ASSETS, **{"aria-label": "Back to Assets"})
+    assert tags(response, "a", href=ACCOUNTS, **{"aria-label": "Back to Accounts"})
 
 
 @pytest.mark.django_db

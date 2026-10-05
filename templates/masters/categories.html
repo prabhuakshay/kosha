@@ -1,14 +1,14 @@
 {% extends "masters/category_page.html" %}
 {% block title %}Categories · Kosha{% endblock %}
 {% block open %}{% if not categories and not closed %}split-open{% endif %}{% endblock %}
-{% block back %}{% include "layouts/_back.html" with to="masters:masters" label="Masters" %}{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="settings" label="Settings" %}{% endblock %}
 {% block main %}
     {% include "signin/_messages.html" %}
     {% if categories or closed %}
         {% comment %}Phones show only the list here; desktops have room to say so.{% endcomment %}
-        {% include "layouts/_placeholder.html" with icon="shapes" heading="Categories" text="Choose a category from the list. Its details open here." %}
+        {% include "layouts/_empty.html" with icon="shapes" heading="Categories" text="Choose a category from the list. Its details open here." %}
     {% else %}
         {% url "masters:new_category" as add %}
-        {% include "layouts/_placeholder.html" with icon="shapes" heading="No categories yet" text="What money is spent or received for, such as Groceries or Salary. One list serves money going out and coming in." add=add add_label="New category" %}
+        {% include "layouts/_empty.html" with icon="shapes" heading="No categories yet" text="What money is spent or received for, such as Groceries or Salary. One list serves money going out and coming in." add=add add_label="New category" %}
     {% endif %}
 {% endblock %}

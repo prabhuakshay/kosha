@@ -1,10 +1,9 @@
 {% extends "layouts/settings_page.html" %}
 {% block title %}New recovery codes · Kosha{% endblock %}
-{% block back %}{% include "layouts/_back.html" with to="security" label="Signing in" %}{% endblock %}
-{% block crumbs %}{% include "layouts/_crumbs.html" with top="settings" top_label="Settings" to="security" label="Signing in" here="New recovery codes" %}{% endblock %}
+{% block back %}{% include "layouts/_back.html" with to="security" label="Signing in" always=True %}{% endblock %}
 {% block main %}
-    <div class="max-w-sm">
-        <h1 class="display page-title">New recovery codes</h1>
+    <div class="mx-4 max-w-sm lg:mx-0">
+        <h1 class="title">New recovery codes</h1>
         <p class="lede">Your old codes no longer work. Each of these signs you in once, and you'll only see them now.</p>
         {% include "signin/_codes.html" %}
         <a href="{% url 'security' %}" class="btn mt-8">I've saved them</a>

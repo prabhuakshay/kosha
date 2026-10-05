@@ -1,0 +1,7 @@
+{% extends "masters/categories.html" %}
+{% block title %}New category · Kosha{% endblock %}
+{% block open %}{% endblock %}
+{% block sheets %}
+    {% url "masters:categories" as cancel %}
+    {% include "layouts/_sheet.html" with title="New category" button="Add category" lede="What money is spent or received for, such as Groceries or Salary." fields="masters/_category_fields.html" %}
+{% endblock %}

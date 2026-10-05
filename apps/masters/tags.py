@@ -62,7 +62,7 @@ def new_tag(request: HttpRequest) -> HttpResponse:
             record(tag, history.Action.CREATED)
         messages.success(request, f"Added {tag.name}.")
         return redirect("masters:tag", tag.pk)
-    return render(request, "masters/tag_form.html", {"form": form, **list_pane()})
+    return render(request, "masters/tag_new.html", {"form": form, **list_pane()})
 
 
 def edit_tag(request: HttpRequest, pk: int) -> HttpResponse:
@@ -88,8 +88,13 @@ def edit_tag(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("masters:tag", tag.pk)
     return render(
         request,
-        "masters/tag_form.html",
-        {"form": form, "tag": tag, **list_pane(selected=tag)},
+        "masters/tag_edit.html",
+        {
+            "form": form,
+            "tag": tag,
+            "history": history.of(tag),
+            **list_pane(selected=tag),
+        },
     )
 
 

@@ -1,6 +1,5 @@
 """Helpers shared by every app's tests."""
 
-import re
 from html.parser import HTMLParser
 from typing import TYPE_CHECKING
 
@@ -40,18 +39,3 @@ def tags(
         for t, a in parser.tags
         if t == tag and all(a.get(k) == v for k, v in attrs.items())
     ]
-
-
-def sub_links(response: HttpResponse, container: str) -> list[str]:
-    """The hrefs of the rail's section links inside one element.
-
-    Args:
-        response: A response with an HTML body.
-        container: An attribute that marks the element, such as ``id="x"``.
-
-    Returns:
-        Each link's href, in order.
-    """
-    start = response.text.index(container)
-    inside = response.text[start : response.text.index("</div>", start)]
-    return re.findall(r'<a href="([^"]+)" class="sub-link"', inside)

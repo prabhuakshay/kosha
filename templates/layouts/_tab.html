@@ -1,11 +1,9 @@
 {% comment %}
-    A tab in the phone's tab bar, like layouts/_nav_link.html, also the current
-    one on every page in the rail section `of`.
+    A tab in the phone's tab bar, the current one anywhere in the sections
+    named in `of`; without `to`, a feature still to come.
 {% endcomment %}
-{% with current=request.resolver_match.view_name %}
-    {% if to %}
-        <a href="{% url to %}" class="tab" {% if current == to or of and of == section %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i>{{ label }}</a>
-    {% else %}
-        <span class="tab" aria-disabled="true"><i data-lucide="{{ icon }}"></i>{{ label }}</span>
-    {% endif %}
-{% endwith %}
+{% if to %}
+    <a href="{% url to %}" class="tab" {% if section in of.split %}aria-current="page"{% endif %}><i data-lucide="{{ icon }}"></i>{{ label }}</a>
+{% else %}
+    <span class="tab" aria-disabled="true"><i data-lucide="{{ icon }}"></i>{{ label }}</span>
+{% endif %}

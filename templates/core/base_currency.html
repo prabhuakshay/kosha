@@ -2,27 +2,27 @@
 {% load money %}
 {% block title %}Base currency · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display page-title">Base currency</h1>
-    <p class="lede">Every amount in Kosha is in this currency.</p>
+    <header class="head">
+        <h1 class="title">Base currency</h1>
+        <p class="lede">Every amount in Kosha is in this currency.</p>
+    </header>
     {% include "signin/_messages.html" %}
-    <form method="post" class="section max-w-sm">
+    <form method="post">
         {% csrf_token %}
-        <label class="block">
-            <span class="label">Currency</span>
-            <select class="field mt-1.5" name="base_currency">
-                {% for code, name in form.fields.base_currency.choices %}
-                    <option value="{{ code }}" {% if code == form.base_currency.value %}selected{% endif %}>{{ name }} ({{ code }})</option>
-                {% endfor %}
-            </select>
-            {% include "signin/_errors.html" with field=form.base_currency %}
-        </label>
-        <p class="notice notice-bad"><i data-lucide="triangle-alert" class="size-4 flex-none"></i>Changing it relabels every amount as it stands. Nothing is converted.</p>
-        <div class="actions">
-            <button class="btn">Change base currency</button>
+        <div class="group">
+            <label class="cell">
+                <span class="cell-label">Currency</span>
+                <select class="cell-input" name="base_currency">
+                    {% for code, name in form.fields.base_currency.choices %}
+                        <option value="{{ code }}" {% if code == form.base_currency.value %}selected{% endif %}>{{ name }} ({{ code }})</option>
+                    {% endfor %}
+                </select>
+                {% include "signin/_errors.html" with field=form.base_currency %}
+            </label>
         </div>
+        <p class="group-note danger-text">Changing it relabels every amount as it stands. Nothing is converted.</p>
+        <div class="actions"><button class="btn">Change base currency</button></div>
     </form>
-    <section class="section">
-        <h2 class="section-title">Amounts look like</h2>
-        <p class="big mt-3 text-[28px]" data-sample>{{ sample|money }}</p>
-    </section>
+    <p class="sec">Amounts look like</p>
+    <div class="group"><p class="row"><span class="figure amount text-[28px]" data-sample>{{ sample|money }}</span></p></div>
 {% endblock %}

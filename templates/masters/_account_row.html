@@ -1,6 +1,7 @@
 {% load money %}
 <a href="{% url listing.detail account.pk %}" class="row" {% if account == selected %}aria-current="page"{% endif %}>
-    <span class="tile"><i data-lucide="{{ account.icon }}"></i></span>
-    <span class="min-w-0 flex-1 truncate text-[15px] font-semibold">{{ account.name }}</span>
-    {% if balance %}<span class="amount text-[14px]" data-balance>{{ account.balance|money }}</span>{% endif %}
+    <span class="glyph"><i data-lucide="{{ account.icon }}"></i></span>
+    <span class="row-main"><span class="row-title" data-name>{{ account.name }}</span></span>
+    {% if balance %}<span class="row-value amount" data-balance>{{ account.balance|money }}</span>{% endif %}
+    <i data-lucide="chevron-right" class="row-chev"></i>
 </a>

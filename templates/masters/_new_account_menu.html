@@ -1,0 +1,12 @@
+<div id="new-account" popover class="menu" aria-label="New account">
+    <div class="menu-card">
+        <p class="menu-head sec">New account</p>
+        <nav class="group" aria-label="New account">
+            <a href="{% url 'masters:new_asset' %}" class="row"><span class="glyph"><i data-lucide="landmark"></i></span><span class="row-main"><span class="row-title">Asset account</span><span class="row-sub">Money you have, or something you own</span></span></a>
+            <a href="{% url 'masters:new_liability' %}" class="row"><span class="glyph"><i data-lucide="credit-card"></i></span><span class="row-main"><span class="row-title">Liability</span><span class="row-sub">Money you owe</span></span></a>
+            <a href="{% url 'masters:new_expense_account' %}" class="row"><span class="glyph"><i data-lucide="arrow-up-right"></i></span><span class="row-main"><span class="row-title">Expense account</span><span class="row-sub">Someone you pay</span></span></a>
+            <a href="{% url 'masters:new_income_account' %}" class="row"><span class="glyph"><i data-lucide="arrow-down-left"></i></span><span class="row-main"><span class="row-title">Income account</span><span class="row-sub">Someone who pays you</span></span></a>
+        </nav>
+    </div>
+    <button type="button" popovertarget="new-account" popovertargetaction="hide" class="confirm-cancel phone-only">Cancel</button>
+</div>

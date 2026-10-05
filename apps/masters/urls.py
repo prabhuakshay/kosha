@@ -12,12 +12,11 @@ def account_routes(listing: listings.Listing) -> list[URLPattern]:
         listing: Which list.
 
     Returns:
-        The list, its form for a new Account, and each Account, its form and
-        what can be done to it.
+        Its form for a new Account, and each Account, its form and what can
+        be done to it.
     """
     prefix, route, kwargs = listing.plural, listing.route, {"listing": listing}
     return [
-        path(f"{prefix}/", views.account_list, kwargs, name=prefix),
         path(f"{prefix}/new/", views.new_account, kwargs, name=f"new_{route}"),
         path(f"{prefix}/<int:pk>/", views.account_detail, kwargs, name=route),
         path(
@@ -39,7 +38,7 @@ def account_routes(listing: listings.Listing) -> list[URLPattern]:
 
 app_name = "masters"
 urlpatterns = [
-    path("", views.masters, name="masters"),
+    path("accounts/", views.accounts, name="accounts"),
     *account_routes(listings.ASSETS),
     *account_routes(listings.LIABILITIES),
     *account_routes(listings.INCOME),

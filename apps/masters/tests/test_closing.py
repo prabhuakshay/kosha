@@ -4,7 +4,6 @@ import pytest
 from django.urls import reverse
 
 from apps.core.testing import tags
-from apps.masters.listings import LISTINGS
 from apps.masters.models import Account
 from apps.masters.testing import account, edit, errors, history, listed, notices, url
 
@@ -76,7 +75,7 @@ def test_an_expense_or_income_account_can_always_be_closed(signed_in, type_):
 def test_the_closed_section_starts_collapsed(signed_in, type_):
     account(type_, closed=True)
 
-    response = signed_in.get(reverse(LISTINGS[type_].list))
+    response = signed_in.get(reverse("masters:accounts"))
 
     section = tags(response, "details")
     assert len(section) == 1
@@ -100,7 +99,7 @@ def test_the_closed_section_is_open_while_one_in_it_is(signed_in, type_):
 def test_a_list_with_none_closed_has_no_closed_section(signed_in, type_):
     account(type_)
 
-    response = signed_in.get(reverse(LISTINGS[type_].list))
+    response = signed_in.get(reverse("masters:accounts"))
 
     assert not tags(response, "details")
 
@@ -110,7 +109,7 @@ def test_a_list_with_none_closed_has_no_closed_section(signed_in, type_):
 def test_a_list_of_only_closed_ones_isnt_empty(signed_in, type_):
     account(type_, closed=True)
 
-    response = signed_in.get(reverse(LISTINGS[type_].list))
+    response = signed_in.get(reverse("masters:accounts"))
 
     assert "yet</h1>" not in response.text
     assert listed(signed_in, type_) == ([], ["HDFC"])
@@ -224,33 +223,33 @@ def test_a_closed_one_can_still_be_renamed(signed_in):
     assert hdfc.name == "HDFC Old"
 
 
-def row_sub(response, title):
+def accounts_value(response):
     return re.search(
-        rf'font-semibold">{title}</span>\s*<span class="row-sub">([^<]+)<',
+        r'>Accounts</span>.*?<span class="row-value">([^<]+)<',
         response.text,
+        re.DOTALL,
     )[1]
 
 
 @pytest.mark.django_db
-def test_closed_ones_dont_count_on_the_index(signed_in):
+def test_closed_ones_dont_count_in_settings(signed_in):
     account(ASSET, balance=320000)
     account(ASSET, "Old savings", closed=True)
     account(EXPENSE, "Amazon")
     account(EXPENSE, "Old shop", closed=True)
 
-    response = signed_in.get(reverse("masters:masters"))
+    response = signed_in.get(reverse("settings"))
 
-    assert row_sub(response, "Assets") == "1 · ₹3,20,000.00"
-    assert row_sub(response, "Expenses") == "1"
+    assert accounts_value(response) == "2 open"
 
 
 @pytest.mark.django_db
-def test_an_index_list_of_only_closed_ones_says_none_open(signed_in):
+def test_only_closed_ones_says_none_open_in_settings(signed_in):
     account(LIABILITY, closed=True)
 
-    response = signed_in.get(reverse("masters:masters"))
+    response = signed_in.get(reverse("settings"))
 
-    assert row_sub(response, "Liabilities") == "None open"
+    assert accounts_value(response) == "None open"
 
 
 @pytest.mark.django_db
@@ -258,7 +257,7 @@ def test_closed_ones_dont_count_in_list_totals(signed_in):
     account(ASSET, balance=320000)
     account(ASSET, "Old savings", closed=True)
 
-    response = signed_in.get(reverse("masters:assets"))
+    response = signed_in.get(reverse("masters:accounts"))
 
     assert re.findall(r'data-subtotal="bank">([^<]+)<', response.text) == [
         "₹3,20,000.00"

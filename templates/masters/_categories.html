@@ -1,22 +1,23 @@
-<div class="list-head flex items-center gap-3">
-    <h2 class="display list-title">Categories</h2>
-    <a href="{% url 'masters:new_category' %}" class="btn btn-small ml-auto" {% if request.resolver_match.view_name == "masters:new_category" %}aria-current="page"{% endif %}><i data-lucide="plus" class="size-3.5"></i>New</a>
-</div>
+<header class="head head-row">
+    <h2 class="title">Categories</h2>
+    <a href="{% url 'masters:new_category' %}" class="tb" title="New category" aria-label="New category"><i data-lucide="plus"></i></a>
+    <p class="lede">What money was spent or received for.</p>
+</header>
 {% if categories %}
-    <nav class="rows mt-4" aria-label="Categories">
+    <nav class="group" aria-label="Categories">
         {% for category in categories %}
             {% include "masters/_category_row.html" %}
         {% endfor %}
     </nav>
 {% elif closed %}
-    <p class="list-note">None open</p>
+    <p class="group-note">None open</p>
 {% else %}
-    <p class="list-note">None yet</p>
+    <p class="group-note">None yet</p>
 {% endif %}
 {% if closed %}
     <details class="closed" data-closed {% if selected.closed %}open{% endif %}>
-        <summary class="group-label group-sum"><span>Closed</span><span class="flex items-center gap-1">{{ closed|length }}<i data-lucide="chevron-down" class="size-3.5"></i></span></summary>
-        <nav class="rows" aria-label="Closed">
+        <summary class="sec"><span>Closed</span><span class="flex items-center gap-1">{{ closed|length }}<i data-lucide="chevron-down" class="size-3.5"></i></span></summary>
+        <nav class="group" aria-label="Closed">
             {% for category in closed %}
                 {% include "masters/_category_row.html" %}
             {% endfor %}

@@ -1,0 +1,7 @@
+<div class="group">
+    <label class="cell">
+        <span class="cell-label">Name</span>
+        <input class="cell-input" name="name" value="{{ form.name.value|default:'' }}" placeholder="e.g. Goa trip" maxlength="100" required autofocus>
+        {% include "signin/_errors.html" with field=form.name %}
+    </label>
+</div>

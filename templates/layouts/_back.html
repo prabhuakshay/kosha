@@ -1,2 +1,6 @@
-{% comment %}The way back to `to`, or to `href` for a page whose URL takes arguments.{% endcomment %}
-<a href="{% if href %}{{ href }}{% else %}{% url to %}{% endif %}" aria-label="Back to {{ label }}" class="topbar-up" data-up><i data-lucide="chevron-left"></i>{{ label }}</a>
+{% comment %}
+    The way back to `to`, or to `href` for a page whose URL takes arguments.
+    Only phones need it beside a list, which desktops show; a page deeper than
+    its list passes `always`.
+{% endcomment %}
+<a href="{% if href %}{{ href }}{% else %}{% url to %}{% endif %}" aria-label="Back to {{ label }}" class="back{% if not always %} phone-only{% endif %}" data-up><i data-lucide="chevron-left"></i><span>{{ label }}</span></a>

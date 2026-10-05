@@ -8,15 +8,14 @@
     "watch:css": "tailwindcss --input assets/css/app.css --output static/css/app.css --watch=always",
     "vendor": "npm run vendor:js && npm run vendor:fonts",
     "vendor:js": "mkdir -p static/js && cp node_modules/htmx.org/dist/htmx.min.js static/js/htmx.min.js && cat node_modules/@alpinejs/collapse/dist/cdn.min.js node_modules/@alpinejs/focus/dist/cdn.min.js node_modules/@alpinejs/csp/dist/cdn.min.js > static/js/alpine.min.js && grep -v '^//# sourceMappingURL=' node_modules/lucide/dist/umd/lucide.min.js > static/js/lucide.min.js",
-    "vendor:fonts": "mkdir -p static/fonts && cd node_modules/@fontsource-variable && cp bricolage-grotesque/files/*-latin-*wdth-normal.woff2 public-sans/files/*-latin-*wght-normal.woff2 jetbrains-mono/files/*-latin-*wght-normal.woff2 ../../static/fonts && for font in *; do cp $font/LICENSE ../../static/fonts/$font-LICENSE.txt; done"
+    "vendor:fonts": "mkdir -p static/fonts && cd node_modules/@fontsource-variable && cp geist/files/*-latin-*wght-normal.woff2 geist-mono/files/*-latin-*wght-normal.woff2 ../../static/fonts && for font in *; do cp $font/LICENSE ../../static/fonts/$font-LICENSE.txt; done"
   },
   "devDependencies": {
     "@alpinejs/collapse": "^3.17.4",
     "@alpinejs/csp": "^3.17.4",
     "@alpinejs/focus": "^3.17.4",
-    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
-    "@fontsource-variable/jetbrains-mono": "^5.3.0",
-    "@fontsource-variable/public-sans": "^5.3.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "@tailwindcss/cli": "^4.3.3",
     "htmx.org": "^2.0.11",
     "lucide": "^1.50.0",

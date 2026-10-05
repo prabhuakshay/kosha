@@ -1,34 +1,36 @@
 {% load money %}
-<div class="list-head flex items-center gap-3">
-    <h2 class="display list-title">{{ listing.title }}</h2>
-    <a href="{% url listing.new %}" class="btn btn-small ml-auto" {% if request.resolver_match.view_name == listing.new %}aria-current="page"{% endif %}><i data-lucide="plus" class="size-3.5"></i>New</a>
-</div>
-{% if groups %}
-    <p class="list-note">{{ listing.total }} <span class="amount" data-total>{{ total|money }}</span></p>
-    {% for kind, accounts, subtotal in groups %}
-        <p class="group-label group-sum"><span data-kind>{{ kind.label }}</span><span class="amount" data-subtotal="{{ kind.value }}">{{ subtotal|money }}</span></p>
-        <nav class="rows" aria-label="{{ kind.label }}">
-            {% for account in accounts %}
-                {% include "masters/_account_row.html" with balance=True %}
-            {% endfor %}
-        </nav>
-    {% endfor %}
-{% elif accounts %}
-    <nav class="rows mt-4" aria-label="{{ listing.title }}">
-        {% for account in accounts %}
-            {% include "masters/_account_row.html" %}
-        {% endfor %}
-    </nav>
-{% elif closed %}
-    <p class="list-note">None open</p>
-{% else %}
-    <p class="list-note">None yet</p>
-{% endif %}
+<header class="head head-row">
+    <h2 class="title">Accounts</h2>
+    <button type="button" popovertarget="new-account" class="tb" title="New account" aria-label="New account"><i data-lucide="plus"></i></button>
+</header>
+{% for section in sections %}
+    {% with listing=section.listing %}
+        <p class="sec sec-lead" id="{{ listing.plural }}"><span>{{ listing.title }}</span>{% if listing.kinds and section.accounts %}<span class="amount" data-total="{{ listing.plural }}">{{ section.total|money }}</span>{% endif %}</p>
+        {% if section.groups %}
+            <nav class="group" aria-label="{{ listing.title }}">
+                {% for kind, accounts, subtotal in section.groups %}
+                    <p class="row row-kind"><span class="row-main" data-kind>{{ kind.label }}</span><span class="amount" data-subtotal="{{ kind.value }}">{{ subtotal|money }}</span></p>
+                    {% for account in accounts %}
+                        {% include "masters/_account_row.html" with balance=True %}
+                    {% endfor %}
+                {% endfor %}
+            </nav>
+        {% elif section.accounts %}
+            <nav class="group" aria-label="{{ listing.title }}">
+                {% for account in section.accounts %}
+                    {% include "masters/_account_row.html" %}
+                {% endfor %}
+            </nav>
+        {% else %}
+            <a href="{% url listing.new %}" class="group row"><span class="row-main"><span class="row-sub wrap">{{ listing.lede }}</span></span><span class="row-value">New</span></a>
+        {% endif %}
+    {% endwith %}
+{% endfor %}
 {% if closed %}
     <details class="closed" data-closed {% if selected.closed %}open{% endif %}>
-        <summary class="group-label group-sum"><span>Closed</span><span class="flex items-center gap-1">{{ closed|length }}<i data-lucide="chevron-down" class="size-3.5"></i></span></summary>
-        <nav class="rows" aria-label="Closed">
-            {% for account in closed %}
+        <summary class="sec"><span>Closed</span><span class="flex items-center gap-1">{{ closed|length }}<i data-lucide="chevron-down" class="size-3.5"></i></span></summary>
+        <nav class="group" aria-label="Closed">
+            {% for account, listing in closed %}
                 {% include "masters/_account_row.html" %}
             {% endfor %}
         </nav>

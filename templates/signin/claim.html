@@ -1,7 +1,7 @@
 {% extends "layouts/signed_out.html" %}
 {% block title %}Claim · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display mt-10 text-[42px] leading-none lg:text-[48px]">This Kosha has no Owner yet</h1>
+    <h1 class="outside-title mt-10">This Kosha has no Owner yet</h1>
     <p class="mt-4 text-[15px] leading-6 text-ink-2">Enter the Setup code printed when the server started. Only someone who runs the server can see it.</p>
     <form method="post" class="mt-8">
         {% csrf_token %}
@@ -10,7 +10,7 @@
             <input class="field mt-1.5 text-center font-mono text-[20px] tracking-[.12em] tabular-nums" name="code" value="{{ form.code.value|default:'' }}" inputmode="numeric" autocomplete="off" required autofocus>
             {% include "signin/_errors.html" with field=form.code %}
         </label>
-        <p class="mt-3 text-[13px] leading-5 text-ink-3">Lost it? On the server, run <code class="rounded bg-well px-1.5 py-0.5 font-mono">python manage.py setup_code</code></p>
+        <p class="mt-3 text-[13px] leading-5 text-ink-3">Lost it? On the server, run <code class="rounded bg-fill px-1.5 py-0.5 font-mono">python manage.py setup_code</code></p>
         <button class="btn mt-8">Continue</button>
     </form>
 {% endblock %}

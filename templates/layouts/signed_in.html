@@ -1,58 +1,63 @@
 {% extends "base.html" %}
-{% load static %}
 {% comment %}
-    Signed in. Desktops get the app rail, icons only on narrower ones; phones
-    get a top bar with the wordmark, or a `back` link, and a tab bar. `panes`
-    is one scrolling pane unless a layout splits it (layouts/split.html); a
-    page deeper than its section fills `crumbs` with the way back for desktops.
+    Signed in. Pages are places: everything you go to and come back from has
+    its own URL. Sheets are actions: adding or changing something opens over
+    the page you were on, and confirming something that can't be undone asks
+    in a small card. Desktops get the side bar; phones get the tab bar, with a
+    `back` link in each pane's bar. `panes` is one scrolling pane unless a
+    layout splits it (layouts/split.html).
 {% endcomment %}
 {% block content %}
-    <div class="shell">
-        <nav class="rail" aria-label="Main">
-            <div class="rail-brand flex h-10 items-center gap-2.5">
-                <img src="{% static 'icons/icon.svg' %}" alt="" class="size-[26px] shrink-0">
-                <span class="wordmark font-display text-[16px] font-bold tracking-[.04em] [font-stretch:85%]">KOSHA</span>
+    <div class="app">
+        <nav class="sidebar" aria-label="Main">
+            <div class="side-top">
+                <span class="wordmark">Kosha</span>
+                <button type="button" popovertarget="add-menu" class="tb" title="New (N)" aria-label="New" data-key="n"><i data-lucide="plus"></i></button>
             </div>
-            <div class="mt-6 grid gap-0.5">
-                {% include "layouts/_nav_link.html" with to="home" icon="house" label="Home" %}
-                {% include "layouts/_section_nav.html" with name="masters" to="masters:masters" icon="wallet" label="Masters" links="masters/_lists.html" %}
-                {% include "layouts/_nav_link.html" with icon="arrow-left-right" label="Transactions" %}
-                {% include "layouts/_nav_link.html" with icon="piggy-bank" label="Budgets" %}
-                {% include "layouts/_nav_link.html" with icon="chart-column" label="Reports" %}
-                {% include "layouts/_section_nav.html" with name="settings" to="settings" icon="settings" label="Settings" links="core/_settings_links.html" %}
+            <div class="side-nav">
+                {% include "layouts/_side_link.html" with to="home" of="home" icon="house" label="Home" key="1" %}
+                {% include "layouts/_side_link.html" with icon="arrow-left-right" label="Activity" %}
+                {% include "layouts/_side_link.html" with icon="gauge" label="Budgets" %}
+                {% include "layouts/_side_link.html" with icon="chart-column" label="Reports" %}
             </div>
-            <button type="button" popovertarget="owner-menu" class="rail-owner" aria-label="Owner menu">
+            <p class="side-head">Settings</p>
+            <div class="side-nav">
+                {% include "layouts/_side_link.html" with to="masters:accounts" of="accounts" icon="wallet" label="Accounts" key="2" %}
+                {% include "layouts/_side_link.html" with to="masters:categories" of="categories" icon="shapes" label="Categories" key="3" %}
+                {% include "layouts/_side_link.html" with to="masters:tags" of="tags" icon="tag" label="Tags" key="4" %}
+                {% include "layouts/_side_link.html" with to="settings" of="settings" icon="settings" label="General" key="," %}
+            </div>
+            <button type="button" popovertarget="owner-menu" class="side-owner" aria-label="Owner menu">
                 <span class="avatar">{{ user.initials }}</span>
-                <span class="rail-owner-text">
-                    <span class="block truncate text-[14px] font-semibold">{{ user.name }}</span>
-                    <span class="block truncate text-[12px] text-on-panel/60">{{ user.email }}</span>
+                <span class="min-w-0 text-left">
+                    <span class="block truncate font-medium">{{ user.name }}</span>
+                    <small>{{ user.email }}</small>
                 </span>
             </button>
         </nav>
         {% block panes %}
-            <div class="main">
-                <header class="topbar">
-                    <div class="flex h-13 items-center gap-2.5 px-5">
-                        {% block back %}{% include "_mark.html" %}{% endblock %}
-                        <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
-                    </div>
-                </header>
+            <div class="content">
                 <main class="pane">
-                    <div class="pane-inner">
-                        {% block crumbs %}{% endblock %}
-                        {% block main %}{% endblock %}
-                    </div>
+                    <header class="bar">
+                        <div class="bar-start">{% block back %}{% endblock %}</div>
+                        <p class="bar-title" aria-hidden="true"></p>
+                        <div class="bar-end">{% block bar_end %}{% endblock %}</div>
+                    </header>
+                    <div class="pane-body">{% block main %}{% endblock %}</div>
                 </main>
             </div>
         {% endblock %}
     </div>
-    <nav class="tabs" aria-label="Main">
-        {% include "layouts/_tab.html" with to="home" icon="house" label="Home" %}
-        {% include "layouts/_tab.html" with to="masters:masters" icon="wallet" label="Masters" of="masters" %}
-        {% include "layouts/_tab.html" with icon="arrow-left-right" label="Activity" %}
-        {% include "layouts/_tab.html" with icon="piggy-bank" label="Budgets" %}
-        {% include "layouts/_tab.html" with to="settings" icon="settings" label="Settings" of="settings" %}
+    <nav class="tabbar" aria-label="Main">
+        <div class="tab-pill">
+            {% include "layouts/_tab.html" with to="home" of="home" icon="house" label="Home" %}
+            {% include "layouts/_tab.html" with icon="arrow-left-right" label="Activity" %}
+            {% include "layouts/_tab.html" with icon="gauge" label="Budgets" %}
+            {% include "layouts/_tab.html" with to="settings" of="settings accounts categories tags" icon="settings" label="Settings" %}
+        </div>
+        <button type="button" popovertarget="add-menu" class="tab-add" aria-label="New"><i data-lucide="plus"></i></button>
     </nav>
-    {% include "layouts/_sheet.html" with id="owner-menu" title=user.name body="layouts/_owner_menu.html" %}
+    {% include "layouts/_add_menu.html" %}
+    {% include "layouts/_owner_menu.html" %}
     {% block sheets %}{% endblock %}
 {% endblock %}

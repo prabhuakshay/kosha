@@ -16,7 +16,7 @@ from apps.core.models import Setting
 from apps.masters.worth import worth
 
 # Matches the light theme's page colour, so the splash screen doesn't flash.
-THEME_COLOR = "#fafaf8"
+THEME_COLOR = "#f3f3f1"
 
 
 def home(request: HttpRequest) -> HttpResponse:

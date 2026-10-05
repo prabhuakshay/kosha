@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from apps.core.testing import sub_links, tags
+from apps.core.testing import tags
 from apps.signin.testing import add_passkey
 
 
@@ -57,43 +57,26 @@ PAGES = [
 ]
 
 
+LISTS = [reverse(f"masters:{n}") for n in ["accounts", "categories", "tags"]]
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize("name", PAGES)
-def test_the_rail_and_tab_bar_are_current_anywhere_in_settings(signed_in, name):
+def test_the_side_bar_and_tab_bar_are_current_anywhere_in_settings(signed_in, name):
     index = signed_in.get(SETTINGS)
     page = signed_in.get(reverse(name))
 
-    assert tags(index, "a", href=SETTINGS, **{"aria-current": "page"})
-    assert (
-        tags(page, "a", href=SETTINGS, **{"class": "rail-link rail-wide"})[0][
-            "aria-current"
-        ]
-        == "true"
+    assert tags(
+        index, "a", href=SETTINGS, **{"class": "side-link", "aria-current": "page"}
+    )
+    assert tags(
+        page, "a", href=SETTINGS, **{"class": "side-link", "aria-current": "true"}
     )
     assert tags(page, "a", href=SETTINGS, **{"class": "tab", "aria-current": "page"})
 
 
-@pytest.mark.django_db
-def test_the_wide_rail_shows_settings_pages_only_while_in_settings(signed_in):
-    inside = signed_in.get(reverse("sessions"))
-    outside = signed_in.get(reverse("home"))
-
-    assert sub_links(inside, 'class="rail-sub"') == [reverse(n) for n in PAGES]
-    assert 'class="rail-sub"' not in outside.text
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("name", ["home", "sessions"])
-def test_the_icon_rail_opens_settings_in_a_flyout(signed_in, name):
-    response = signed_in.get(reverse(name))
-
-    assert tags(response, "button", popovertarget="settings-flyout")
-    assert "popover" in tags(response, "div", id="settings-flyout")[0]
-    assert sub_links(response, 'id="settings-flyout"') == [reverse(n) for n in PAGES]
-
-
 def selected(response):
-    current = tags(response, "a", **{"class": "sub-link", "aria-current": "page"})
+    current = tags(response, "a", **{"class": "row", "aria-current": "page"})
     return {c["href"] for c in current}
 
 
@@ -117,10 +100,10 @@ def test_the_settings_page_open_is_marked_current(signed_in, name, current):
 
 
 @pytest.mark.django_db
-def test_confirm_marks_no_settings_page_current(signed_in, clock):
+def test_confirm_counts_as_signing_in(signed_in, clock):
     clock.advance(minutes=11)
 
-    assert selected(signed_in.get(reverse("confirm"))) == set()
+    assert selected(signed_in.get(reverse("confirm"))) == {SECURITY}
 
 
 def rows(response):
@@ -129,16 +112,16 @@ def rows(response):
 
 @pytest.mark.django_db
 def test_the_settings_index_lists_every_page(signed_in):
-    assert rows(signed_in.get(SETTINGS)) == [reverse(n) for n in PAGES]
+    assert rows(signed_in.get(SETTINGS))[:9] == LISTS + [reverse(n) for n in PAGES]
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("name", [*PAGES, "password"])
-def test_a_settings_page_has_the_whole_pane_to_itself(signed_in, name):
+def test_a_settings_page_sits_beside_the_settings_list(signed_in, name):
     response = signed_in.get(reverse(name))
 
-    assert rows(response) == []
-    assert 'class="split' not in response.text
+    assert rows(response)[:9] == LISTS + [reverse(n) for n in PAGES]
+    assert 'class="split split-open"' in response.text
 
 
 @pytest.mark.django_db
@@ -156,14 +139,9 @@ def test_new_recovery_codes_go_back_to_signing_in(signed_in):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    ("name", "here"),
-    [
-        ("password", "Password"),
-        ("new_recovery_codes", "New recovery codes"),
-        ("new_authenticator", "Authenticator app"),
-    ],
+    "name", ["password", "new_recovery_codes", "new_authenticator"]
 )
-def test_pages_under_signing_in_show_the_way_back_up(signed_in, name, here):
+def test_pages_under_signing_in_always_show_the_way_back_up(signed_in, name):
     if name == "new_recovery_codes":
         response = signed_in.post(reverse("make_recovery_codes"), follow=True)
     elif name == "new_authenticator":
@@ -171,10 +149,12 @@ def test_pages_under_signing_in_show_the_way_back_up(signed_in, name, here):
     else:
         response = signed_in.get(reverse(name))
 
-    assert tags(response, "nav", **{"aria-label": "Breadcrumb"})
-    assert links(response, "settings")
-    assert links(response, "security")
-    assert f'<li aria-current="page">{here}</li>' in response.text
+    assert tags(
+        response,
+        "a",
+        href=SECURITY,
+        **{"class": "back", "aria-label": "Back to Signing in"},
+    )
 
 
 def asks_first(response, sheet, action):

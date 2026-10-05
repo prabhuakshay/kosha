@@ -20,6 +20,14 @@ class Worth:
         """Everything in Asset accounts minus everything in Liabilities."""
         return self.assets - self.liabilities
 
+    @property
+    def asset_share(self) -> int | None:
+        """What the Owner has as a percent of what they have and owe, if either."""
+        owned, owed = max(self.assets, 0), max(self.liabilities, 0)
+        if not owned + owed:
+            return None
+        return round(owned * 100 / (owned + owed))
+
 
 def worth() -> Worth:
     """Add up the open Asset accounts and Liabilities, as their lists do.

@@ -68,8 +68,8 @@ def test_the_owner_adds_one_and_sees_it(signed_in):
     )
     assert response["Location"] == url("", created)
     page = signed_in.get(response["Location"])
-    assert '<h1 class="display page-title">Groceries</h1>' in page.text
-    assert "<dd data-color-name>Sage</dd>" in page.text
+    assert "<h1>Groceries</h1>" in page.text
+    assert "data-color-name>Sage<" in page.text
     assert "data-icon-name>Shopping cart</dd>" in page.text
     assert tags(page, "i", **{"data-lucide": "shopping-cart"})
 
@@ -221,10 +221,9 @@ def test_they_are_listed_alphabetically_with_their_color_and_icon(signed_in):
     response = signed_in.get(CATEGORIES)
 
     rows = re.findall(
-        r'class="row"[^>]*>\s*<span class="tile category-tile color-(\w+)">'
-        r'(?:<i data-lucide="([\w-]+)"></i>)?<span class="category-dot"></span>'
-        r"</span>\s*"
-        r'<span class="min-w-0 flex-1 truncate text-\[15px\] font-semibold">([^<]+)<',
+        r'class="row"[^>]*>\s*<span class="glyph color-(\w+)">'
+        r'(?:<i data-lucide="([\w-]+)"></i>)?</span>\s*'
+        r'<span class="row-main"><span class="row-title" data-name>([^<]+)<',
         response.text,
     )
     assert rows == [
@@ -306,8 +305,8 @@ def test_each_palette_color_reads_well_in_both_themes(theme, color):
     tokens = themes()[theme]
 
     value = tokens[f"category-{color}"]
-    tile = mix(value, tokens["surface"], 0.14)
-    for background in [tokens["bg"], tokens["list"], tokens["surface"], tile]:
+    tile = mix(value, tokens["paper"], 0.14)
+    for background in [tokens["canvas"], tokens["paper"], tile]:
         assert contrast(value, background) >= 3
 
 

@@ -1,0 +1,6 @@
+{% extends "masters/category.html" %}
+{% block title %}Edit {{ category.name }} · Kosha{% endblock %}
+{% block sheets %}
+    {% url "masters:category" category.pk as cancel %}
+    {% include "layouts/_sheet.html" with title="Edit category" button="Save changes" fields="masters/_category_fields.html" %}
+{% endblock %}

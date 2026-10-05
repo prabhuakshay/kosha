@@ -1,4 +1,5 @@
 <a href="{% url 'masters:category' category.pk %}" class="row" {% if category == selected %}aria-current="page"{% endif %}>
-    {% include "masters/_category_tile.html" %}
-    <span class="min-w-0 flex-1 truncate text-[15px] font-semibold">{{ category.name }}</span>
+    {% include "masters/_category_glyph.html" %}
+    <span class="row-main"><span class="row-title" data-name>{{ category.name }}</span></span>
+    <i data-lucide="chevron-right" class="row-chev"></i>
 </a>

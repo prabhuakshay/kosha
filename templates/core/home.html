@@ -1,18 +1,27 @@
 {% extends "layouts/signed_in.html" %}
 {% load money %}
 {% block main %}
-    <h1 class="display page-title">Home</h1>
-    <section class="worth" aria-labelledby="net-worth">
-        <p class="label" id="net-worth">Net worth</p>
-        <p class="big mt-2 text-[40px]" data-net-worth>{{ worth.net|money }}</p>
-        <div class="worth-parts">
-            <p class="worth-part"><span class="flex-1">Liquid net worth</span><span class="amount" data-liquid>{{ worth.liquid|money }}</span></p>
-            <a href="{% url 'masters:assets' %}" class="worth-part"><span class="flex-1">Assets</span><span class="amount" data-assets>{{ worth.assets|money }}</span><i data-lucide="chevron-right" class="row-chevron"></i></a>
-            <a href="{% url 'masters:liabilities' %}" class="worth-part"><span class="flex-1">Liabilities</span><span class="amount" data-liabilities>{{ worth.liabilities|money }}</span><i data-lucide="chevron-right" class="row-chevron"></i></a>
-        </div>
-        {% if worth.no_accounts %}
-            <p class="note">Add the accounts your money is in to see what you're worth.</p>
-            <div class="actions"><a href="{% url 'masters:new_asset' %}" class="btn"><i data-lucide="plus"></i>Add an asset account</a></div>
+    <header class="head">
+        <p class="eyebrow">{% now "l, j F" %}</p>
+        <h1 class="title">Home</h1>
+    </header>
+    <section class="slab worth" aria-labelledby="net-worth">
+        <p class="slab-label" id="net-worth">Net worth</p>
+        <p class="figure amount" data-net-worth>{{ worth.net|money }}</p>
+        <p class="worth-liquid">Liquid net worth <span class="amount" data-liquid>{{ worth.liquid|money }}</span></p>
+        {% if worth.asset_share is not None %}
+            <svg class="worth-bar" viewBox="0 0 100 1" preserveAspectRatio="none" aria-hidden="true">
+                <rect class="worth-owed" width="100" height="1"></rect>
+                <rect class="worth-owned" width="{{ worth.asset_share }}" height="1"></rect>
+            </svg>
         {% endif %}
+        <nav class="worth-split" aria-label="Net worth">
+            <a href="{% url 'masters:accounts' %}#assets" class="worth-side"><span class="worth-side-label"><span class="worth-dot worth-owned"></span>Assets<i data-lucide="chevron-right"></i></span><span class="amount" data-assets>{{ worth.assets|money }}</span></a>
+            <a href="{% url 'masters:accounts' %}#liabilities" class="worth-side"><span class="worth-side-label"><span class="worth-dot worth-owed"></span>Liabilities<i data-lucide="chevron-right"></i></span><span class="amount" data-liabilities>{{ worth.liabilities|money }}</span></a>
+        </nav>
     </section>
+    {% if worth.no_accounts %}
+        <p class="group-note">Add the accounts your money is in to see what you're worth.</p>
+        <div class="actions"><a href="{% url 'masters:new_asset' %}" class="btn"><i data-lucide="plus"></i>Add an asset account</a></div>
+    {% endif %}
 {% endblock %}

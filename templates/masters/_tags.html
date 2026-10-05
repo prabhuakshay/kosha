@@ -1,16 +1,18 @@
-<div class="list-head flex items-center gap-3">
-    <h2 class="display list-title">Tags</h2>
-    <a href="{% url 'masters:new_tag' %}" class="btn btn-small ml-auto" {% if request.resolver_match.view_name == "masters:new_tag" %}aria-current="page"{% endif %}><i data-lucide="plus" class="size-3.5"></i>New</a>
-</div>
+<header class="head head-row">
+    <h2 class="title">Tags</h2>
+    <a href="{% url 'masters:new_tag' %}" class="tb" title="New tag" aria-label="New tag"><i data-lucide="plus"></i></a>
+    <p class="lede">The context money moved in. Typing a new one makes it.</p>
+</header>
 {% if tags %}
-    <nav class="rows mt-4" aria-label="Tags">
+    <nav class="group" aria-label="Tags">
         {% for tag in tags %}
             <a href="{% url 'masters:tag' tag.pk %}" class="row" {% if tag == selected %}aria-current="page"{% endif %}>
-                <span class="tile"><i data-lucide="tag"></i></span>
-                <span class="min-w-0 flex-1 truncate text-[15px] font-semibold">{{ tag.name }}</span>
+                <span class="glyph"><i data-lucide="hash"></i></span>
+                <span class="row-main"><span class="row-title" data-name>{{ tag.name }}</span></span>
+                <i data-lucide="chevron-right" class="row-chev"></i>
             </a>
         {% endfor %}
     </nav>
 {% else %}
-    <p class="list-note">None yet</p>
+    <p class="group-note">None yet</p>
 {% endif %}

@@ -3,116 +3,113 @@ import re
 import pytest
 from django.urls import reverse
 
-from apps.core.testing import sub_links, tags
-from apps.masters.models import Account
+from apps.core.testing import tags
+from apps.masters.models import Account, Category, Tag
 
-MASTERS = reverse("masters:masters")
-
-
-@pytest.mark.django_db
-def test_the_rail_and_tab_bar_lead_to_masters(signed_in):
-    response = signed_in.get(reverse("home"))
-
-    masters = tags(response, "a", href=MASTERS)
-    assert {m["class"] for m in masters} == {"rail-link rail-wide", "tab"}
-    assert 'rail-label">Accounts<' not in response.text
-
-
-LISTS = ["assets", "liabilities", "income", "expenses", "categories", "tags"]
-
-
-@pytest.mark.django_db
-def test_the_wide_rail_shows_the_lists_only_while_in_masters(signed_in):
-    inside = signed_in.get(reverse("masters:assets"))
-    outside = signed_in.get(reverse("home"))
-
-    assert sub_links(inside, 'class="rail-sub"') == [
-        reverse(f"masters:{n}") for n in LISTS
-    ]
-    assert 'class="rail-sub"' not in outside.text
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("name", ["home", "masters:assets"])
-def test_the_icon_rail_opens_the_lists_in_a_flyout(signed_in, name):
-    response = signed_in.get(reverse(name))
-
-    assert tags(response, "button", popovertarget="masters-flyout")
-    assert "popover" in tags(response, "div", id="masters-flyout")[0]
-    assert sub_links(response, 'id="masters-flyout"') == [
-        reverse(f"masters:{n}") for n in LISTS
-    ]
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("name", ["masters:masters", *(f"masters:{n}" for n in LISTS)])
-def test_the_masters_tab_is_current_anywhere_in_masters(signed_in, name):
-    response = signed_in.get(reverse(name))
-
-    assert tags(response, "a", href=MASTERS, **{"class": "tab", "aria-current": "page"})
+ACCOUNTS = reverse("masters:accounts")
+LISTS = ["accounts", "categories", "tags"]
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("name", LISTS)
-def test_the_list_open_is_marked_current(signed_in, name):
-    response = signed_in.get(reverse(f"masters:{name}"))
+def test_the_side_bar_leads_to_each_list(signed_in, name):
+    response = signed_in.get(reverse("home"))
 
-    current = tags(response, "a", **{"class": "sub-link", "aria-current": "page"})
-    assert {c["href"] for c in current} == {reverse(f"masters:{name}")}
-
-
-def row_subs(response):
-    return dict(
-        re.findall(
-            r'<span class="block text-\[15px\] font-semibold">([^<]+)</span>\s*'
-            r'<span class="row-sub">([^<]+)</span>',
-            response.text,
-        )
+    assert tags(
+        response, "a", href=reverse(f"masters:{name}"), **{"class": "side-link"}
     )
 
 
 @pytest.mark.django_db
-def test_the_index_lists_every_list_with_counts_and_totals(signed_in):
-    Account.objects.create(
-        type=Account.Type.ASSET, kind="bank", name="HDFC", opening_balance=300000
-    )
-    Account.objects.create(
-        type=Account.Type.ASSET, kind="cash", name="Wallet", opening_balance=20000
-    )
-    Account.objects.create(
-        type=Account.Type.LIABILITY,
-        kind="credit_card",
-        name="HDFC",
-        opening_balance=45000,
-    )
-    Account.objects.create(type=Account.Type.EXPENSE, name="Amazon")
-    Account.objects.create(type=Account.Type.EXPENSE, name="BESCOM")
-    Account.objects.create(type=Account.Type.INCOME, name="Acme")
+@pytest.mark.parametrize("name", LISTS)
+def test_the_list_open_is_marked_current_in_the_side_bar(signed_in, name):
+    response = signed_in.get(reverse(f"masters:{name}"))
 
-    response = signed_in.get(MASTERS)
+    current = tags(response, "a", **{"class": "side-link", "aria-current": "page"})
+    assert [c["href"] for c in current] == [reverse(f"masters:{name}")]
 
-    for name in LISTS:
-        assert tags(response, "a", href=reverse(f"masters:{name}"), **{"class": "row"})
-    assert row_subs(response) == {
-        "Assets": "2 · ₹3,20,000.00",
-        "Liabilities": "1 · ₹45,000.00",
-        "Income": "1",
-        "Expenses": "2",
-        "Categories": "None yet",
-        "Tags": "None yet",
-    }
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("name", LISTS)
+def test_the_settings_tab_is_current_anywhere_in_the_lists(signed_in, name):
+    response = signed_in.get(reverse(f"masters:{name}"))
+
+    assert tags(
+        response,
+        "a",
+        href=reverse("settings"),
+        **{"class": "tab", "aria-current": "page"},
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("name", LISTS)
+def test_each_list_goes_back_to_settings_on_phones(signed_in, name):
+    response = signed_in.get(reverse(f"masters:{name}"))
+
+    assert tags(
+        response, "a", href=reverse("settings"), **{"aria-label": "Back to Settings"}
+    )
+
+
+@pytest.mark.django_db
+def test_settings_lists_each_list_with_how_many_are_open(signed_in):
+    Account.objects.create(type=Account.Type.ASSET, kind="bank", name="HDFC")
+    Account.objects.create(type=Account.Type.EXPENSE, name="Amazon", closed=True)
+    Category.objects.create(name="Groceries", color="forest")
+    Tag.objects.create(name="goa")
+
+    response = signed_in.get(reverse("settings"))
+
+    values = dict(
+        re.findall(
+            r'class="row-title">([^<]+)</span>.*?<span class="row-value">([^<]+)<',
+            response.text,
+            re.DOTALL,
+        )[:3]
+    )
+    assert values == {"Accounts": "1 open", "Categories": "1 open", "Tags": "1"}
+
+
+@pytest.mark.django_db
+def test_the_add_menu_offers_every_kind_of_thing(signed_in):
+    response = signed_in.get(reverse("home"))
+
+    menu = response.text[response.text.index('id="add-menu"') :]
+    for name in [
+        "new_asset",
+        "new_liability",
+        "new_expense_account",
+        "new_income_account",
+        "new_category",
+        "new_tag",
+    ]:
+        assert f'href="{reverse(f"masters:{name}")}"' in menu
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     ("name", "says"),
     [
-        ("liabilities", "credit cards, loans, a mortgage"),
-        ("income", "who pays you"),
-        ("expenses", "who you pay"),
+        ("liabilities", "Money you owe"),
+        ("income", "Someone who pays you"),
+        ("expenses", "Someone you pay"),
+        ("assets", "Money you have, or something you own"),
+    ],
+)
+def test_an_empty_section_says_what_belongs_there(signed_in, name, says):
+    response = signed_in.get(ACCOUNTS)
+
+    start = response.text.index(f'id="{name}"')
+    assert says in response.text[start : start + 600]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("name", "says"),
+    [
         ("categories", "What money is spent or received for"),
         ("tags", "The context money moves in"),
-        ("assets", "bank accounts, deposits, cash and investments"),
     ],
 )
 def test_an_empty_list_says_what_belongs_there(signed_in, name, says):
@@ -123,8 +120,8 @@ def test_an_empty_list_says_what_belongs_there(signed_in, name, says):
 
 
 @pytest.mark.django_db
-def test_an_empty_assets_list_offers_the_first_one(signed_in):
-    response = signed_in.get(reverse("masters:assets"))
+def test_no_accounts_offers_the_first_one(signed_in):
+    response = signed_in.get(ACCOUNTS)
 
     assert tags(response, "a", href=reverse("masters:new_asset"), **{"class": "btn"})
 
@@ -133,8 +130,9 @@ def test_an_empty_assets_list_offers_the_first_one(signed_in):
 @pytest.mark.parametrize(
     "path",
     [
-        MASTERS,
-        *(reverse(f"masters:{n}") for n in LISTS),
+        ACCOUNTS,
+        reverse("masters:categories"),
+        reverse("masters:tags"),
         reverse("masters:new_asset"),
         reverse("masters:asset", args=[1]),
         reverse("masters:edit_asset", args=[1]),

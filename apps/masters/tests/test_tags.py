@@ -35,7 +35,7 @@ def test_the_owner_adds_one_and_sees_it(signed_in):
     assert created.name == "Goa trip 2026"
     assert response["Location"] == url("", created)
     page = signed_in.get(response["Location"])
-    assert '<h1 class="display page-title">Goa trip 2026</h1>' in page.text
+    assert "<h1>Goa trip 2026</h1>" in page.text
     assert tags(page, "a", href=url("", created), **{"aria-current": "page"})
 
 

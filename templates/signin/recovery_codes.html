@@ -1,7 +1,7 @@
 {% extends "layouts/signed_out.html" %}
 {% block title %}Recovery codes · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display mt-10 text-[42px] leading-none lg:text-[48px]">Keep these somewhere safe</h1>
+    <h1 class="outside-title mt-10">Keep these somewhere safe</h1>
     <p class="mt-3 max-w-[34ch] text-[15px] leading-6 text-ink-2">If you lose your phone, each code signs you in once. You'll only see them now.</p>
     {% include "signin/_codes.html" %}
     <a href="{% url 'home' %}" class="btn mt-8">I've saved them</a>

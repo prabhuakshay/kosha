@@ -1,0 +1,12 @@
+{% comment %}
+    A pane with nothing open in it: `icon`, `heading` and `text`, and a link
+    to `add` the first one, labelled `add_label`, if given.
+{% endcomment %}
+<div class="empty">
+    <div>
+        <span class="glyph glyph-lg mx-auto"><i data-lucide="{{ icon }}"></i></span>
+        <h1>{{ heading }}</h1>
+        <p class="lede">{{ text }}</p>
+        {% if add %}<a href="{{ add }}" class="btn"><i data-lucide="plus"></i>{{ add_label }}</a>{% endif %}
+    </div>
+</div>
