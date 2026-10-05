@@ -75,6 +75,7 @@ MIDDLEWARE = [
     # Every view needs sign-in unless it opts out with @login_not_required.
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django_otp.middleware.OTPMiddleware",
+    "apps.core.middleware.TimeZoneMiddleware",
     # A password alone reaches only the code step, or setting up a Way to sign in.
     "apps.signin.middleware.WayToSignInMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

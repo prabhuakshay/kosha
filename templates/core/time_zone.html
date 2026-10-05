@@ -1,0 +1,24 @@
+{% extends "layouts/settings_page.html" %}
+{% block title %}Time zone · Kosha{% endblock %}
+{% block main %}
+    <header class="head">
+        <h1 class="title">Time zone</h1>
+        <p class="lede">Decides what today is, and every date and time in Kosha is shown in it.</p>
+    </header>
+    {% include "signin/_messages.html" %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="group">
+            <label class="cell">
+                <span class="cell-label">Time zone</span>
+                <select class="cell-input" name="time_zone">
+                    {% for zone, label in form.fields.time_zone.choices %}
+                        <option value="{{ zone }}" {% if zone == form.time_zone.value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% include "signin/_errors.html" with field=form.time_zone %}
+            </label>
+        </div>
+        <div class="actions"><button class="btn">Change time zone</button></div>
+    </form>
+{% endblock %}

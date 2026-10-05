@@ -5,8 +5,8 @@ from html import unescape
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
-from django.utils.timezone import localdate
 
+from apps.core import time_zone
 from apps.core.testing import tags
 from apps.masters.listings import LISTINGS
 from apps.masters.models import KINDS, Account, Category, Tag
@@ -38,7 +38,7 @@ def add(
     """
     data = {**FILLED_IN[type_], "notes": ""}
     if type_ in KINDS:
-        data |= {"opening_balance": "0", "opened_on": localdate().isoformat()}
+        data |= {"opening_balance": "0", "opened_on": time_zone.today().isoformat()}
     data |= fields
     return client.post(reverse(LISTINGS[type_].new), data)
 
@@ -157,7 +157,7 @@ def account(
         kind=FILLED_IN[type_]["kind"],
         name=name,
         opening_balance=balance,
-        opened_on=localdate(),
+        opened_on=time_zone.today(),
         closed=closed,
     )
 

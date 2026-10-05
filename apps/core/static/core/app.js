@@ -35,6 +35,10 @@ document.addEventListener("click", (event) => {
   if (button) navigator.clipboard.writeText(document.getElementById(button.dataset.copy).innerText);
 });
 
+// The server can't tell where the browser is, and the Owner's Time zone is
+// guessed from it until they set one (core/time_zone.py).
+document.cookie = `time_zone=${Intl.DateTimeFormat().resolvedOptions().timeZone}; path=/; max-age=34560000; samesite=lax`;
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register(document.currentScript.dataset.serviceWorker);
 }

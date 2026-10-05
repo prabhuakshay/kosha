@@ -2,6 +2,7 @@
 
 from django import template
 
+from apps.core import time_zone
 from apps.core.money import base_currency
 from apps.masters.models import Account, Category, Tag
 
@@ -40,5 +41,6 @@ def settings_list(context: template.Context) -> dict:
         "categories": count(list(Category.objects.all())),
         "tags": Tag.objects.count() or "None yet",
         "base_currency": base_currency(),
+        "time_zone": time_zone.name(),
         "theme": context["theme"],
     }

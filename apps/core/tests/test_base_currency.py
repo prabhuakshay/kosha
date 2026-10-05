@@ -1,13 +1,9 @@
 import pytest
 from django.urls import reverse
 
-from apps.core.testing import tags
+from apps.core.testing import chosen
 
 BASE_CURRENCY = reverse("base_currency")
-
-
-def chosen(response):
-    return [o["value"] for o in tags(response, "option") if "selected" in o]
 
 
 @pytest.mark.django_db
