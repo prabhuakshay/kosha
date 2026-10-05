@@ -403,6 +403,11 @@
       box-shadow 0.2s;
   }
 
+  /* An empty bar floats over the page until the title scrolls into it. */
+  .bar:not(:has(.bar-start > *)):not(:has(.bar-end > *)) {
+    margin-bottom: -2rem;
+  }
+
   .bar.collapsed {
     background: color-mix(in srgb, var(--canvas) 86%, transparent);
     -webkit-backdrop-filter: blur(20px) saturate(1.8);
@@ -1773,6 +1778,7 @@
     .bar:not(:has(.bar-end > *)):not(:has(.bar-start > :not(.phone-only))) {
       position: static;
       height: 1.5rem;
+      margin-bottom: 0;
       background: none;
       box-shadow: none;
     }

@@ -17,8 +17,12 @@
             <div class="side-nav">
                 {% include "layouts/_side_link.html" with to="home" of="home" icon="house" label="Home" key="1" %}
                 {% include "layouts/_side_link.html" with icon="arrow-left-right" label="Activity" %}
-                {% include "layouts/_side_link.html" with icon="gauge" label="Budgets" %}
                 {% include "layouts/_side_link.html" with icon="chart-column" label="Reports" %}
+            </div>
+            <p class="side-head">Plan</p>
+            <div class="side-nav">
+                {% include "layouts/_side_link.html" with icon="gauge" label="Budgets" %}
+                {% include "layouts/_side_link.html" with icon="goal" label="Goals" %}
             </div>
             <p class="side-head">Settings</p>
             <div class="side-nav">
@@ -52,7 +56,7 @@
         <div class="tab-pill">
             {% include "layouts/_tab.html" with to="home" of="home" icon="house" label="Home" %}
             {% include "layouts/_tab.html" with icon="arrow-left-right" label="Activity" %}
-            {% include "layouts/_tab.html" with icon="gauge" label="Budgets" %}
+            {% include "layouts/_tab.html" with icon="target" label="Plan" %}
             {% include "layouts/_tab.html" with to="settings" of="settings accounts categories tags" icon="settings" label="Settings" %}
         </div>
         <button type="button" popovertarget="add-menu" class="tab-add" aria-label="New"><i data-lucide="plus"></i></button>
