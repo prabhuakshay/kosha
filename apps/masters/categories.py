@@ -66,7 +66,7 @@ def new_category(request: HttpRequest) -> HttpResponse:
             record(category, history.Action.CREATED)
         messages.success(request, f"Added {category.name}.")
         return redirect("masters:category", category.pk)
-    return render(request, "masters/category_form.html", {"form": form, **list_pane()})
+    return render(request, "masters/category_new.html", {"form": form, **list_pane()})
 
 
 def edit_category(request: HttpRequest, pk: int) -> HttpResponse:
@@ -92,8 +92,13 @@ def edit_category(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("masters:category", category.pk)
     return render(
         request,
-        "masters/category_form.html",
-        {"form": form, "category": category, **list_pane(selected=category)},
+        "masters/category_edit.html",
+        {
+            "form": form,
+            "category": category,
+            "history": history.of(category),
+            **list_pane(selected=category),
+        },
     )
 
 

@@ -4,7 +4,6 @@ import pytest
 from django.urls import reverse
 
 from apps.core.testing import tags
-from apps.masters.listings import LISTINGS
 from apps.masters.models import Account
 from apps.masters.testing import account, listed, notices, url
 
@@ -21,7 +20,7 @@ def test_an_unused_one_is_deleted(signed_in, type_):
     response = signed_in.post(url("delete_", hdfc), follow=True)
 
     assert not Account.objects.exists()
-    assert response.redirect_chain[-1][0] == reverse(LISTINGS[type_].list)
+    assert response.redirect_chain[-1][0] == reverse("masters:accounts")
     assert notices(response) == ["Deleted HDFC."]
     assert listed(signed_in, type_) == ([], [])
 

@@ -1,0 +1,43 @@
+<div class="group">
+    <label class="cell">
+        <span class="cell-label">Name</span>
+        <input class="cell-input" name="name" value="{{ form.name.value|default:'' }}" placeholder="e.g. Groceries" maxlength="100" required {% if not category %}autofocus{% endif %}>
+        {% include "signin/_errors.html" with field=form.name %}
+    </label>
+</div>
+<fieldset>
+    <legend class="sec">Colour</legend>
+    <div class="group">
+        <div class="picker">
+            {% for value, label in form.fields.color.choices %}
+                {% if value %}
+                    <label class="pick color-{{ value }}" title="{{ label }}">
+                        <input type="radio" name="color" value="{{ value }}" {% if value == form.color.value %}checked{% endif %}>
+                        <span class="dot"></span><span class="sr-only">{{ label }}</span>
+                    </label>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% include "signin/_errors.html" with field=form.color %}
+</fieldset>
+<fieldset>
+    <legend class="sec">Icon</legend>
+    <div class="group">
+        <div class="picker">
+            <label class="pick" title="None">
+                <input type="radio" name="icon" value="" {% if not form.icon.value %}checked{% endif %}>
+                <span>None</span>
+            </label>
+            {% for value, label in form.fields.icon.choices %}
+                {% if value %}
+                    <label class="pick" title="{{ label }}">
+                        <input type="radio" name="icon" value="{{ value }}" {% if value == form.icon.value %}checked{% endif %}>
+                        <i data-lucide="{{ value }}"></i><span class="sr-only">{{ label }}</span>
+                    </label>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% include "signin/_errors.html" with field=form.icon %}
+</fieldset>

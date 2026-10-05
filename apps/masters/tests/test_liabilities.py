@@ -15,11 +15,12 @@ from apps.masters.testing import (
     field_value,
     groups,
     history,
+    listed,
     rows,
 )
 
 LIABILITY = Account.Type.LIABILITY
-LIABILITIES, NEW = reverse("masters:liabilities"), reverse("masters:new_liability")
+ACCOUNTS, NEW = reverse("masters:accounts"), reverse("masters:new_liability")
 
 
 def liability(name, kind, balance):
@@ -52,7 +53,7 @@ def test_the_owner_adds_a_liability_and_sees_it(signed_in):
     assert account.type == LIABILITY
     assert response["Location"] == reverse("masters:liability", args=[account.pk])
     page = signed_in.get(response["Location"])
-    assert '<h1 class="display page-title">HDFC Regalia</h1>' in page.text
+    assert "<h1>HDFC Regalia</h1>" in page.text
     assert "data-kind>Credit card</span> · Liability<" in page.text
     assert "data-balance>₹45,000.50<" in page.text
     assert "1 Apr 2026" in page.text
@@ -199,7 +200,7 @@ def test_liabilities_are_grouped_by_kind_with_subtotals_and_a_total_owed(signed_
     liability("hdfc", "credit_card", "-500")
     liability("Ravi", "debt", "5000")
 
-    response = signed_in.get(LIABILITIES)
+    response = signed_in.get(ACCOUNTS)
 
     assert groups(response) == [
         ("Credit card", "₹19,500.00"),
@@ -212,38 +213,34 @@ def test_liabilities_are_grouped_by_kind_with_subtotals_and_a_total_owed(signed_
         ("Home loan", "₹25,00,000.00"),
         ("Ravi", "₹5,000.00"),
     ]
-    assert "Total owed" in response.text
-    assert "data-total>₹25,24,500.00<" in response.text
+    assert 'data-total="liabilities">₹25,24,500.00<' in response.text
 
 
 @pytest.mark.django_db
 def test_the_liabilities_list_leaves_out_asset_accounts(signed_in):
     Account.objects.create(type=Account.Type.ASSET, kind="bank", name="HDFC")
 
-    response = signed_in.get(LIABILITIES)
-
-    assert rows(response) == []
-    assert "No liabilities yet</h1>" in response.text
+    assert listed(signed_in, Account.Type.LIABILITY) == ([], [])
 
 
 @pytest.mark.django_db
 def test_each_liability_row_shows_its_kinds_icon(signed_in):
     card = liability("HDFC", "credit_card", "1")
 
-    response = signed_in.get(LIABILITIES)
+    response = signed_in.get(ACCOUNTS)
 
     assert re.search(
         rf'href="{reverse("masters:liability", args=[card.pk])}" class="row" >\s*'
-        r'<span class="tile"><i data-lucide="credit-card">',
+        r'<span class="glyph"><i data-lucide="credit-card">',
         response.text,
     )
 
 
 @pytest.mark.django_db
 def test_an_empty_liabilities_list_offers_the_first_one(signed_in):
-    response = signed_in.get(LIABILITIES)
+    response = signed_in.get(ACCOUNTS)
 
-    assert tags(response, "a", href=NEW, **{"class": "btn"})
+    assert tags(response, "a", href=NEW, **{"class": "group row"})
 
 
 @pytest.mark.django_db
@@ -253,22 +250,22 @@ def test_the_liability_open_is_marked_current(signed_in, name):
 
     response = signed_in.get(reverse(name, args=[card.pk]))
 
-    current = tags(response, "a", **{"aria-current": "page"})
-    assert {c["href"] for c in current if c["class"] in {"row", "sub-link"}} == {
-        reverse("masters:liability", args=[card.pk]),
-        LIABILITIES,
+    current = tags(response, "a", **{"class": "row", "aria-current": "page"})
+    assert {c["href"] for c in current} == {
+        reverse("masters:liability", args=[card.pk])
     }
+    assert tags(
+        response, "a", href=ACCOUNTS, **{"class": "side-link", "aria-current": "true"}
+    )
 
 
 @pytest.mark.django_db
-def test_a_liability_goes_back_to_the_liabilities_list(signed_in):
+def test_a_liability_goes_back_to_the_accounts_list(signed_in):
     card = liability("HDFC", "credit_card", "1")
 
     response = detail(signed_in, card)
 
-    assert tags(
-        response, "a", href=LIABILITIES, **{"aria-label": "Back to Liabilities"}
-    )
+    assert tags(response, "a", href=ACCOUNTS, **{"aria-label": "Back to Accounts"})
 
 
 @pytest.mark.django_db

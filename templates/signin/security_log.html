@@ -1,24 +1,24 @@
 {% extends "layouts/settings_page.html" %}
 {% block title %}Security log · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display page-title">Security log</h1>
-    <p class="lede">Sign-ins, failed tries and changes to how you sign in, newest first. Nobody can edit or clear it.</p>
+    <header class="head">
+        <h1 class="title">Security log</h1>
+        <p class="lede">Sign-ins, failed tries and changes to how you sign in, newest first. Nobody can edit or clear it.</p>
+    </header>
     {% for day, entries in days %}
-        <h2 class="section-title mt-8" data-log-day>{{ day }}</h2>
-        <ul class="items">
+        <h2 class="sec" data-log-day>{{ day }}</h2>
+        <ul class="group">
             {% for entry in entries %}
-                <li class="item">
-                    <div class="min-w-0 flex-1">
-                        <p class="item-title">
-                            <span class="{% if entry.kind == 'paused' %}text-bad{% endif %}" data-log-kind>{{ entry.get_kind_display }}</span>{% if entry.detail %}<span class="font-normal text-ink-2">{{ entry.detail }}</span>{% endif %}
-                        </p>
-                        <p class="item-sub">{% if entry.device %}{{ entry.device }} · {{ entry.address|default:"Unknown address" }}{% else %}On the server{% endif %}</p>
-                    </div>
-                    <span class="item-sub shrink-0 self-start">{{ entry.at|time:"g:i A"|lower }}</span>
+                <li class="row row-top">
+                    <span class="row-main">
+                        <span class="row-title"><span class="{% if entry.kind == 'paused' %}text-danger{% endif %}" data-log-kind>{{ entry.get_kind_display }}</span>{% if entry.detail %} <span class="text-ink-2">{{ entry.detail }}</span>{% endif %}</span>
+                        <span class="row-sub">{% if entry.device %}{{ entry.device }} · {{ entry.address|default:"Unknown address" }}{% else %}On the server{% endif %}</span>
+                    </span>
+                    <span class="stamp">{{ entry.at|time:"g:i A"|lower }}</span>
                 </li>
             {% endfor %}
         </ul>
     {% empty %}
-        <p class="note mt-8">Nothing yet.</p>
+        <p class="group-note">Nothing yet.</p>
     {% endfor %}
 {% endblock %}

@@ -1,10 +1,16 @@
 {% comment %}
-    A `_sheet.html` body that asks before a destructive POST to `action`.
-    Cancel takes the focus, so a stray Enter doesn't do it.
+    Asks `title` and `text` before a destructive POST to `action`, opened by
+    a button with `popovertarget="{{ id }}"`. Cancel takes the focus, so a
+    stray Enter doesn't do it.
 {% endcomment %}
-<p class="note text-[15px]">{{ text }}</p>
-<form method="post" action="{{ action }}" class="actions md:flex-row-reverse">
-    {% csrf_token %}
-    <button class="btn btn-danger"><i data-lucide="{{ icon }}"></i>{{ button }}</button>
-    <button type="button" popovertarget="{{ id }}" popovertargetaction="hide" class="btn btn-quiet" autofocus>Cancel</button>
-</form>
+<div id="{{ id }}" popover class="confirm" aria-labelledby="{{ id }}-title">
+    <form method="post" action="{{ action }}">
+        {% csrf_token %}
+        <div class="confirm-card">
+            <p class="confirm-text"><b id="{{ id }}-title">{{ title }}</b>{{ text }}</p>
+            <button class="confirm-go"><i data-lucide="{{ icon }}"></i>{{ button }}</button>
+            <button type="button" popovertarget="{{ id }}" popovertargetaction="hide" class="confirm-cancel desk-only" autofocus>Cancel</button>
+        </div>
+        <button type="button" popovertarget="{{ id }}" popovertargetaction="hide" class="confirm-cancel phone-only" autofocus>Cancel</button>
+    </form>
+</div>

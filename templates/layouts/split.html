@@ -1,35 +1,29 @@
 {% extends "layouts/signed_in.html" %}
 {% comment %}
-    A section's list beside the page open from it. A section fills `list`
-    with its list pane and `back` with the way back to it; its pages fill
-    `main`. Phones show only the page, under `back`, and a list under the
-    wordmark unless the section fills `list_back`; a page that empties
-    `open` shows phones only the list. A page deeper than the list fills
-    `crumbs` with the same way back.
+    A section's list beside the page open from it, as in Mail. A section fills
+    `list` with its list; its pages fill `main`, `back` and `bar_end`. Phones show only the page, unless a page
+    empties `open` to show the list instead.
 {% endcomment %}
 {% block panes %}
     <div class="split {% block open %}split-open{% endblock %}">
         <div class="split-list">
-            <header class="topbar">
-                <div class="flex h-13 items-center gap-2.5 px-5">
-                    {% block list_back %}{% include "_mark.html" %}{% endblock %}
-                    <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
-                </div>
-            </header>
-            {% block list %}{% endblock %}
+            <div class="pane">
+                <header class="bar">
+                    <div class="bar-start">{% block list_back %}{% endblock %}</div>
+                    <p class="bar-title" aria-hidden="true"></p>
+                    <div class="bar-end"></div>
+                </header>
+                {% block list %}{% endblock %}
+            </div>
         </div>
         <div class="split-detail">
-            <header class="topbar">
-                <div class="flex h-13 items-center gap-2.5 px-5">
-                    {% block back %}{% endblock %}
-                    <button type="button" popovertarget="owner-menu" class="avatar ml-auto" aria-label="Owner menu">{{ user.initials }}</button>
-                </div>
-            </header>
             <main class="pane">
-                <div class="pane-inner">
-                    {% block crumbs %}{% endblock %}
-                    {% block main %}{% endblock %}
-                </div>
+                <header class="bar">
+                    <div class="bar-start">{% block back %}{% endblock %}</div>
+                    <p class="bar-title" aria-hidden="true"></p>
+                    <div class="bar-end">{% block bar_end %}{% endblock %}</div>
+                </header>
+                <div class="pane-body">{% block main %}{% endblock %}</div>
             </main>
         </div>
     </div>

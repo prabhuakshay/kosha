@@ -59,8 +59,8 @@ def test_pages_make_kosha_installable(page_response):
         m["media"]: m["content"] for m in tags(response, "meta", name="theme-color")
     }
     assert themes == {
-        "(prefers-color-scheme: light)": "#fafaf8",
-        "(prefers-color-scheme: dark)": "#1b1d1d",
+        "(prefers-color-scheme: light)": "#f3f3f1",
+        "(prefers-color-scheme: dark)": "#000000",
     }
 
 
@@ -82,8 +82,8 @@ def test_manifest(client):
     assert manifest["name"] == "Kosha"
     assert manifest["display"] == "standalone"
     assert manifest["start_url"] == reverse("home")
-    assert manifest["theme_color"] == "#fafaf8"
-    assert manifest["background_color"] == "#fafaf8"
+    assert manifest["theme_color"] == "#f3f3f1"
+    assert manifest["background_color"] == "#f3f3f1"
     icons = {(i["sizes"], i.get("purpose", "any")): i["src"] for i in manifest["icons"]}
     assert icons == {
         ("192x192", "any"): static("icons/icon-192.png"),

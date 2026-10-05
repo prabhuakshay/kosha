@@ -1,0 +1,7 @@
+{% extends "masters/account.html" %}
+{% block title %}Edit {{ account.name }} · Kosha{% endblock %}
+{% block sheets %}
+    {{ block.super }}
+    {% url listing.detail account.pk as cancel %}
+    {% include "layouts/_sheet.html" with title="Edit account" button="Save changes" fields="masters/_account_fields.html" %}
+{% endblock %}

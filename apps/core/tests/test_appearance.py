@@ -33,14 +33,14 @@ def test_a_new_device_follows_its_own_light_or_dark(signed_in):
     assert pressed(response) == ["auto"]
     assert theme(response) is None
     assert theme_colors(response) == [
-        ("#fafaf8", "(prefers-color-scheme: light)"),
-        ("#1b1d1d", "(prefers-color-scheme: dark)"),
+        ("#f3f3f1", "(prefers-color-scheme: light)"),
+        ("#000000", "(prefers-color-scheme: dark)"),
     ]
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    ("choice", "color"), [("light", "#fafaf8"), ("dark", "#1b1d1d")]
+    ("choice", "color"), [("light", "#f3f3f1"), ("dark", "#000000")]
 )
 def test_the_owner_chooses_light_or_dark_for_every_page(signed_in, choice, color):
     response = signed_in.post(APPEARANCE, {"theme": choice})
@@ -116,8 +116,8 @@ def test_settings_says_how_this_browser_looks(signed_in):
 
     response = signed_in.get(reverse("settings"))
 
-    subs = re.findall(
-        r'font-semibold">([^<]+)</span>\s*<span class="row-sub">([^<]+)<',
+    values = re.findall(
+        r'class="row-title">([^<]+)</span></span>\s*<span class="row-value">([^<]+)<',
         response.text,
     )
-    assert ("Appearance", "Light") in subs
+    assert ("Appearance", "Light") in values

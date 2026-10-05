@@ -1,0 +1,7 @@
+{% extends "masters/tags.html" %}
+{% block title %}New tag · Kosha{% endblock %}
+{% block open %}{% endblock %}
+{% block sheets %}
+    {% url "masters:tags" as cancel %}
+    {% include "layouts/_sheet.html" with title="New tag" button="Add tag" lede="The context money moves in, such as a trip or “reimbursable”." fields="masters/_tag_fields.html" %}
+{% endblock %}

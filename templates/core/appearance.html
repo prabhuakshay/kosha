@@ -1,16 +1,18 @@
 {% extends "layouts/settings_page.html" %}
 {% block title %}Appearance · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display page-title">Appearance</h1>
-    <p class="lede">How Kosha looks in this browser.</p>
+    <header class="head">
+        <h1 class="title">Appearance</h1>
+        <p class="lede">How Kosha looks in this browser.</p>
+    </header>
     {% comment %}Loaded whole, as a swapped-in body would keep the old theme on <html>.{% endcomment %}
-    <form method="post" class="section max-w-sm" hx-boost="false">
+    <form method="post" class="group p-1" hx-boost="false">
         {% csrf_token %}
         <div class="segments" role="group" aria-label="Theme">
             {% for option in themes %}
                 <button class="segment" name="theme" value="{{ option.value }}" aria-pressed="{% if option == theme %}true{% else %}false{% endif %}"><i data-lucide="{{ option.icon }}"></i>{{ option.label }}</button>
             {% endfor %}
         </div>
-        <p class="note mt-3">Auto follows this device's own light or dark setting. Other browsers and devices keep their own choice.</p>
     </form>
+    <p class="group-note">Auto follows this device's own light or dark setting. Other browsers and devices keep their own choice.</p>
 {% endblock %}

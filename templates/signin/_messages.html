@@ -1,3 +1,3 @@
 {% for message in messages %}
-    <p class="notice {% if message.level_tag == 'error' %}notice-bad{% endif %}" role="status"><i data-lucide="{% if message.level_tag == 'error' %}triangle-alert{% else %}circle-check{% endif %}" class="size-4"></i>{{ message }}</p>
+    <p class="notice {% if message.level_tag == 'error' %}notice-bad{% endif %}" role="status"><i data-lucide="{% if message.level_tag == 'error' %}triangle-alert{% else %}circle-check{% endif %}"></i>{{ message }}</p>
 {% endfor %}

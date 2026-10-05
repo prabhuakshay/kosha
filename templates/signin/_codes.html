@@ -1,4 +1,4 @@
-<ol class="mt-8 grid grid-cols-2 gap-x-6 gap-y-2.5 rounded-xl border bg-surface p-5 font-mono text-[15px] tabular-nums" id="recovery-codes">
+<ol class="mt-8 grid grid-cols-2 gap-x-6 gap-y-2.5 rounded-2xl bg-paper p-5 ring-1 ring-line font-mono text-[15px] tabular-nums" id="recovery-codes">
     {% for code in codes %}<li data-recovery-code>{{ code|slice:":4" }} {{ code|slice:"4:" }}</li>{% endfor %}
 </ol>
 <button type="button" class="btn btn-quiet mt-3" data-copy="recovery-codes"><i data-lucide="copy"></i>Copy all {{ codes|length }}</button>

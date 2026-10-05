@@ -15,10 +15,8 @@ class Listing:
     plural: str
     title: str
     noun: str
-    icon: str
-    about: str
     lede: str
-    total: str = ""
+    example: str
     opening_note: str = ""
 
     @property
@@ -30,11 +28,6 @@ class Listing:
     def form(self) -> type[AccountForm]:
         """The form adding or changing one of its Accounts."""
         return BalanceAccountForm if self.kinds else AccountForm
-
-    @property
-    def list(self) -> str:
-        """The list's route name."""
-        return f"masters:{self.plural}"
 
     @property
     def detail(self) -> str:
@@ -73,11 +66,8 @@ ASSETS = Listing(
     plural="assets",
     title="Assets",
     noun="asset account",
-    icon="wallet",
-    about="Money you have: bank accounts, deposits, cash and investments, money "
-    "you've lent, and things you own such as a house or gold.",
+    example="HDFC Savings",
     lede="Money you have, or something you own.",
-    total="Total",
     opening_note="What it held when you started tracking it. Use a minus sign "
     "only if it was overdrawn.",
 )
@@ -87,10 +77,8 @@ LIABILITIES = Listing(
     plural="liabilities",
     title="Liabilities",
     noun="liability",
-    icon="scale",
-    about="Money you owe: credit cards, loans, a mortgage and debts to people.",
+    example="HDFC Regalia",
     lede="Money you owe, even if you can spend from it, such as a credit card.",
-    total="Total owed",
     opening_note="What you owed when you started tracking it. Use a minus sign "
     "only if you were in credit.",
 )
@@ -100,8 +88,7 @@ INCOME = Listing(
     plural="income",
     title="Income",
     noun="income account",
-    icon="arrow-down-left",
-    about="Income accounts: who pays you, such as an employer, a client or a tenant.",
+    example="Acme Corp",
     lede="Someone who pays you, such as an employer, a client or a tenant.",
 )
 EXPENSES = Listing(
@@ -110,8 +97,7 @@ EXPENSES = Listing(
     plural="expenses",
     title="Expenses",
     noun="expense account",
-    icon="arrow-up-right",
-    about="Expense accounts: who you pay, such as a shop, a landlord or a utility.",
+    example="BigBasket",
     lede="Someone you pay, such as a shop, a landlord or a utility.",
 )
 LISTINGS = {

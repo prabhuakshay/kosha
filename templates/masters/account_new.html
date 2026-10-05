@@ -1,0 +1,7 @@
+{% extends "masters/accounts.html" %}
+{% block title %}New {{ listing.noun }} · Kosha{% endblock %}
+{% block sheets %}
+    {{ block.super }}
+    {% url "masters:accounts" as cancel %}
+    {% include "layouts/_sheet.html" with title="New "|add:listing.noun button="Add "|add:listing.noun lede=listing.lede fields="masters/_account_fields.html" %}
+{% endblock %}

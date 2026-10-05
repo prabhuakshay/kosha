@@ -1,5 +1,11 @@
-<p class="mt-1 text-[14px] text-ink-2">{{ user.email }}</p>
-<form method="post" action="{% url 'sign_out' %}" class="mt-6">
-    {% csrf_token %}
-    <button class="btn btn-danger"><i data-lucide="log-out"></i>Sign out</button>
-</form>
+<div id="owner-menu" popover class="confirm" aria-labelledby="owner-menu-title">
+    <div class="confirm-card">
+        <p class="confirm-text"><b id="owner-menu-title">{{ user.name }}</b>{{ user.email }}</p>
+        <form method="post" action="{% url 'sign_out' %}">
+            {% csrf_token %}
+            <button class="confirm-go"><i data-lucide="log-out"></i>Sign out</button>
+        </form>
+        <button type="button" popovertarget="owner-menu" popovertargetaction="hide" class="confirm-cancel desk-only">Cancel</button>
+    </div>
+    <button type="button" popovertarget="owner-menu" popovertargetaction="hide" class="confirm-cancel phone-only">Cancel</button>
+</div>

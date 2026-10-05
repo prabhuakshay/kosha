@@ -93,18 +93,19 @@ def test_a_deleted_one_stays_in_the_full_history(signed_in):
 
 @pytest.mark.django_db
 def test_the_index_counts_them(signed_in):
-    masters = reverse("masters:masters")
+    settings = reverse("settings")
 
-    def sub():
+    def value():
         return re.search(
-            r'font-semibold">Tags</span>\s*<span class="row-sub">([^<]+)<',
-            signed_in.get(masters).text,
+            r'>Tags</span>.*?<span class="row-value">([^<]+)<',
+            signed_in.get(settings).text,
+            re.DOTALL,
         )[1]
 
-    assert sub() == "None yet"
+    assert value() == "None yet"
     tag("Goa")
     tag("Diwali")
-    assert sub() == "2"
+    assert value() == "2"
 
 
 @pytest.mark.django_db
@@ -114,8 +115,8 @@ def test_the_one_open_is_marked_current(signed_in, page):
 
     response = signed_in.get(url(page, goa))
 
-    current = tags(response, "a", **{"aria-current": "page"})
-    assert {c["href"] for c in current if c["class"] in {"row", "sub-link"}} == {
+    current = [c for c in tags(response, "a") if c.get("aria-current")]
+    assert {c["href"] for c in current if c["class"] in {"row", "side-link"}} == {
         url("", goa),
         TAGS,
     }

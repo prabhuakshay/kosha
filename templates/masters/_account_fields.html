@@ -1,0 +1,40 @@
+<div class="group">
+    <label class="cell">
+        <span class="cell-label">Name</span>
+        <input class="cell-input" name="name" value="{{ form.name.value|default:'' }}" placeholder="e.g. {{ listing.example }}" maxlength="100" required {% if not account %}autofocus{% endif %}>
+        {% include "signin/_errors.html" with field=form.name %}
+    </label>
+    {% if listing.kinds %}
+        <label class="cell">
+            <span class="cell-label">Kind</span>
+            <select class="cell-input" name="kind" required>
+                {% for value, label in form.fields.kind.choices %}
+                    <option value="{{ value }}" {% if value == form.kind.value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% include "signin/_errors.html" with field=form.kind %}
+        </label>
+    {% endif %}
+</div>
+{% if listing.kinds %}
+    <div class="group mt-4">
+        <label class="cell">
+            <span class="cell-label">Opening balance</span>
+            <input class="cell-input amount" name="opening_balance" value="{{ form.opening_balance.value|default_if_none:'' }}" inputmode="decimal" placeholder="0" autocomplete="off" required>
+            {% include "signin/_errors.html" with field=form.opening_balance %}
+        </label>
+        <label class="cell">
+            <span class="cell-label">Opened on</span>
+            <input class="cell-input" type="date" name="opened_on" value="{{ form.opened_on.value|date:'Y-m-d'|default:form.opened_on.value }}" max="{% now 'Y-m-d' %}" required>
+            {% include "signin/_errors.html" with field=form.opened_on %}
+        </label>
+    </div>
+    <p class="group-note">{{ listing.opening_note }}</p>
+{% endif %}
+<div class="group mt-4">
+    <label class="cell">
+        <span class="cell-label">Notes</span>
+        <textarea class="cell-input" name="notes" rows="3" placeholder="Optional">{{ form.notes.value|default:'' }}</textarea>
+        {% include "signin/_errors.html" with field=form.notes %}
+    </label>
+</div>

@@ -1,0 +1,2 @@
+{% comment %}A Category's icon with a dot of its colour, or the dot alone.{% endcomment %}
+<span class="glyph{% if large %} glyph-lg{% endif %} color-{{ category.color }}">{% if category.icon %}<i data-lucide="{{ category.icon }}"></i>{% endif %}</span>

@@ -34,7 +34,7 @@ def test_the_owner_changes_it_and_sees_amounts_written_its_way(
     response = signed_in.post(BASE_CURRENCY, {"base_currency": currency}, follow=True)
 
     assert chosen(response) == [currency]
-    assert f"data-sample>{written}</p>" in response.text
+    assert f"data-sample>{written}</span>" in response.text
 
 
 @pytest.mark.django_db

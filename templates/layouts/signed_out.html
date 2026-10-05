@@ -1,24 +1,20 @@
 {% extends "base.html" %}
-{% load static %}
 {% comment %}
     Outside the app. Phones get the form alone under the wordmark; desktops put
-    a panel beside it.
+    a black panel beside it.
 {% endcomment %}
 {% block content %}
-    <div class="lg:grid lg:min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-        <aside class="sticky top-0 hidden h-dvh flex-col justify-between bg-panel p-10 text-on-panel lg:flex xl:p-14">
-            <div class="flex items-center gap-2.5">
-                <img src="{% static 'icons/icon.svg' %}" alt="" class="size-[26px] shrink-0">
-                <span class="font-display text-[16px] font-bold tracking-[.04em] [font-stretch:85%]">KOSHA</span>
-            </div>
+    <div class="outside lg:grid lg:min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <aside class="sticky top-0 hidden h-dvh flex-col justify-between bg-[var(--chrome)] p-10 text-[var(--on-chrome)] lg:flex xl:p-14">
+            <span class="wordmark">Kosha</span>
             <div>
-                <p class="display max-w-[13ch] text-[56px] leading-[.98]">Your treasury, on a server you control.</p>
-                <p class="mt-5 max-w-[42ch] text-[15px] leading-6 text-on-panel/70">One owner, signed in with a passkey or an authenticator app. Nothing leaves your server.</p>
+                <p class="max-w-[13ch] text-[52px] leading-[1] font-bold tracking-[-0.045em]">Your treasury, on a server you control.</p>
+                <p class="mt-5 max-w-[42ch] text-[15px] leading-6 opacity-65">One owner, signed in with a passkey or an authenticator app. Nothing leaves your server.</p>
             </div>
-            <p class="text-[13px] text-on-panel/50">कोश · Sanskrit for treasury</p>
+            <p class="text-[13px] opacity-45">कोश · Sanskrit for treasury</p>
         </aside>
         <div class="mx-auto flex min-h-dvh w-full max-w-sm flex-col px-5 pt-[env(safe-area-inset-top)] pb-28 lg:max-w-[26rem] lg:justify-center lg:py-16">
-            <header class="flex h-14 items-center gap-2.5 lg:hidden">{% include "_mark.html" %}</header>
+            <header class="flex h-14 items-center lg:hidden"><span class="wordmark">Kosha</span></header>
             <main>
                 {% block main %}{% endblock %}
             </main>

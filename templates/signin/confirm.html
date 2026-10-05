@@ -1,25 +1,27 @@
 {% extends "layouts/settings_page.html" %}
 {% block title %}Confirm it's you · Kosha{% endblock %}
 {% block main %}
-    <div class="max-w-sm">
-        <span class="tile size-12 rounded-xl"><i data-lucide="lock" class="size-5"></i></span>
-        <h1 class="display page-title mt-5">Confirm it's you</h1>
-        <p class="lede">Changing how you sign in needs a fresh check. It lasts 10 minutes.</p>
-        <div class="section">
-            {% if has_passkey %}
-                {% include "signin/_passkey_button.html" with label="Use a passkey" %}
-            {% endif %}
-            {% if has_passkey and has_authenticator %}
-                {% include "signin/_or.html" %}
-            {% endif %}
-            {% if has_authenticator %}
-                <form method="post">
-                    {% csrf_token %}
-                    {% include "signin/_code_field.html" with label="Code from your authenticator app" field=form.code digits_only=True %}
-                    <button class="btn mt-6">Confirm</button>
-                </form>
-            {% endif %}
-            <p class="note">A recovery code won't work here.</p>
+    <div class="hero">
+        <span class="glyph glyph-lg"><i data-lucide="lock"></i></span>
+        <div class="hero-who">
+            <h1>Confirm it's you</h1>
+            <p class="hero-kind">Changing how you sign in needs a fresh check. It lasts 10 minutes.</p>
         </div>
+    </div>
+    <div class="mx-4 max-w-sm lg:mx-0">
+        {% if has_passkey %}
+            {% include "signin/_passkey_button.html" with label="Use a passkey" %}
+        {% endif %}
+        {% if has_passkey and has_authenticator %}
+            {% include "signin/_or.html" %}
+        {% endif %}
+        {% if has_authenticator %}
+            <form method="post">
+                {% csrf_token %}
+                {% include "signin/_code_field.html" with label="Code from your authenticator app" field=form.code digits_only=True %}
+                <button class="btn mt-6">Confirm</button>
+            </form>
+        {% endif %}
+        <p class="note">A recovery code won't work here.</p>
     </div>
 {% endblock %}

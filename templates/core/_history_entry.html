@@ -1,12 +1,12 @@
 {% comment %}A History entry, naming its subject in the full History.{% endcomment %}
-<li class="item" data-history-entry>
-    <div class="min-w-0 flex-1">
-        <p class="item-title">
-            <span data-history-action>{{ entry.get_action_display }}</span>{% if in_full_history %}<span class="font-normal text-ink-2" data-history-subject>{{ entry.subject_name }} · {{ entry.subject_type }}</span>{% endif %}
-        </p>
+<li class="row row-top" data-history-entry>
+    <span class="row-main">
+        <span class="row-title">
+            <span data-history-action>{{ entry.get_action_display }}</span>{% if in_full_history %} <span class="text-ink-2" data-history-subject>{{ entry.subject_name }} · {{ entry.subject_type }}</span>{% endif %}
+        </span>
         {% for field, old, new in entry.changes %}
-            <p class="item-sub break-words" data-history-change>{{ field }}: {{ old|default:"None" }} → {{ new|default:"None" }}</p>
+            <span class="row-sub wrap" data-history-change>{{ field }}: {{ old|default:"None" }} → {{ new|default:"None" }}</span>
         {% endfor %}
-    </div>
-    <span class="item-sub shrink-0 self-start">{% if not in_full_history %}{{ entry.at|date:"j M Y" }}, {% endif %}{{ entry.at|time:"g:i A"|lower }}</span>
+    </span>
+    <span class="stamp">{% if not in_full_history %}{{ entry.at|date:"j M Y" }}, {% endif %}{{ entry.at|time:"g:i A"|lower }}</span>
 </li>

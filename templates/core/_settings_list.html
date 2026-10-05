@@ -1,0 +1,28 @@
+<header class="head"><h2 class="title">Settings</h2></header>
+<div class="group">
+    <button type="button" popovertarget="owner-menu" class="row">
+        <span class="avatar">{{ user.initials }}</span>
+        <span class="row-main"><span class="row-title font-medium">{{ user.name }}</span><span class="row-sub">{{ user.email }} · Owner</span></span>
+    </button>
+</div>
+<p class="sec">Your money</p>
+<nav class="group" aria-label="Your money">
+    {% include "layouts/_row.html" with to="masters:accounts" icon="wallet" title="Accounts" sub="Where money is and where it goes" value=accounts %}
+    {% include "layouts/_row.html" with to="masters:categories" icon="shapes" title="Categories" sub="What money was for" value=categories %}
+    {% include "layouts/_row.html" with to="masters:tags" icon="tag" title="Tags" sub="The context it moved in" value=tags %}
+</nav>
+<p class="sec">Kosha</p>
+<nav class="group" aria-label="Kosha">
+    {% include "layouts/_row.html" with to="base_currency" icon="coins" title="Base currency" value=base_currency %}
+    {% include "layouts/_row.html" with to="history" icon="history" title="History" sub="Every change to your money and Settings" %}
+</nav>
+<p class="sec">This browser</p>
+<nav class="group" aria-label="This browser">
+    {% include "layouts/_row.html" with to="appearance" icon=theme.icon title="Appearance" value=theme.label %}
+</nav>
+<p class="sec">Security</p>
+<nav class="group" aria-label="Security">
+    {% include "layouts/_row.html" with to="security" icon="fingerprint" title="Signing in" sub="Passkeys, password, recovery codes" also="password new_authenticator new_recovery_codes confirm" %}
+    {% include "layouts/_row.html" with to="sessions" icon="monitor-smartphone" title="Sessions" sub="Every device signed in" %}
+    {% include "layouts/_row.html" with to="security_log" icon="scroll-text" title="Security log" sub="Sign-ins and changes" %}
+</nav>

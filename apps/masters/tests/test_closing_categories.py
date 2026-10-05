@@ -140,20 +140,21 @@ def test_closing_reopening_and_deleting_are_in_history(signed_in):
 
 @pytest.mark.django_db
 def test_the_index_counts_the_open_ones(signed_in):
-    masters = reverse("masters:masters")
+    settings = reverse("settings")
 
-    def sub():
+    def value():
         return re.search(
-            r'font-semibold">Categories</span>\s*<span class="row-sub">([^<]+)<',
-            signed_in.get(masters).text,
+            r'>Categories</span>.*?<span class="row-value">([^<]+)<',
+            signed_in.get(settings).text,
+            re.DOTALL,
         )[1]
 
-    assert sub() == "None yet"
+    assert value() == "None yet"
     category(closed=True)
-    assert sub() == "None open"
+    assert value() == "None open"
     category("Rent")
     category("Fuel")
-    assert sub() == "2"
+    assert value() == "2 open"
 
 
 @pytest.mark.django_db
@@ -163,8 +164,8 @@ def test_the_one_open_is_marked_current(signed_in, page):
 
     response = signed_in.get(url(page, groceries))
 
-    current = tags(response, "a", **{"aria-current": "page"})
-    assert {c["href"] for c in current if c["class"] in {"row", "sub-link"}} == {
+    current = [c for c in tags(response, "a") if c.get("aria-current")]
+    assert {c["href"] for c in current if c["class"] in {"row", "side-link"}} == {
         url("", groceries),
         CATEGORIES,
     }

@@ -1,6 +1,8 @@
-{% extends "layouts/signed_in.html" %}
+{% extends "layouts/split.html" %}
+{% load settings_list %}
 {% comment %}
-    A page in Settings, under a `back` link to Settings on phones unless the
-    page says otherwise. Desktops list Settings in the rail beside it.
+    A page in Settings, beside Settings' list on desktops and under a `back`
+    link to it on phones.
 {% endcomment %}
+{% block list %}{% settings_list %}{% endblock %}
 {% block back %}{% include "layouts/_back.html" with to="settings" label="Settings" %}{% endblock %}

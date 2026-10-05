@@ -24,20 +24,28 @@ SETTINGS_PAGES = {
 
 
 def section(request: HttpRequest) -> dict[str, str | None]:
-    """Name the section of the app rail the page is in, if any.
+    """Name the part of the app the page is in, for the side bar and tab bar.
 
     Args:
         request: The incoming request.
 
     Returns:
-        ``section``: ``masters``, ``settings`` or None.
+        ``section``: ``home``, ``accounts``, ``categories``, ``tags``,
+        ``settings`` or None.
     """
     match = request.resolver_match
-    if match is None:
-        return {"section": None}
-    if match.namespace == "masters":
-        return {"section": "masters"}
-    return {"section": "settings" if match.view_name in SETTINGS_PAGES else None}
+    name = match.view_name if match else ""
+    if not name.startswith("masters:"):
+        section = "home" if name == "home" else None
+        if name in SETTINGS_PAGES:
+            section = "settings"
+    elif "categor" in name:
+        section = "categories"
+    elif "tag" in name:
+        section = "tags"
+    else:
+        section = "accounts"
+    return {"section": section}
 
 
 def theme(request: HttpRequest) -> dict[str, appearance.Theme]:

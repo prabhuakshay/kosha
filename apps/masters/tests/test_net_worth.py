@@ -75,8 +75,9 @@ def test_the_assets_and_liabilities_totals_lead_to_their_lists(signed_in):
 
     assert amount(response, "assets") == "₹53,00,000.00"
     assert amount(response, "liabilities") == "₹40,000.00"
-    assert link_around(response, "assets") == reverse("masters:assets")
-    assert link_around(response, "liabilities") == reverse("masters:liabilities")
+    accounts = reverse("masters:accounts")
+    assert link_around(response, "assets") == f"{accounts}#assets"
+    assert link_around(response, "liabilities") == f"{accounts}#liabilities"
 
 
 @pytest.mark.django_db
@@ -96,7 +97,9 @@ def test_with_accounts_it_no_longer_invites_one(signed_in):
     response = signed_in.get(HOME)
 
     assert amount(response, "net-worth") == "-₹40,000.00"
-    assert not tags(response, "a", href=reverse("masters:new_asset"))
+    assert not tags(
+        response, "a", href=reverse("masters:new_asset"), **{"class": "btn"}
+    )
 
 
 @pytest.mark.django_db
@@ -125,3 +128,20 @@ def test_closed_accounts_are_left_out_like_in_their_lists(signed_in):
 
     assert amount(response, "net-worth") == "₹3,00,000.00"
     assert amount(response, "assets") == "₹3,00,000.00"
+
+
+@pytest.mark.django_db
+def test_a_bar_shows_how_much_of_it_is_owned_and_how_much_owed(signed_in):
+    asset("bank", "300000")
+    liability("loan", "100000")
+
+    response = signed_in.get(HOME)
+
+    assert tags(response, "rect", **{"class": "worth-owned"})[0]["width"] == "75"
+
+
+@pytest.mark.django_db
+def test_without_accounts_there_is_no_bar(signed_in):
+    response = signed_in.get(HOME)
+
+    assert not tags(response, "rect")

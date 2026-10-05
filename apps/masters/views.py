@@ -11,7 +11,9 @@ from django.views.decorators.http import require_POST
 
 from apps.core import history
 from apps.core.money import write
-from apps.masters.models import KINDS, Account, Category, Tag
+from apps.masters.listings import LISTINGS
+from apps.masters.models import KINDS, Account
+from apps.masters.worth import worth
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -19,65 +21,16 @@ if TYPE_CHECKING:
     from apps.masters.listings import Listing
 
 
-def masters(request: HttpRequest) -> HttpResponse:
-    """List the lists in Masters, each with how many it holds and their total.
+def accounts(request: HttpRequest) -> HttpResponse:
+    """List every Account, with what the open ones add up to beside them.
 
     Args:
         request: The incoming request.
 
     Returns:
-        The Masters index.
+        The list of Accounts.
     """
-    accounts = list(Account.objects.all())
-
-    def of(type_: Account.Type) -> list[Account]:
-        return [a for a in accounts if a.type == type_]
-
-    return render(
-        request,
-        "masters/masters.html",
-        {
-            "assets": summary(of(Account.Type.ASSET), total=True),
-            "liabilities": summary(of(Account.Type.LIABILITY), total=True),
-            "income": summary(of(Account.Type.INCOME)),
-            "expenses": summary(of(Account.Type.EXPENSE)),
-            "categories": summary(list(Category.objects.all())),
-            "tags": str(Tag.objects.count() or "None yet"),
-        },
-    )
-
-
-def summary(items: list[Account] | list[Category], *, total: bool = False) -> str:
-    """Say how many open ones a list holds, and what they hold between them.
-
-    Args:
-        items: The list's Accounts or Categories, Closed ones included.
-        total: Whether to add up their balances, for Accounts.
-
-    Returns:
-        Such as ``2 · ₹3,20,000.00``, ``None open`` or ``None yet``.
-    """
-    if not items:
-        return "None yet"
-    items = [i for i in items if not i.closed]
-    if not items:
-        return "None open"
-    if total:
-        return f"{len(items)} · {write(sum(i.balance for i in items))}"
-    return str(len(items))
-
-
-def account_list(request: HttpRequest, listing: Listing) -> HttpResponse:
-    """List Accounts of one type, by Kind if it has them.
-
-    Args:
-        request: The incoming request.
-        listing: Which list.
-
-    Returns:
-        The list.
-    """
-    return render(request, "masters/accounts.html", list_pane(listing))
+    return render(request, "masters/accounts.html", {"worth": worth(), **list_pane()})
 
 
 def account_detail(request: HttpRequest, listing: Listing, pk: int) -> HttpResponse:
@@ -97,9 +50,10 @@ def account_detail(request: HttpRequest, listing: Listing, pk: int) -> HttpRespo
         "masters/account.html",
         {
             "account": account,
+            "listing": listing,
             "history": history.of(account),
             "cant_close": cant_close(account),
-            **list_pane(listing, selected=account),
+            **list_pane(selected=account),
         },
     )
 
@@ -122,7 +76,9 @@ def new_account(request: HttpRequest, listing: Listing) -> HttpResponse:
         messages.success(request, f"Added {account.name}.")
         return redirect(listing.detail, account.pk)
     return render(
-        request, "masters/account_form.html", {"form": form, **list_pane(listing)}
+        request,
+        "masters/account_new.html",
+        {"form": form, "listing": listing, "worth": worth(), **list_pane()},
     )
 
 
@@ -150,11 +106,14 @@ def edit_account(request: HttpRequest, listing: Listing, pk: int) -> HttpRespons
         return redirect(listing.detail, account.pk)
     return render(
         request,
-        "masters/account_form.html",
+        "masters/account_edit.html",
         {
             "form": form,
             "account": account,
-            **list_pane(listing, selected=account),
+            "listing": listing,
+            "history": history.of(account),
+            "cant_close": cant_close(account),
+            **list_pane(selected=account),
         },
     )
 
@@ -247,7 +206,7 @@ def delete_account(request: HttpRequest, listing: Listing, pk: int) -> HttpRespo
         record(account, history.Action.DELETED)
         account.delete()
     messages.success(request, f"Deleted {account.name}.")
-    return redirect(listing.list)
+    return redirect("masters:accounts")
 
 
 def snapshot(account: Account) -> dict[str, str]:
@@ -291,30 +250,37 @@ def record(
     )
 
 
-def list_pane(listing: Listing, selected: Account | None = None) -> dict:
-    """What a list pane shows: its open Accounts, then its Closed ones.
+def list_pane(selected: Account | None = None) -> dict:
+    """What the list pane shows: each type's open Accounts, then the Closed ones.
 
-    Open Accounts are grouped by Kind with totals, if the list has Kinds.
+    Open Accounts are grouped by Kind with totals, for the types that have
+    Kinds.
 
     Args:
-        listing: Which list.
         selected: The Account open beside the list, if any.
 
     Returns:
         The template context for the list pane.
     """
-    accounts = list(Account.objects.filter(type=listing.type).order_by(Lower("name")))
-    of_type = [a for a in accounts if not a.closed]
-    groups = []
-    for kind in listing.kinds:
-        of_kind = [a for a in of_type if a.kind == kind]
-        if of_kind:
-            groups.append((kind, of_kind, sum(a.balance for a in of_kind)))
+    accounts = list(Account.objects.order_by(Lower("name")))
+    sections = []
+    for listing in LISTINGS.values():
+        of_type = [a for a in accounts if a.type == listing.type and not a.closed]
+        groups = []
+        for kind in listing.kinds:
+            of_kind = [a for a in of_type if a.kind == kind]
+            if of_kind:
+                groups.append((kind, of_kind, sum(a.balance for a in of_kind)))
+        sections.append(
+            {
+                "listing": listing,
+                "accounts": of_type,
+                "groups": groups,
+                "total": sum(a.balance for a in of_type),
+            }
+        )
     return {
-        "listing": listing,
-        "accounts": of_type,
-        "closed": [a for a in accounts if a.closed],
-        "groups": groups,
-        "total": sum(a.balance for a in of_type),
+        "sections": sections,
+        "closed": [(a, LISTINGS[a.type]) for a in accounts if a.closed],
         "selected": selected,
     }

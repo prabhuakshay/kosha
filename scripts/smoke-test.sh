@@ -77,7 +77,7 @@ for js in htmx.min.js alpine.min.js lucide.min.js; do
 done
 in_image grep -q 'CSP Parser Error' staticfiles/js/alpine.min.js \
   || fail "alpine.min.js is not Alpine's CSP build"
-for file in fonts/public-sans-latin-wght-normal.woff2 icons/icon-512.png core/app.js; do
+for file in fonts/geist-latin-wght-normal.woff2 icons/icon-512.png core/app.js; do
   in_image test -s "staticfiles/$file" || fail "$file missing or empty"
 done
 pass "compiled, vendored and committed assets collected"

@@ -1,80 +1,70 @@
 {% extends "layouts/settings_page.html" %}
 {% block title %}Signing in · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display page-title">Signing in</h1>
-    <p class="mt-3 flex items-center gap-2 text-[13px] text-ink-2"><i data-lucide="lock-open" class="size-4 text-good"></i>Confirmed it's you · changes allowed for 10 minutes</p>
+    <header class="head">
+        <h1 class="title">Signing in</h1>
+        <p class="lede flex items-center gap-2"><i data-lucide="lock-open"></i>Confirmed it's you · changes allowed for 10 minutes</p>
+    </header>
     {% include "signin/_messages.html" %}
 
-    <section class="section" aria-labelledby="passkeys-title">
-        <h2 id="passkeys-title" class="section-title">Passkeys <small>{% if passkeys %}{{ passkeys|length }} passkey{{ passkeys|length|pluralize }}{% else %}None yet · recommended{% endif %}</small></h2>
-        <p class="note">Sign in with your fingerprint or face, no password. Each phone, computer or security key holds its own.</p>
-        {% if passkeys %}
-            <ul class="items">
-                {% for passkey in passkeys %}
-                    <li class="item">
-                        <span class="tile"><i data-lucide="key-round"></i></span>
-                        <span class="min-w-0 flex-1">
-                            <span class="item-title"><span class="truncate" data-passkey-name>{{ passkey.name|default:"Passkey" }}</span></span>
-                            <span class="item-sub block">Added {{ passkey.created_at|date:"j M Y" }} · {% if passkey.last_used_at %}Last used {{ passkey.last_used_at|date:"j M Y" }}{% else %}Never used{% endif %}</span>
-                        </span>
-                        <button type="button" popovertarget="remove-passkey-{{ passkey.pk }}" class="btn btn-danger btn-small"><i data-lucide="trash-2" class="size-3.5"></i>Remove</button>
-                        {% url 'remove_passkey' passkey.pk as remove %}
-                        {% with pk=passkey.pk|stringformat:"s" %}
-                            {% include "layouts/_sheet.html" with id="remove-passkey-"|add:pk title="Remove this passkey?" body="layouts/_confirm.html" text="It won't sign you in any more. To use it again, you'd add it again." action=remove icon="trash-2" button="Remove passkey" %}
-                        {% endwith %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-        {% url 'security' as security %}
-        <div class="actions">
-            <button type="button" {% include "signin/_passkey_attrs.html" with action="register" next=security %} class="btn disabled:opacity-50"><i data-lucide="plus"></i>Add a passkey on this device</button>
-        </div>
-        {% include "signin/_passkey_status.html" %}
+    <section aria-labelledby="passkeys-title">
+        <h2 id="passkeys-title" class="sec"><span>Passkeys</span><span>{% if passkeys %}{{ passkeys|length }} passkey{{ passkeys|length|pluralize }}{% else %}None yet · recommended{% endif %}</span></h2>
+        <ul class="group">
+            {% for passkey in passkeys %}
+                <li class="row">
+                    <span class="glyph"><i data-lucide="key-round"></i></span>
+                    <span class="row-main">
+                        <span class="row-title" data-passkey-name>{{ passkey.name|default:"Passkey" }}</span>
+                        <span class="row-sub">Added {{ passkey.created_at|date:"j M Y" }} · {% if passkey.last_used_at %}Last used {{ passkey.last_used_at|date:"j M Y" }}{% else %}Never used{% endif %}</span>
+                    </span>
+                    <button type="button" popovertarget="remove-passkey-{{ passkey.pk }}" class="tb tb-text tb-danger"><i data-lucide="trash-2"></i><span class="tb-label">Remove</span></button>
+                    {% url 'remove_passkey' passkey.pk as remove %}
+                    {% with pk=passkey.pk|stringformat:"s" %}
+                        {% include "layouts/_confirm.html" with id="remove-passkey-"|add:pk title="Remove this passkey?" text="It won't sign you in any more. To use it again, you'd add it again." action=remove icon="trash-2" button="Remove passkey" %}
+                    {% endwith %}
+                </li>
+            {% endfor %}
+            {% url 'security' as security %}
+            <li><button type="button" {% include "signin/_passkey_attrs.html" with action="register" next=security %} class="row{% if passkeys %} row-sep{% endif %} disabled:opacity-50"><span class="glyph"><i data-lucide="plus"></i></span><span class="row-main">Add a passkey on this device</span></button></li>
+        </ul>
+        <p class="group-note">Sign in with your fingerprint or face, no password. Each phone, computer or security key holds its own.</p>
+        <div class="mx-4 lg:mx-3">{% include "signin/_passkey_status.html" %}</div>
     </section>
 
-    <section class="section" aria-labelledby="authenticator-title">
-        <h2 id="authenticator-title" class="section-title">Authenticator app</h2>
-        <div class="state">
-            <span class="state-icon {% if not authenticator %}state-icon-off{% endif %}"><i data-lucide="{% if authenticator %}shield-check{% else %}smartphone{% endif %}"></i></span>
-            <div>
-                <p class="big text-[28px]">{{ authenticator|yesno:"On,Off" }}</p>
-                <p class="item-sub">A 6-digit code from it, with your password, signs you in when no passkey is to hand.</p>
-            </div>
-        </div>
-        <div class="actions">
+    <section aria-labelledby="authenticator-title">
+        <h2 id="authenticator-title" class="sec"><span>Authenticator app</span><span>{{ authenticator|yesno:"On,Off" }}</span></h2>
+        <div class="group">
             <form method="post" action="{% url 'start_authenticator' %}">
                 {% csrf_token %}
+                <button class="row"><span class="glyph"><i data-lucide="{% if authenticator %}refresh-cw{% else %}smartphone{% endif %}"></i></span><span class="row-main">{% if authenticator %}Replace with a new one{% else %}Set up{% endif %}</span><i data-lucide="chevron-right" class="row-chev"></i></button>
                 {% if authenticator %}
-                    <button class="btn btn-quiet"><i data-lucide="refresh-cw"></i>Replace with a new one</button>
-                {% else %}
-                    <button class="btn"><i data-lucide="plus"></i>Set up</button>
+                    <button type="button" popovertarget="remove-authenticator" class="row row-danger">Remove the authenticator app</button>
                 {% endif %}
             </form>
-            {% if authenticator %}
-                <button type="button" popovertarget="remove-authenticator" class="btn btn-danger"><i data-lucide="trash-2"></i>Remove</button>
-                {% url 'remove_authenticator' as remove %}
-                {% include "layouts/_sheet.html" with id="remove-authenticator" title="Remove the authenticator app?" body="layouts/_confirm.html" text="Its codes won't sign you in any more. Until you set one up again, only a passkey will." action=remove icon="trash-2" button="Remove app" %}
-            {% endif %}
         </div>
+        <p class="group-note">A 6-digit code from it, with your password, signs you in when no passkey is to hand.</p>
+        {% if authenticator %}
+            {% url 'remove_authenticator' as remove %}
+            {% include "layouts/_confirm.html" with id="remove-authenticator" title="Remove the authenticator app?" text="Its codes won't sign you in any more. Until you set one up again, only a passkey will." action=remove icon="trash-2" button="Remove app" %}
+        {% endif %}
     </section>
 
-    <section class="section" aria-labelledby="password-title">
-        <h2 id="password-title" class="section-title">Password</h2>
-        <p class="note">It signs you in only together with a code from the authenticator app. Changing it signs out every other device.</p>
-        <div class="actions">
-            <a href="{% url 'password' %}" class="btn btn-quiet"><i data-lucide="rectangle-ellipsis"></i>Change password</a>
-        </div>
+    <section aria-labelledby="password-title">
+        <h2 id="password-title" class="sec">Password</h2>
+        <nav class="group" aria-label="Password">
+            <a href="{% url 'password' %}" class="row"><span class="glyph"><i data-lucide="rectangle-ellipsis"></i></span><span class="row-main">Change password</span><i data-lucide="chevron-right" class="row-chev"></i></a>
+        </nav>
+        <p class="group-note">It signs you in only together with a code from the authenticator app. Changing it signs out every other device.</p>
     </section>
 
-    <section class="section" aria-labelledby="codes-title">
-        <h2 id="codes-title" class="section-title">Recovery codes <small>{{ recovery_codes_left }} of {{ recovery_codes_total }} left</small></h2>
-        <p class="note">Each signs you in once, in place of the authenticator app's code, if your phone is lost.</p>
-        <div class="meter" aria-hidden="true">{% for i in "0123456789" %}<span {% if forloop.counter <= recovery_codes_left %}class="on"{% endif %}></span>{% endfor %}</div>
-        <div class="actions">
-            <button type="button" popovertarget="make-recovery-codes" class="btn btn-quiet"><i data-lucide="refresh-cw"></i>Make new codes</button>
+    <section aria-labelledby="codes-title">
+        <h2 id="codes-title" class="sec"><span>Recovery codes</span><span>{{ recovery_codes_left }} of {{ recovery_codes_total }} left</span></h2>
+        <div class="group">
+            <div class="row"><div class="meter-dots" aria-hidden="true">{% for i in "0123456789" %}<span {% if forloop.counter <= recovery_codes_left %}class="on"{% endif %}></span>{% endfor %}</div></div>
+            <button type="button" popovertarget="make-recovery-codes" class="row"><span class="glyph"><i data-lucide="refresh-cw"></i></span><span class="row-main">Make new codes</span></button>
         </div>
+        <p class="group-note">Each signs you in once, in place of the authenticator app's code, if your phone is lost.</p>
         {% url 'make_recovery_codes' as make %}
-        {% include "layouts/_sheet.html" with id="make-recovery-codes" title="Make new recovery codes?" body="layouts/_confirm.html" text="Your old codes stop working straight away, saved or not. You'll see the new ones once." action=make icon="refresh-cw" button="Make new codes" %}
+        {% include "layouts/_confirm.html" with id="make-recovery-codes" title="Make new recovery codes?" text="Your old codes stop working straight away, saved or not. You'll see the new ones once." action=make icon="refresh-cw" button="Make new codes" %}
     </section>
 {% endblock %}

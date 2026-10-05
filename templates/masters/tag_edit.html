@@ -1,0 +1,6 @@
+{% extends "masters/tag.html" %}
+{% block title %}Rename {{ tag.name }} · Kosha{% endblock %}
+{% block sheets %}
+    {% url "masters:tag" tag.pk as cancel %}
+    {% include "layouts/_sheet.html" with title="Rename tag" button="Save name" fields="masters/_tag_fields.html" %}
+{% endblock %}

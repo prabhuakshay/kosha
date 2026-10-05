@@ -1,0 +1,14 @@
+{% comment %}What the tab bar's + and the side bar's New button can add.{% endcomment %}
+<div id="add-menu" popover class="menu" aria-label="New">
+    <div class="menu-card">
+        <p class="menu-head sec">New</p>
+        <nav class="group" aria-label="New">
+            <a href="{% url 'masters:new_asset' %}" class="row"><span class="glyph"><i data-lucide="landmark"></i></span><span class="row-main">Asset account</span></a>
+            <a href="{% url 'masters:new_liability' %}" class="row"><span class="glyph"><i data-lucide="credit-card"></i></span><span class="row-main">Liability</span></a>
+            <a href="{% url 'masters:new_expense_account' %}" class="row"><span class="glyph"><i data-lucide="arrow-up-right"></i></span><span class="row-main">Expense account</span></a>
+            <a href="{% url 'masters:new_income_account' %}" class="row"><span class="glyph"><i data-lucide="arrow-down-left"></i></span><span class="row-main">Income account</span></a>
+            <a href="{% url 'masters:new_category' %}" class="row menu-break"><span class="glyph"><i data-lucide="shapes"></i></span><span class="row-main">Category</span></a>
+            <a href="{% url 'masters:new_tag' %}" class="row"><span class="glyph"><i data-lucide="tag"></i></span><span class="row-main">Tag</span></a>
+        </nav>
+    </div>
+</div>

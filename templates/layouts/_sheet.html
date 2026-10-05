@@ -1,12 +1,24 @@
 {% comment %}
-    A bottom sheet on a phone, a centred dialog on a desktop, opened by a
-    button with `popovertarget="{{ id }}"`. `body` is the template inside it.
+    A form for adding or changing something, over the page it belongs to: a
+    bottom sheet on a phone, a centred dialog on a desktop. It opens with the
+    page (core/app.js), and closing it goes back to `cancel`. The including
+    template passes `title`, `button`, `lede` and `fields`, the template of its
+    inputs.
 {% endcomment %}
-<div id="{{ id }}" popover aria-labelledby="{{ id }}-title" class="sheet">
-    <div class="grabber"></div>
-    <div class="flex items-center gap-3">
-        <h2 id="{{ id }}-title" class="display text-[24px] leading-none">{{ title }}</h2>
-        <button type="button" popovertarget="{{ id }}" popovertargetaction="hide" class="ml-auto grid size-9 place-items-center rounded-full bg-well text-ink-2" aria-label="Close"><i data-lucide="x"></i></button>
-    </div>
-    {% include body %}
-</div>
+<dialog class="sheet" data-open aria-labelledby="sheet-title" tabindex="-1">
+    <form method="post" class="sheet-form">
+        {% csrf_token %}
+        <header class="sheet-head">
+            <a href="{{ cancel }}" class="tb" data-dismiss>Cancel</a>
+            <h2 id="sheet-title">{{ title }}</h2>
+        </header>
+        <div class="sheet-body">
+            {% if lede %}<p class="lede">{{ lede }}</p>{% endif %}
+            {% include fields %}
+        </div>
+        <footer class="sheet-foot">
+            <a href="{{ cancel }}" class="btn btn-quiet" data-dismiss>Cancel<kbd>esc</kbd></a>
+            <button class="btn">{{ button }}<kbd>⌘↵</kbd></button>
+        </footer>
+    </form>
+</dialog>

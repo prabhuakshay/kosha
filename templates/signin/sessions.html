@@ -1,30 +1,32 @@
 {% extends "layouts/settings_page.html" %}
 {% block title %}Sessions · Kosha{% endblock %}
 {% block main %}
-    <h1 class="display page-title">Sessions</h1>
-    <p class="lede">Every device signed in to Kosha. Each stays signed in for 30 days after its last visit.</p>
+    <header class="head">
+        <h1 class="title">Sessions</h1>
+        <p class="lede">Every device signed in to Kosha. Each stays signed in for 30 days after its last visit.</p>
+    </header>
     {% include "signin/_messages.html" %}
-    <ul class="items section">
+    <ul class="group">
         {% for session in sessions %}
-            <li class="item">
-                <span class="tile self-start"><i data-lucide="monitor-smartphone"></i></span>
-                <div class="min-w-0 flex-1">
-                    <p class="item-title">
+            <li class="row row-top">
+                <span class="glyph"><i data-lucide="monitor-smartphone"></i></span>
+                <span class="row-main">
+                    <span class="row-title flex flex-wrap items-center gap-1.5">
                         <span data-session-device>{{ session.device }}</span>
-                        {% if session.current %}<span class="tag">This device</span>{% endif %}
-                        {% if session.password_only %}<span class="tag tag-bad">Password only</span>{% endif %}
-                    </p>
-                    <p class="item-sub">{{ session.address|default:"Unknown address" }}{% if session.signed_in_at %} · Signed in {{ session.signed_in_at|date:"j M Y" }}{% endif %}</p>
-                    <p class="item-sub">Active {{ session.last_active|date:"j M Y" }}, {{ session.last_active|time:"g:i A"|lower }}</p>
-                </div>
+                        {% if session.current %}<span class="pill">This device</span>{% endif %}
+                        {% if session.password_only %}<span class="pill pill-danger">Password only</span>{% endif %}
+                    </span>
+                    <span class="row-sub">{{ session.address|default:"Unknown address" }}{% if session.signed_in_at %} · Signed in {{ session.signed_in_at|date:"j M Y" }}{% endif %}</span>
+                    <span class="row-sub">Active {{ session.last_active|date:"j M Y" }}, {{ session.last_active|time:"g:i A"|lower }}</span>
+                </span>
             </li>
         {% endfor %}
+        {% if sessions|length > 1 %}
+            <li><button type="button" popovertarget="sign-out-others" class="row row-danger row-sep">Sign out everywhere else</button></li>
+        {% endif %}
     </ul>
     {% if sessions|length > 1 %}
-        <div class="actions">
-            <button type="button" popovertarget="sign-out-others" class="btn btn-danger"><i data-lucide="log-out"></i>Sign out everywhere else</button>
-        </div>
         {% url 'sign_out_others' as sign_out %}
-        {% include "layouts/_sheet.html" with id="sign-out-others" title="Sign out everywhere else?" body="layouts/_confirm.html" text="Every other device will need to sign in again. This one stays signed in." action=sign_out icon="log-out" button="Sign out others" %}
+        {% include "layouts/_confirm.html" with id="sign-out-others" title="Sign out everywhere else?" text="Every other device will need to sign in again. This one stays signed in." action=sign_out icon="log-out" button="Sign out others" %}
     {% endif %}
 {% endblock %}

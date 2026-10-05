@@ -1,48 +1,71 @@
 {% extends "masters/account_page.html" %}
 {% load money %}
 {% block title %}{{ account.name }} · Kosha{% endblock %}
-{% block main %}
-    <h1 class="display page-title">{{ account.name }}</h1>
-    <p class="mt-3 flex items-center gap-2 text-[15px] text-ink-2"><i data-lucide="{{ account.icon }}" class="size-4"></i>{% if account.kind %}<span data-kind>{{ account.get_kind_display }}</span> · {% endif %}{{ account.get_type_display }}{% if account.closed %} · <span class="font-semibold" data-closed-badge>Closed</span>{% endif %}</p>
-    {% include "signin/_messages.html" %}
-    {% if listing.kinds %}
-        <section class="section">
-            <p class="label">Balance</p>
-            <p class="big mt-2 text-[40px]" data-balance>{{ account.balance|money }}</p>
-        </section>
+{% block bar_end %}
+    <a href="{% url listing.edit account.pk %}" class="tb tb-text" data-key="e" title="Edit (E)"><i data-lucide="pencil"></i><span class="tb-label">Edit</span><kbd>E</kbd></a>
+    {% if account.closed %}
+        <form method="post" action="{% url listing.reopen account.pk %}" class="desk-only">
+            {% csrf_token %}
+            <button class="tb"><i data-lucide="archive-restore"></i><span class="tb-label">Reopen</span></button>
+        </form>
+    {% elif not cant_close %}
+        <button type="button" popovertarget="close-account" class="tb desk-only"><i data-lucide="archive"></i><span class="tb-label">Close</span></button>
     {% endif %}
-    <dl class="facts">
+    {% if not account.in_use %}
+        <button type="button" popovertarget="delete-account" class="tb tb-danger desk-only" title="Delete"><i data-lucide="trash-2"></i></button>
+    {% endif %}
+{% endblock %}
+{% block main %}
+    {% include "signin/_messages.html" %}
+    <div class="hero">
+        <span class="glyph glyph-lg"><i data-lucide="{{ account.icon }}"></i></span>
+        <div class="hero-who">
+            <h1>{{ account.name }}</h1>
+            <p class="hero-kind">{% if account.kind %}<span data-kind>{{ account.get_kind_display }}</span> · {% endif %}{{ account.get_type_display }}{% if account.closed %} <span class="pill" data-closed-badge>Closed</span>{% endif %}</p>
+        </div>
         {% if listing.kinds %}
-            <div><dt>Opening balance</dt><dd data-opening-balance>{{ account.opening_balance|money }}</dd></div>
-            <div><dt>Opened on</dt><dd>{{ account.opened_on|date:"j M Y" }}</dd></div>
+            <div class="hero-figure">
+                <p class="label-caps">{% if account.type == "liability" %}Owed{% else %}Balance{% endif %}</p>
+                <p class="figure amount" data-balance>{{ account.balance|money }}</p>
+            </div>
         {% endif %}
-        <div><dt>Notes</dt><dd class="whitespace-pre-line">{{ account.notes|default:"None" }}</dd></div>
+    </div>
+    <p class="sec">Details</p>
+    <dl class="group">
+        {% if listing.kinds %}
+            <div class="row"><dt class="row-main">Opening balance</dt><dd class="row-value amount" data-opening-balance>{{ account.opening_balance|money }}</dd></div>
+            <div class="row"><dt class="row-main">Opened on</dt><dd class="row-value">{{ account.opened_on|date:"j M Y" }}</dd></div>
+        {% endif %}
+        <div class="row row-top"><dt class="row-main">Notes</dt><dd class="row-value whitespace-pre-line text-left">{{ account.notes|default:"None" }}</dd></div>
     </dl>
-    {% if cant_close %}<p class="note">{{ cant_close }}</p>{% endif %}
-    <div class="actions">
-        <a href="{% url listing.edit account.pk %}" class="btn btn-quiet"><i data-lucide="pencil"></i>Edit</a>
+    {% if cant_close %}<p class="group-note">{{ cant_close }}</p>{% endif %}
+    <p class="sec">History</p>
+    <ul class="group">
+        {% for entry in history %}
+            {% include "core/_history_entry.html" %}
+        {% empty %}
+            <li class="row row-sub">Nothing yet</li>
+        {% endfor %}
+    </ul>
+    <div class="page-actions group">
         {% if account.closed %}
             <form method="post" action="{% url listing.reopen account.pk %}">
                 {% csrf_token %}
-                <button class="btn btn-quiet"><i data-lucide="archive-restore"></i>Reopen</button>
+                <button class="row justify-center">Reopen account</button>
             </form>
         {% elif not cant_close %}
-            <button type="button" popovertarget="close-account" class="btn btn-quiet"><i data-lucide="archive"></i>Close</button>
-            {% url listing.close account.pk as close %}
-            {% include "layouts/_sheet.html" with id="close-account" title="Close "|add:account.name|add:"?" body="layouts/_confirm.html" text="It leaves your everyday lists but keeps its history. You can reopen it any time." action=close icon="archive" button="Close account" %}
+            <button type="button" popovertarget="close-account" class="row justify-center">Close account</button>
         {% endif %}
         {% if not account.in_use %}
-            <button type="button" popovertarget="delete-account" class="btn btn-danger"><i data-lucide="trash-2"></i>Delete</button>
-            {% url listing.delete account.pk as delete %}
-            {% include "layouts/_sheet.html" with id="delete-account" title="Delete "|add:account.name|add:"?" body="layouts/_confirm.html" text="It's gone for good, though History keeps that it existed. To keep it out of the way instead, close it." action=delete icon="trash-2" button="Delete account" %}
+            <button type="button" popovertarget="delete-account" class="row row-danger{% if account.closed %} row-sep{% endif %}">Delete account</button>
         {% endif %}
     </div>
-    <section class="section">
-        <h2 class="section-title">History</h2>
-        <ul class="items">
-            {% for entry in history %}
-                {% include "core/_history_entry.html" %}
-            {% endfor %}
-        </ul>
-    </section>
+    {% if not account.closed and not cant_close %}
+        {% url listing.close account.pk as close %}
+        {% include "layouts/_confirm.html" with id="close-account" title="Close "|add:account.name|add:"?" text="It leaves your everyday lists but keeps its history. You can reopen it any time." action=close icon="archive" button="Close account" %}
+    {% endif %}
+    {% if not account.in_use %}
+        {% url listing.delete account.pk as delete %}
+        {% include "layouts/_confirm.html" with id="delete-account" title="Delete "|add:account.name|add:"?" text="It's gone for good, though History keeps that it existed. To keep it out of the way instead, close it." action=delete icon="trash-2" button="Delete account" %}
+    {% endif %}
 {% endblock %}

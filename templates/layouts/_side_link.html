@@ -1,0 +1,9 @@
+{% comment %}
+    A link in the side bar, the current one anywhere in the section `of`;
+    without `to`, a feature still to come. `key` is its shortcut.
+{% endcomment %}
+{% if to %}
+    <a href="{% url to %}" class="side-link" {% if section == of %}aria-current="{% if request.resolver_match.view_name == to %}page{% else %}true{% endif %}"{% endif %} {% if key %}data-key="{{ key }}"{% endif %}><i data-lucide="{{ icon }}"></i>{{ label }}{% if key %}<kbd>{{ key }}</kbd>{% endif %}</a>
+{% else %}
+    <span class="side-link" aria-disabled="true"><i data-lucide="{{ icon }}"></i>{{ label }}<span class="pill">Soon</span></span>
+{% endif %}
